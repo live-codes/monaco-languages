@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="container" style="height: 90vh"></div>
+
+    <script type="module">
+      import { monaco } from "https://cdn.jsdelivr.net/npm/@live-codes/monaco-editor/monaco.js";
+
+      window.monaco = monaco;
+      const vueSupport = (await import("./dist/vue.js")).default;
+
+      const lang = "vue";
+      monaco.languages.register({ id: lang });
+      monaco.languages.setLanguageConfiguration(lang, vueSupport.config);
+      monaco.languages.setMonarchTokensProvider(lang, vueSupport.tokens);
+      monaco.languages.registerCompletionItemProvider(
+        lang,
+        vueSupport.completions,
+      );
+      monaco.languages.registerDefinitionProvider(lang, vueSupport.definitions);
+      vueSupport.init(monaco);
+
+      const code =
+        `<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+
+const count = ref(0)
+const doubled = computed(() => count.value * 2)
+
+function increment() {
+  count.value++
+}
+
+onMounted(() => {
+  console.log('Component mounted!')
+})
+</scr` +
+        `ipt>
+
+<template>
+  <div class="counter">
+    <p>Count: {{ count }}</p>
+    <p>Doubled: {{ doubled }}</p>
+    <button @click="increment">Increment</button>
+  </div>
+</template>
+
+<style scoped>
+.counter {
+  padding: 1rem;
+}
+</style>
+`;
+
+      const editor = monaco.editor.create(
+        document.getElementById("container"),
+        {
+          value: "",
+          language: "tyescript",
+          automaticLayout: true,
+          theme: "vs-dark",
+        },
+      );
+
+      setTimeout(() => {
+        monaco.editor.setModelLanguage(editor.getModel(), lang);
+        editor.getModel()?.setValue(code);
+      }, 1000);
+    </script>
+  </body>
+</html>

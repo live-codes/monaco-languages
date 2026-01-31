@@ -6,9 +6,20 @@ import esbuild from "esbuild";
  * @type {esbuild.BuildOptions}
  */
 const buildOptions = {
-  entryPoints: ["src/index.ts"],
+  entryPoints: [
+    "src/astro.ts",
+    "src/clio.ts",
+    "src/imba.ts",
+    "src/json5.ts",
+    "src/minizinc.ts",
+    "src/prolog.ts",
+    "src/ripple.ts",
+    "src/sql.ts",
+    "src/vue.ts",
+    "src/wat.ts",
+  ],
   bundle: true,
-  outfile: "dist/index.js",
+  outdir: "dist",
   platform: "browser",
   target: "esnext",
   format: "esm",

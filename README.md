@@ -1,3 +1,3 @@
-# @live-codes/monaco-ripple
+# @live-codes/monaco-languages
 
-Monaco Editor support for Ripple, for use in [LiveCodes](https://livecodes.io).
+Language support for Monaco Editor, for use in [LiveCodes](https://livecodes.io).

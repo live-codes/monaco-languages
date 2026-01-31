@@ -1,11 +1,22 @@
 {
-  "name": "@live-codes/monaco-ripple",
-  "version": "0.1.3",
-  "description": "Monaco Editor support for Ripple",
+  "name": "@live-codes/monaco-languages",
+  "version": "0.1.0",
+  "description": "Language support for Monaco Editor",
   "repository": {
-    "url": "https://github.com/live-codes/monaco-ripple"
+    "url": "https://github.com/live-codes/monaco-languages"
   },
-  "main": "dist/index.js",
+  "exports": {
+    "astro": "./dist/astro.js",
+    "clio": "./dist/clio.js",
+    "imba": "./dist/imba.js",
+    "json5": "./dist/json5.js",
+    "minizinc": "./dist/minizinc.js",
+    "prolog": "./dist/prolog.js",
+    "ripple": "./dist/ripple.js",
+    "sql": "./dist/sql.js",
+    "vue": "./dist/vue.js",
+    "wat": "./dist/wat.js"
+  },
   "scripts": {
     "start": "node ./build.js --dev",
     "build": "node ./build.js",
