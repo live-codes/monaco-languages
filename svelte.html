@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="container" style="height: 90vh"></div>
+
+    <script type="module">
+      import { monaco } from "https://cdn.jsdelivr.net/npm/@live-codes/monaco-editor/monaco.js";
+
+      window.monaco = monaco;
+      const svelteSupport = (await import("./dist/svelte.js")).default;
+
+      const lang = "svelte";
+      monaco.languages.register({ id: lang });
+      monaco.languages.setLanguageConfiguration(lang, svelteSupport.config);
+      monaco.languages.setMonarchTokensProvider(lang, svelteSupport.tokens);
+      monaco.languages.registerCompletionItemProvider(
+        lang,
+        svelteSupport.completions,
+      );
+      monaco.languages.registerDefinitionProvider(
+        lang,
+        svelteSupport.definitions,
+      );
+      svelteSupport.init(monaco);
+
+      const code =
+        `<script>
+  let title = "Svelte";
+  let counter = 0;
+  function increment() {
+    counter += 1;
+  }
+</scr` +
+        `ipt>
+
+<style>
+  .container,
+  .container button {
+    background: #fff;
+    border-radius: 0.5em;
+    color: #111;
+    padding: 1em;
+    text-align: center;
+    font: 1em sans-serif;
+  }
+  .logo {
+    width: 150px;
+  }
+</style>
+
+<div class="container">
+  <h1>Hello, {title}!</h1>
+  <img class="logo" alt="logo" src="https://gigamaster.github.io/livecodes/livecodes/assets/templates/svelte.svg" />
+  <p>You clicked {counter} times.</p>
+  <button on:click="{increment}">Click me</button>
+</div>
+`;
+
+      const editor = monaco.editor.create(
+        document.getElementById("container"),
+        {
+          value: "",
+          language: "tyescript",
+          automaticLayout: true,
+          theme: "vs-dark",
+        },
+      );
+
+      setTimeout(() => {
+        monaco.editor.setModelLanguage(editor.getModel(), lang);
+        editor.getModel()?.setValue(code);
+      }, 1000);
+    </script>
+  </body>
+</html>

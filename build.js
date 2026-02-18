@@ -15,6 +15,7 @@ const buildOptions = {
     "src/prolog.ts",
     "src/ripple.ts",
     "src/sql.ts",
+    "src/svelte.ts",
     "src/vue.ts",
     "src/wat.ts",
   ],
