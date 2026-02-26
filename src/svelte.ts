@@ -4,13 +4,21 @@ import {
   completionItemProvider,
   definitionProvider,
 } from "./svelte/svelte-tokens";
-import { initializeSvelteIntelliSense } from "./svelte/svelte-intellisense";
+import { initializeSvelteIntelliSense as initializeIntelliSense } from "./svelte/svelte-intellisense";
 
-// Main export
-export default {
+export {
   config,
   tokens,
-  completions: completionItemProvider,
-  definitions: definitionProvider,
-  init: initializeSvelteIntelliSense,
+  completionItemProvider as completions,
+  definitionProvider as definitions,
+};
+
+export default (monaco = (window as any).monaco) => {
+  const lang = "svelte";
+  monaco.languages.register({ id: lang });
+  monaco.languages.setLanguageConfiguration(lang, config);
+  monaco.languages.setMonarchTokensProvider(lang, tokens);
+  monaco.languages.registerCompletionItemProvider(lang, completionItemProvider);
+  monaco.languages.registerDefinitionProvider(lang, definitionProvider);
+  return initializeIntelliSense(monaco);
 };

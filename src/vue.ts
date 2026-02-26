@@ -4,13 +4,14 @@ import {
   completionItemProvider,
   definitionProvider,
 } from "./vue/vue-tokens";
-import { initializeVueIntelliSense } from "./vue/vue-intellisense";
+import { initializeVueIntelliSense as initializeIntelliSense } from "./vue/vue-intellisense";
 
-// Main export
-export default {
-  config,
-  tokens,
-  completions: completionItemProvider,
-  definitions: definitionProvider,
-  init: initializeVueIntelliSense,
+export default (monaco = (window as any).monaco) => {
+  const lang = "vue";
+  monaco.languages.register({ id: lang });
+  monaco.languages.setLanguageConfiguration(lang, config);
+  monaco.languages.setMonarchTokensProvider(lang, tokens);
+  monaco.languages.registerCompletionItemProvider(lang, completionItemProvider);
+  monaco.languages.registerDefinitionProvider(lang, definitionProvider);
+  return initializeIntelliSense(monaco);
 };

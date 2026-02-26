@@ -10,20 +10,9 @@
 
     <script type="module">
       import { monaco } from "https://cdn.jsdelivr.net/npm/@live-codes/monaco-editor/monaco.js";
+      import vueSupport from "./dist/vue.js";
 
-      window.monaco = monaco;
-      const vueSupport = (await import("./dist/vue.js")).default;
-
-      const lang = "vue";
-      monaco.languages.register({ id: lang });
-      monaco.languages.setLanguageConfiguration(lang, vueSupport.config);
-      monaco.languages.setMonarchTokensProvider(lang, vueSupport.tokens);
-      monaco.languages.registerCompletionItemProvider(
-        lang,
-        vueSupport.completions,
-      );
-      monaco.languages.registerDefinitionProvider(lang, vueSupport.definitions);
-      vueSupport.init(monaco);
+      vueSupport(monaco);
 
       const code =
         `<script setup lang="ts">
@@ -68,7 +57,7 @@ onMounted(() => {
       );
 
       setTimeout(() => {
-        monaco.editor.setModelLanguage(editor.getModel(), lang);
+        monaco.editor.setModelLanguage(editor.getModel(), "vue");
         editor.getModel()?.setValue(code);
       }, 1000);
     </script>

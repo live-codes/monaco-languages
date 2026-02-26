@@ -1,126 +1,134 @@
-export default {
-  config: {
-    comments: {
-      lineComment: '%',
-      blockComment: ['/*', '*/'],
-    },
-    brackets: [
-      ['{', '}'],
-      ['[', ']'],
-      ['(', ')'],
-    ],
-    autoClosingPairs: [
-      { open: '{', close: '}' },
-      { open: '[', close: ']' },
-      { open: '(', close: ')' },
-      { open: "'", close: "'", notIn: ['string', 'comment'] },
-      { open: '"', close: '"', notIn: ['string', 'comment'] },
-    ],
-    surroundingPairs: [
-      { open: '{', close: '}' },
-      { open: '[', close: ']' },
-      { open: '(', close: ')' },
-      { open: "'", close: "'" },
-      { open: '"', close: '"' },
-    ],
+const config = {
+  comments: {
+    lineComment: "%",
+    blockComment: ["/*", "*/"],
   },
-  tokens: {
-    defaultToken: '',
-    tokenPostfix: '.prolog',
+  brackets: [
+    ["{", "}"],
+    ["[", "]"],
+    ["(", ")"],
+  ],
+  autoClosingPairs: [
+    { open: "{", close: "}" },
+    { open: "[", close: "]" },
+    { open: "(", close: ")" },
+    { open: "'", close: "'", notIn: ["string", "comment"] },
+    { open: '"', close: '"', notIn: ["string", "comment"] },
+  ],
+  surroundingPairs: [
+    { open: "{", close: "}" },
+    { open: "[", close: "]" },
+    { open: "(", close: ")" },
+    { open: "'", close: "'" },
+    { open: '"', close: '"' },
+  ],
+};
 
-    // Common regular expressions
-    atom: /[a-z][a-zA-Z0-9_]*/,
-    variable: /[A-Z_][a-zA-Z0-9_]*/,
+const tokens = {
+  defaultToken: "",
+  tokenPostfix: ".prolog",
 
-    builtins: [
-      'write',
-      'writeln',
-      'nl',
-      'read',
-      'get',
-      'put',
-      'assert',
-      'retract',
-      'consult',
-      'fail',
-      'true',
-      'is',
-      'mod',
-      'rem',
-      'not',
-      'repeat',
-      '!',
-      'member',
-      'append',
-      'length',
-      'findall',
-      'bagof',
-      'setof',
-    ],
+  // Common regular expressions
+  atom: /[a-z][a-zA-Z0-9_]*/,
+  variable: /[A-Z_][a-zA-Z0-9_]*/,
 
-    tokenizer: {
-      root: [
-        // --- FIXED COMMENT LOGIC ---
-        // Match % followed by anything that is NOT a newline
-        [/%[^\n\r]*/, 'comment'],
+  builtins: [
+    "write",
+    "writeln",
+    "nl",
+    "read",
+    "get",
+    "put",
+    "assert",
+    "retract",
+    "consult",
+    "fail",
+    "true",
+    "is",
+    "mod",
+    "rem",
+    "not",
+    "repeat",
+    "!",
+    "member",
+    "append",
+    "length",
+    "findall",
+    "bagof",
+    "setof",
+  ],
 
-        // Block comments
-        [/\/\*/, 'comment', '@commentBlock'],
+  tokenizer: {
+    root: [
+      // --- FIXED COMMENT LOGIC ---
+      // Match % followed by anything that is NOT a newline
+      [/%[^\n\r]*/, "comment"],
 
-        // Strings (Double quotes)
-        [/"/, 'string', '@stringDouble'],
+      // Block comments
+      [/\/\*/, "comment", "@commentBlock"],
 
-        // Quoted Atoms (Single quotes)
-        [/'/, 'string.atom', '@stringSingle'],
+      // Strings (Double quotes)
+      [/"/, "string", "@stringDouble"],
 
-        // Cut operator
-        [/!/, 'keyword.cut'],
+      // Quoted Atoms (Single quotes)
+      [/'/, "string.atom", "@stringSingle"],
 
-        // Comparison and Math Operators
-        [/:-|-->/, 'keyword.operator'],
-        [/[=><\\+\-\*\/]+/, 'operator'],
+      // Cut operator
+      [/!/, "keyword.cut"],
 
-        // Variables
-        [/@variable/, 'variable'],
+      // Comparison and Math Operators
+      [/:-|-->/, "keyword.operator"],
+      [/[=><\\+\-\*\/]+/, "operator"],
 
-        // Built-in predicates vs Normal Atoms
-        [
-          /@atom/,
-          {
-            cases: {
-              '@builtins': 'predefined',
-              '@default': 'type.identifier',
-            },
+      // Variables
+      [/@variable/, "variable"],
+
+      // Built-in predicates vs Normal Atoms
+      [
+        /@atom/,
+        {
+          cases: {
+            "@builtins": "predefined",
+            "@default": "type.identifier",
           },
-        ],
-
-        // Numbers
-        [/\d+(\.\d+)?/, 'number'],
-
-        // Brackets and punctuation
-        [/[[]\{\}\(\)\.,|]/, 'delimiter'],
-
-        // Whitespace
-        [/\s+/, 'white'],
+        },
       ],
 
-      commentBlock: [
-        [/[^\/*]+/, 'comment'],
-        [/\*\//, 'comment', '@pop'],
-        [/[\/*]/, 'comment'],
-      ],
+      // Numbers
+      [/\d+(\.\d+)?/, "number"],
 
-      stringDouble: [
-        [/[^\\"]+/, 'string'],
-        [/\\./, 'string.escape'],
-        [/"/, 'string', '@pop'],
-      ],
+      // Brackets and punctuation
+      [/[[]\{\}\(\)\.,|]/, "delimiter"],
 
-      stringSingle: [
-        [/[^\\']+/, 'string.atom'],
-        [/\\./, 'string.escape'],
-        [/'/, 'string.atom', '@pop'],
-      ],
-    },
+      // Whitespace
+      [/\s+/, "white"],
+    ],
+
+    commentBlock: [
+      [/[^\/*]+/, "comment"],
+      [/\*\//, "comment", "@pop"],
+      [/[\/*]/, "comment"],
+    ],
+
+    stringDouble: [
+      [/[^\\"]+/, "string"],
+      [/\\./, "string.escape"],
+      [/"/, "string", "@pop"],
+    ],
+
+    stringSingle: [
+      [/[^\\']+/, "string.atom"],
+      [/\\./, "string.escape"],
+      [/'/, "string.atom", "@pop"],
+    ],
   },
+};
+
+export { config, tokens };
+
+export default (monaco = (window as any).monaco) => {
+  const lang = "prolog";
+  monaco.languages.register({ id: lang });
+  monaco.languages.setLanguageConfiguration(lang, config);
+  monaco.languages.setMonarchTokensProvider(lang, tokens);
 };

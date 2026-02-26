@@ -10,23 +10,9 @@
 
     <script type="module">
       import { monaco } from "https://cdn.jsdelivr.net/npm/@live-codes/monaco-editor/monaco.js";
+      import svelteSupport from "./dist/svelte.js";
 
-      window.monaco = monaco;
-      const svelteSupport = (await import("./dist/svelte.js")).default;
-
-      const lang = "svelte";
-      monaco.languages.register({ id: lang });
-      monaco.languages.setLanguageConfiguration(lang, svelteSupport.config);
-      monaco.languages.setMonarchTokensProvider(lang, svelteSupport.tokens);
-      monaco.languages.registerCompletionItemProvider(
-        lang,
-        svelteSupport.completions,
-      );
-      monaco.languages.registerDefinitionProvider(
-        lang,
-        svelteSupport.definitions,
-      );
-      svelteSupport.init(monaco);
+      svelteSupport(monaco);
 
       const code =
         `<script>
@@ -72,7 +58,7 @@
       );
 
       setTimeout(() => {
-        monaco.editor.setModelLanguage(editor.getModel(), lang);
+        monaco.editor.setModelLanguage(editor.getModel(), "svelte");
         editor.getModel()?.setValue(code);
       }, 1000);
     </script>

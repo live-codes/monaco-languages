@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import { exec } from "node:child_process";
 import process from "node:process";
 import esbuild from "esbuild";
@@ -6,19 +7,10 @@ import esbuild from "esbuild";
  * @type {esbuild.BuildOptions}
  */
 const buildOptions = {
-  entryPoints: [
-    "src/astro.ts",
-    "src/clio.ts",
-    "src/imba.ts",
-    "src/json5.ts",
-    "src/minizinc.ts",
-    "src/prolog.ts",
-    "src/ripple.ts",
-    "src/sql.ts",
-    "src/svelte.ts",
-    "src/vue.ts",
-    "src/wat.ts",
-  ],
+  entryPoints: fs
+    .readdirSync("./src")
+    .filter((f) => fs.statSync(`./src/${f}`).isFile())
+    .map((f) => `./src/${f}`),
   bundle: true,
   outdir: "dist",
   platform: "browser",

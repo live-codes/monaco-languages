@@ -1,0 +1,1562 @@
+import type * as Monaco from "monaco-editor";
+
+export default (monaco: typeof Monaco) => {
+  /* ================================================================
+   DATA
+   ================================================================ */
+
+  const KEYWORDS = [
+    "define",
+    "define-syntax",
+    "define-values",
+    "define-record-type",
+    "define-library",
+    "lambda",
+    "if",
+    "else",
+    "cond",
+    "case",
+    "and",
+    "or",
+    "when",
+    "unless",
+    "begin",
+    "do",
+    "let",
+    "let*",
+    "letrec",
+    "letrec*",
+    "let-values",
+    "let*-values",
+    "let-syntax",
+    "letrec-syntax",
+    "set!",
+    "quote",
+    "unquote",
+    "quasiquote",
+    "unquote-splicing",
+    "syntax-rules",
+    "import",
+    "export",
+    "library",
+    "include",
+    "include-ci",
+    "cond-expand",
+    "guard",
+    "parameterize",
+    "delay",
+    "delay-force",
+    "force",
+    "make-promise",
+    "promise?",
+    "=>",
+  ];
+
+  const BUILTINS = [
+    "car",
+    "cdr",
+    "cons",
+    "list",
+    "append",
+    "reverse",
+    "length",
+    "map",
+    "for-each",
+    "filter",
+    "fold-left",
+    "fold-right",
+    "reduce",
+    "assoc",
+    "assv",
+    "assq",
+    "member",
+    "memv",
+    "memq",
+    "list-ref",
+    "list-tail",
+    "list-copy",
+    "list->vector",
+    "list->string",
+    "caar",
+    "cadr",
+    "cdar",
+    "cddr",
+    "caaar",
+    "caadr",
+    "cadar",
+    "caddr",
+    "cdaar",
+    "cdadr",
+    "cddar",
+    "cdddr",
+    "null?",
+    "pair?",
+    "list?",
+    "boolean?",
+    "number?",
+    "complex?",
+    "real?",
+    "rational?",
+    "integer?",
+    "exact?",
+    "inexact?",
+    "string?",
+    "symbol?",
+    "char?",
+    "vector?",
+    "bytevector?",
+    "procedure?",
+    "port?",
+    "input-port?",
+    "output-port?",
+    "eof-object?",
+    "eof-object",
+    "not",
+    "boolean=?",
+    "eq?",
+    "eqv?",
+    "equal?",
+    "zero?",
+    "positive?",
+    "negative?",
+    "even?",
+    "odd?",
+    "abs",
+    "max",
+    "min",
+    "gcd",
+    "lcm",
+    "floor",
+    "ceiling",
+    "truncate",
+    "round",
+    "exact",
+    "inexact",
+    "exact->inexact",
+    "inexact->exact",
+    "number->string",
+    "string->number",
+    "quotient",
+    "remainder",
+    "modulo",
+    "expt",
+    "sqrt",
+    "sin",
+    "cos",
+    "tan",
+    "asin",
+    "acos",
+    "atan",
+    "exp",
+    "log",
+    "string-length",
+    "string-ref",
+    "string-set!",
+    "string-append",
+    "substring",
+    "string-copy",
+    "string-copy!",
+    "string->list",
+    "string->symbol",
+    "symbol->string",
+    "string-upcase",
+    "string-downcase",
+    "string-foldcase",
+    "string=?",
+    "string<?",
+    "string>?",
+    "string<=?",
+    "string>=?",
+    "make-string",
+    "string-contains",
+    "string-for-each",
+    "string-map",
+    "string-fill!",
+    "char->integer",
+    "integer->char",
+    "char-alphabetic?",
+    "char-numeric?",
+    "char-whitespace?",
+    "char-upper-case?",
+    "char-lower-case?",
+    "char-upcase",
+    "char-downcase",
+    "char=?",
+    "char<?",
+    "char>?",
+    "char<=?",
+    "char>=?",
+    "vector",
+    "make-vector",
+    "vector-ref",
+    "vector-set!",
+    "vector-length",
+    "vector->list",
+    "vector-fill!",
+    "vector-copy",
+    "vector-copy!",
+    "vector-append",
+    "vector-map",
+    "vector-for-each",
+    "bytevector",
+    "make-bytevector",
+    "bytevector-length",
+    "bytevector-u8-ref",
+    "bytevector-u8-set!",
+    "bytevector-copy",
+    "bytevector-copy!",
+    "bytevector-append",
+    "display",
+    "newline",
+    "write",
+    "write-char",
+    "write-string",
+    "read",
+    "read-char",
+    "read-line",
+    "peek-char",
+    "char-ready?",
+    "open-input-file",
+    "open-output-file",
+    "open-input-string",
+    "open-output-string",
+    "get-output-string",
+    "close-port",
+    "close-input-port",
+    "close-output-port",
+    "current-input-port",
+    "current-output-port",
+    "current-error-port",
+    "with-input-from-file",
+    "with-output-to-file",
+    "call-with-input-file",
+    "call-with-output-file",
+    "call-with-port",
+    "apply",
+    "call-with-current-continuation",
+    "call/cc",
+    "values",
+    "call-with-values",
+    "dynamic-wind",
+    "eval",
+    "error",
+    "raise",
+    "raise-continuable",
+    "with-exception-handler",
+    "error-object?",
+    "error-object-message",
+    "error-object-irritants",
+    "make-parameter",
+    "features",
+    "+",
+    "-",
+    "*",
+    "/",
+    "=",
+    "<",
+    ">",
+    "<=",
+    ">=",
+  ];
+
+  const DOCS = {
+    define: {
+      s: "(define <var> <expr>)\n(define (<name> <formals>) <body>)",
+      d: "Creates a new variable or procedure binding.",
+      e: "(define x 42)\n(define (square x) (* x x))",
+    },
+    lambda: {
+      s: "(lambda <formals> <body>)",
+      d: "Creates an anonymous procedure.",
+      e: "(lambda (x y) (+ x y))",
+    },
+    if: {
+      s: "(if <test> <consequent> <alternate>)",
+      d: "Conditional expression. Evaluates test, then consequent if true, alternate if false.",
+      e: '(if (> x 0) "positive" "non-positive")',
+    },
+    cond: {
+      s: "(cond <clause> ...)",
+      d: "Multi-way conditional. Each clause is (<test> <expr> ...). An else clause may appear last.",
+      e: "(cond\n  ((< n 0) 'negative)\n  ((= n 0) 'zero)\n  (else 'positive))",
+    },
+    case: {
+      s: "(case <key> <clause> ...)",
+      d: "Dispatches on value of key. Each clause is ((<datum> ...) <expr> ...).",
+      e: "(case day\n  ((mon tue) 'work)\n  ((sat sun) 'rest))",
+    },
+    let: {
+      s: "(let ((<var> <init>) ...) <body>)\n(let <name> ((<var> <init>) ...) <body>)",
+      d: "Binds variables to values and evaluates body. Named let creates a loop.",
+      e: "(let ((x 1) (y 2)) (+ x y))",
+    },
+    "let*": {
+      s: "(let* ((<var> <init>) ...) <body>)",
+      d: "Sequential bindings — each can refer to previous ones.",
+      e: "(let* ((x 1) (y (+ x 1))) y)  ; => 2",
+    },
+    letrec: {
+      s: "(letrec ((<var> <init>) ...) <body>)",
+      d: "Recursive bindings — variables can reference each other.",
+      e: "(letrec ((even? (lambda (n) ...))) ...)",
+    },
+    begin: {
+      s: "(begin <expr> ...)",
+      d: "Evaluates expressions sequentially; returns the last value.",
+      e: '(begin (display "hi") (newline) 42)',
+    },
+    "set!": {
+      s: "(set! <variable> <expression>)",
+      d: "Mutates the binding of variable.",
+      e: "(set! x (+ x 1))",
+    },
+    and: {
+      s: "(and <test> ...)",
+      d: "Short-circuit logical AND. Returns first false value, or last value.",
+      e: "(and 1 2 3) ; => 3",
+    },
+    or: {
+      s: "(or <test> ...)",
+      d: "Short-circuit logical OR. Returns first true value, or #f.",
+      e: "(or #f #f 3) ; => 3",
+    },
+    when: {
+      s: "(when <test> <expr> ...)",
+      d: "Evaluates expressions if test is true.",
+      e: "(when (> x 0) (display x))",
+    },
+    unless: {
+      s: "(unless <test> <expr> ...)",
+      d: "Evaluates expressions if test is false.",
+      e: "(unless (= x 0) (display (/ 1 x)))",
+    },
+    do: {
+      s: "(do ((<var> <init> <step>) ...)\n    (<test> <expr> ...)\n  <cmd> ...)",
+      d: "Iteration construct.",
+      e: "(do ((i 0 (+ i 1))) ((= i 10)) (display i))",
+    },
+    import: {
+      s: "(import <import-set> ...)",
+      d: "Imports bindings from libraries.",
+      e: "(import (scheme base) (scheme write))",
+    },
+    "define-syntax": {
+      s: "(define-syntax <keyword> <transformer>)",
+      d: "Defines a macro.",
+      e: "(define-syntax my-and\n  (syntax-rules () ...))",
+    },
+    "syntax-rules": {
+      s: "(syntax-rules (<literal> ...) <clause> ...)",
+      d: "Creates a macro transformer. Each clause is (<pattern> <template>).",
+      e: "(syntax-rules ()\n  ((swap! a b)\n   (let ((t a)) (set! a b) (set! b t))))",
+    },
+    "define-record-type": {
+      s: "(define-record-type <name>\n  (<constructor> <field> ...)\n  <pred>\n  (<field> <accessor> [<mutator>]) ...)",
+      d: "Defines a new record type with constructor, predicate, and accessors.",
+      e: "(define-record-type <point>\n  (make-point x y)\n  point?\n  (x point-x)\n  (y point-y))",
+    },
+    guard: {
+      s: "(guard (<var> <clause> ...)\n  <body>)",
+      d: "Exception handling. Catches exceptions raised in body.",
+      e: '(guard (e (#t (display e)))\n  (error "oops"))',
+    },
+    parameterize: {
+      s: "(parameterize ((<param> <value>) ...) <body>)",
+      d: "Dynamically binds parameters to new values.",
+      e: '(parameterize ((current-output-port p)) (display "hi"))',
+    },
+    delay: {
+      s: "(delay <expression>)",
+      d: "Creates a promise.",
+      e: "(define p (delay (+ 1 2)))",
+    },
+    force: {
+      s: "(force <promise>)",
+      d: "Forces a promise; memoizes the result.",
+      e: "(force (delay (+ 1 2))) ; => 3",
+    },
+    quote: {
+      s: "(quote <datum>)  or  '<datum>",
+      d: "Returns datum without evaluating it.",
+      e: "'(1 2 3) ; => (1 2 3)",
+    },
+    quasiquote: {
+      s: "(quasiquote <template>)  or  `<template>",
+      d: "Like quote but allows unquoting with , and ,@.",
+      e: "`(1 ,(+ 1 1) ,@(list 3 4)) ; => (1 2 3 4)",
+    },
+
+    // Built-in functions
+    car: {
+      s: "(car pair) -> obj",
+      d: "Returns the first element of a pair.",
+      e: "(car '(1 2 3)) ; => 1",
+    },
+    cdr: {
+      s: "(cdr pair) -> obj",
+      d: "Returns the rest of a pair (everything after the first element).",
+      e: "(cdr '(1 2 3)) ; => (2 3)",
+    },
+    cons: {
+      s: "(cons obj1 obj2) -> pair",
+      d: "Constructs a new pair.",
+      e: "(cons 1 '(2 3)) ; => (1 2 3)",
+    },
+    list: {
+      s: "(list obj ...) -> list",
+      d: "Creates a proper list from arguments.",
+      e: "(list 1 2 3) ; => (1 2 3)",
+    },
+    append: {
+      s: "(append list ...) -> list",
+      d: "Concatenates lists.",
+      e: "(append '(1 2) '(3 4)) ; => (1 2 3 4)",
+    },
+    reverse: {
+      s: "(reverse list) -> list",
+      d: "Returns list with elements in reverse order.",
+      e: "(reverse '(1 2 3)) ; => (3 2 1)",
+    },
+    length: {
+      s: "(length list) -> integer",
+      d: "Returns the number of elements.",
+      e: "(length '(a b c)) ; => 3",
+    },
+    map: {
+      s: "(map proc list ...) -> list",
+      d: "Applies proc element-wise; returns list of results.",
+      e: "(map square '(1 2 3)) ; => (1 4 9)",
+    },
+    "for-each": {
+      s: "(for-each proc list ...) -> void",
+      d: "Like map but for side effects only.",
+      e: "(for-each display '(1 2 3))",
+    },
+    filter: {
+      s: "(filter pred list) -> list",
+      d: "Returns elements satisfying pred.",
+      e: "(filter even? '(1 2 3 4)) ; => (2 4)",
+    },
+    apply: {
+      s: "(apply proc arg ... args) -> obj",
+      d: "Calls proc; last argument must be a list.",
+      e: "(apply + '(1 2 3)) ; => 6",
+    },
+    "null?": {
+      s: "(null? obj) -> boolean",
+      d: "Returns #t if obj is the empty list.",
+      e: "(null? '()) ; => #t",
+    },
+    "pair?": {
+      s: "(pair? obj) -> boolean",
+      d: "Returns #t if obj is a pair.",
+      e: "(pair? '(1 2)) ; => #t",
+    },
+    "list?": {
+      s: "(list? obj) -> boolean",
+      d: "Returns #t if obj is a proper list.",
+      e: "(list? '(1 2)) ; => #t",
+    },
+    not: {
+      s: "(not obj) -> boolean",
+      d: "Returns #t if obj is #f.",
+      e: "(not #f) ; => #t",
+    },
+    "eq?": {
+      s: "(eq? obj1 obj2) -> boolean",
+      d: "Identity comparison (same object).",
+      e: "(eq? 'a 'a) ; => #t",
+    },
+    "eqv?": {
+      s: "(eqv? obj1 obj2) -> boolean",
+      d: "Like eq? but compares numbers and chars by value.",
+      e: "(eqv? 42 42) ; => #t",
+    },
+    "equal?": {
+      s: "(equal? obj1 obj2) -> boolean",
+      d: "Deep structural equality.",
+      e: "(equal? '(1 2) '(1 2)) ; => #t",
+    },
+    "number?": {
+      s: "(number? obj) -> boolean",
+      d: "Returns #t if obj is a number.",
+      e: "(number? 42) ; => #t",
+    },
+    "string?": {
+      s: "(string? obj) -> boolean",
+      d: "Returns #t if obj is a string.",
+      e: '(string? "hi") ; => #t',
+    },
+    "symbol?": {
+      s: "(symbol? obj) -> boolean",
+      d: "Returns #t if obj is a symbol.",
+      e: "(symbol? 'hi) ; => #t",
+    },
+    "boolean?": {
+      s: "(boolean? obj) -> boolean",
+      d: "Returns #t if obj is a boolean.",
+      e: "(boolean? #t) ; => #t",
+    },
+    "procedure?": {
+      s: "(procedure? obj) -> boolean",
+      d: "Returns #t if obj is a procedure.",
+      e: "(procedure? car) ; => #t",
+    },
+    "char?": {
+      s: "(char? obj) -> boolean",
+      d: "Returns #t if obj is a character.",
+      e: "(char? #\\a) ; => #t",
+    },
+    "vector?": {
+      s: "(vector? obj) -> boolean",
+      d: "Returns #t if obj is a vector.",
+      e: "(vector? #(1 2)) ; => #t",
+    },
+    "+": {
+      s: "(+ z ...) -> number",
+      d: "Sum of arguments. Returns 0 with no args.",
+      e: "(+ 1 2 3) ; => 6",
+    },
+    "-": {
+      s: "(- z1 z2 ...) -> number",
+      d: "Subtraction or negation.",
+      e: "(- 10 3) ; => 7\n(- 5) ; => -5",
+    },
+    "*": {
+      s: "(* z ...) -> number",
+      d: "Product of arguments. Returns 1 with no args.",
+      e: "(* 2 3 4) ; => 24",
+    },
+    "/": {
+      s: "(/ z1 z2 ...) -> number",
+      d: "Division or reciprocal.",
+      e: "(/ 10 2) ; => 5",
+    },
+    "=": {
+      s: "(= z1 z2 ...) -> boolean",
+      d: "Numeric equality.",
+      e: "(= 1 1 1) ; => #t",
+    },
+    "<": {
+      s: "(< x1 x2 ...) -> boolean",
+      d: "Strictly increasing.",
+      e: "(< 1 2 3) ; => #t",
+    },
+    ">": {
+      s: "(> x1 x2 ...) -> boolean",
+      d: "Strictly decreasing.",
+      e: "(> 3 2 1) ; => #t",
+    },
+    "<=": {
+      s: "(<= x1 x2 ...) -> boolean",
+      d: "Non-decreasing.",
+      e: "(<= 1 1 2) ; => #t",
+    },
+    ">=": {
+      s: "(>= x1 x2 ...) -> boolean",
+      d: "Non-increasing.",
+      e: "(>= 3 3 1) ; => #t",
+    },
+    abs: { s: "(abs x) -> number", d: "Absolute value.", e: "(abs -5) ; => 5" },
+    max: {
+      s: "(max x1 x2 ...) -> number",
+      d: "Returns the maximum.",
+      e: "(max 1 3 2) ; => 3",
+    },
+    min: {
+      s: "(min x1 x2 ...) -> number",
+      d: "Returns the minimum.",
+      e: "(min 1 3 2) ; => 1",
+    },
+    "zero?": {
+      s: "(zero? z) -> boolean",
+      d: "Returns #t if z is zero.",
+      e: "(zero? 0) ; => #t",
+    },
+    "positive?": {
+      s: "(positive? x) -> boolean",
+      d: "Returns #t if x > 0.",
+      e: "(positive? 5) ; => #t",
+    },
+    "negative?": {
+      s: "(negative? x) -> boolean",
+      d: "Returns #t if x < 0.",
+      e: "(negative? -3) ; => #t",
+    },
+    "even?": {
+      s: "(even? n) -> boolean",
+      d: "Returns #t if n is even.",
+      e: "(even? 4) ; => #t",
+    },
+    "odd?": {
+      s: "(odd? n) -> boolean",
+      d: "Returns #t if n is odd.",
+      e: "(odd? 3) ; => #t",
+    },
+    expt: {
+      s: "(expt z1 z2) -> number",
+      d: "z1 raised to the power z2.",
+      e: "(expt 2 10) ; => 1024",
+    },
+    sqrt: { s: "(sqrt z) -> number", d: "Square root.", e: "(sqrt 16) ; => 4" },
+    modulo: {
+      s: "(modulo n1 n2) -> integer",
+      d: "Modulo (sign follows n2).",
+      e: "(modulo 10 3) ; => 1",
+    },
+    remainder: {
+      s: "(remainder n1 n2) -> integer",
+      d: "Remainder (sign follows n1).",
+      e: "(remainder -10 3) ; => -1",
+    },
+    quotient: {
+      s: "(quotient n1 n2) -> integer",
+      d: "Integer division, truncated toward zero.",
+      e: "(quotient 10 3) ; => 3",
+    },
+    floor: {
+      s: "(floor x) -> integer",
+      d: "Largest integer <= x.",
+      e: "(floor 3.7) ; => 3",
+    },
+    ceiling: {
+      s: "(ceiling x) -> integer",
+      d: "Smallest integer >= x.",
+      e: "(ceiling 3.2) ; => 4",
+    },
+    round: {
+      s: "(round x) -> integer",
+      d: "Nearest integer; rounds to even for halfway.",
+      e: "(round 3.5) ; => 4",
+    },
+    truncate: {
+      s: "(truncate x) -> integer",
+      d: "Truncate toward zero.",
+      e: "(truncate -3.7) ; => -3",
+    },
+    gcd: {
+      s: "(gcd n ...) -> integer",
+      d: "Greatest common divisor.",
+      e: "(gcd 12 18) ; => 6",
+    },
+    lcm: {
+      s: "(lcm n ...) -> integer",
+      d: "Least common multiple.",
+      e: "(lcm 4 6) ; => 12",
+    },
+    "number->string": {
+      s: "(number->string z [radix]) -> string",
+      d: "Converts number to string.",
+      e: '(number->string 255 16) ; => "ff"',
+    },
+    "string->number": {
+      s: "(string->number s [radix]) -> number | #f",
+      d: "Parses string as number; #f on failure.",
+      e: '(string->number "42") ; => 42',
+    },
+    "string-length": {
+      s: "(string-length s) -> integer",
+      d: "Number of characters in string.",
+      e: '(string-length "hello") ; => 5',
+    },
+    "string-ref": {
+      s: "(string-ref s k) -> char",
+      d: "k-th character (0-indexed).",
+      e: '(string-ref "hello" 1) ; => #\\e',
+    },
+    "string-append": {
+      s: "(string-append s ...) -> string",
+      d: "Concatenates strings.",
+      e: '(string-append "a" "b" "c") ; => "abc"',
+    },
+    substring: {
+      s: "(substring s start end) -> string",
+      d: "Substring from start (inclusive) to end (exclusive).",
+      e: '(substring "hello" 1 4) ; => "ell"',
+    },
+    "string->list": {
+      s: "(string->list s) -> list",
+      d: "List of characters.",
+      e: '(string->list "abc") ; => (#\\a #\\b #\\c)',
+    },
+    "list->string": {
+      s: "(list->string list) -> string",
+      d: "String from list of characters.",
+      e: '(list->string \'(#\\a #\\b)) ; => "ab"',
+    },
+    "string->symbol": {
+      s: "(string->symbol s) -> symbol",
+      d: "Returns symbol with given name.",
+      e: '(string->symbol "foo") ; => foo',
+    },
+    "symbol->string": {
+      s: "(symbol->string sym) -> string",
+      d: "Returns name of symbol.",
+      e: '(symbol->string \'foo) ; => "foo"',
+    },
+    "string-upcase": {
+      s: "(string-upcase s) -> string",
+      d: "Uppercased copy.",
+      e: '(string-upcase "hello") ; => "HELLO"',
+    },
+    "string-downcase": {
+      s: "(string-downcase s) -> string",
+      d: "Lowercased copy.",
+      e: '(string-downcase "HELLO") ; => "hello"',
+    },
+    "string=?": {
+      s: "(string=? s1 s2) -> boolean",
+      d: "String equality.",
+      e: '(string=? "abc" "abc") ; => #t',
+    },
+    "char->integer": {
+      s: "(char->integer c) -> integer",
+      d: "Unicode scalar value.",
+      e: "(char->integer #\\A) ; => 65",
+    },
+    "integer->char": {
+      s: "(integer->char n) -> char",
+      d: "Character with given Unicode value.",
+      e: "(integer->char 65) ; => #\\A",
+    },
+    vector: {
+      s: "(vector obj ...) -> vector",
+      d: "Creates vector.",
+      e: "(vector 1 2 3) ; => #(1 2 3)",
+    },
+    "make-vector": {
+      s: "(make-vector k [fill]) -> vector",
+      d: "Vector of length k.",
+      e: "(make-vector 5 0) ; => #(0 0 0 0 0)",
+    },
+    "vector-ref": {
+      s: "(vector-ref v k) -> obj",
+      d: "k-th element (0-indexed).",
+      e: "(vector-ref #(10 20 30) 1) ; => 20",
+    },
+    "vector-set!": {
+      s: "(vector-set! v k obj) -> void",
+      d: "Sets k-th element.",
+      e: "(vector-set! v 0 99)",
+    },
+    "vector-length": {
+      s: "(vector-length v) -> integer",
+      d: "Number of elements.",
+      e: "(vector-length #(1 2 3)) ; => 3",
+    },
+    display: {
+      s: "(display obj [port]) -> void",
+      d: "Outputs obj (strings without quotes).",
+      e: '(display "Hello!")',
+    },
+    newline: {
+      s: "(newline [port]) -> void",
+      d: "Outputs a newline.",
+      e: "(newline)",
+    },
+    write: {
+      s: "(write obj [port]) -> void",
+      d: "Writes a machine-readable representation.",
+      e: '(write "hello") ; outputs "hello" with quotes',
+    },
+    read: {
+      s: "(read [port]) -> obj",
+      d: "Reads next Scheme datum from input.",
+      e: "(read)",
+    },
+    "call/cc": {
+      s: "(call/cc proc) -> obj",
+      d: "Captures the current continuation and passes it to proc.",
+      e: "(call/cc (lambda (k) (k 42))) ; => 42",
+    },
+    "call-with-current-continuation": {
+      s: "(call-with-current-continuation proc) -> obj",
+      d: "Same as call/cc.",
+      e: "(call-with-current-continuation (lambda (k) (k 42)))",
+    },
+    values: {
+      s: "(values obj ...) -> values",
+      d: "Returns multiple values.",
+      e: "(values 1 2 3)",
+    },
+    "call-with-values": {
+      s: "(call-with-values producer consumer) -> obj",
+      d: "Passes multiple values from producer to consumer.",
+      e: "(call-with-values (lambda () (values 1 2)) +) ; => 3",
+    },
+    eval: {
+      s: "(eval expr env) -> obj",
+      d: "Evaluates expression in environment.",
+      e: "(eval '(+ 1 2) (environment '(scheme base)))",
+    },
+    error: {
+      s: "(error who msg irritant ...)",
+      d: "Raises an error.",
+      e: '(error "div" "division by zero")',
+    },
+    raise: {
+      s: "(raise obj)",
+      d: "Raises an exception.",
+      e: '(raise "something went wrong")',
+    },
+    "with-exception-handler": {
+      s: "(with-exception-handler handler thunk) -> obj",
+      d: "Installs exception handler for thunk.",
+      e: '(with-exception-handler\n  (lambda (e) (display e))\n  (lambda () (error "oops")))',
+    },
+    "dynamic-wind": {
+      s: "(dynamic-wind before thunk after) -> obj",
+      d: "Calls thunk, running before on entry and after on exit.",
+      e: '(dynamic-wind\n  (lambda () (display "in"))\n  (lambda () 42)\n  (lambda () (display "out")))',
+    },
+    assoc: {
+      s: "(assoc obj alist [=]) -> pair | #f",
+      d: "Finds first pair whose car equals obj.",
+      e: "(assoc 'b '((a 1)(b 2)(c 3))) ; => (b 2)",
+    },
+    member: {
+      s: "(member obj list [=]) -> list | #f",
+      d: "Finds first sublist whose car equals obj.",
+      e: "(member 3 '(1 2 3 4)) ; => (3 4)",
+    },
+    "list-ref": {
+      s: "(list-ref list k) -> obj",
+      d: "k-th element (0-indexed).",
+      e: "(list-ref '(a b c) 1) ; => b",
+    },
+    "list-tail": {
+      s: "(list-tail list k) -> list",
+      d: "Sublist from k-th element onward.",
+      e: "(list-tail '(a b c d) 2) ; => (c d)",
+    },
+    "make-parameter": {
+      s: "(make-parameter init [converter]) -> parameter",
+      d: "Creates a parameter object.",
+      e: "(define p (make-parameter 10))\n(p) ; => 10",
+    },
+    exact: {
+      s: "(exact z) -> exact-number",
+      d: "Converts to exact.",
+      e: "(exact 3.0) ; => 3",
+    },
+    inexact: {
+      s: "(inexact z) -> inexact-number",
+      d: "Converts to inexact.",
+      e: "(inexact 1/3) ; => 0.333...",
+    },
+    "open-input-string": {
+      s: "(open-input-string s) -> input-port",
+      d: "Port that reads from string.",
+      e: '(read (open-input-string "42")) ; => 42',
+    },
+    "open-output-string": {
+      s: "(open-output-string) -> output-port",
+      d: "Port that accumulates to a string.",
+      e: '(let ((p (open-output-string)))\n  (display "hi" p)\n  (get-output-string p)) ; => "hi"',
+    },
+    "get-output-string": {
+      s: "(get-output-string port) -> string",
+      d: "Retrieves accumulated string.",
+      e: "(get-output-string p)",
+    },
+    "fold-left": {
+      s: "(fold-left f init list) -> obj",
+      d: "Left fold over list.",
+      e: "(fold-left + 0 '(1 2 3)) ; => 6",
+    },
+    "fold-right": {
+      s: "(fold-right f init list) -> obj",
+      d: "Right fold over list.",
+      e: "(fold-right cons '() '(1 2 3)) ; => (1 2 3)",
+    },
+    cadr: {
+      s: "(cadr pair) -> obj",
+      d: "(car (cdr pair)) — second element.",
+      e: "(cadr '(1 2 3)) ; => 2",
+    },
+    caddr: {
+      s: "(caddr pair) -> obj",
+      d: "(car (cdr (cdr pair))) — third element.",
+      e: "(caddr '(1 2 3)) ; => 3",
+    },
+    caar: {
+      s: "(caar pair) -> obj",
+      d: "(car (car pair)).",
+      e: "(caar '((1 2) 3)) ; => 1",
+    },
+    cddr: {
+      s: "(cddr pair) -> obj",
+      d: "(cdr (cdr pair)).",
+      e: "(cddr '(1 2 3 4)) ; => (3 4)",
+    },
+  };
+
+  /* ================================================================
+   REGISTER LANGUAGE
+   ================================================================ */
+
+  monaco.languages.register({
+    id: "scheme",
+    extensions: [".scm", ".ss", ".sld", ".sls", ".sps"],
+    aliases: ["Scheme", "scheme", "scm"],
+  });
+
+  /* ================================================================
+   LANGUAGE CONFIGURATION
+   ================================================================ */
+
+  monaco.languages.setLanguageConfiguration("scheme", {
+    comments: { lineComment: ";", blockComment: ["#|", "|#"] },
+    brackets: [
+      ["(", ")"],
+      ["[", "]"],
+    ],
+    autoClosingPairs: [
+      { open: "(", close: ")" },
+      { open: "[", close: "]" },
+      { open: '"', close: '"', notIn: ["string"] },
+    ],
+    surroundingPairs: [
+      { open: "(", close: ")" },
+      { open: "[", close: "]" },
+      { open: '"', close: '"' },
+    ],
+    wordPattern:
+      /[a-zA-Z!$%&*/:<=>?@^_~][a-zA-Z0-9!$%&*/:<=>?@^_~+\-.]*|[+\-*/]=?|>=?|<=?|\.{3}/,
+    indentationRules: {
+      increaseIndentPattern: /^\s*\(.*[^)]\s*$/,
+      decreaseIndentPattern: /^\s*\)/,
+    },
+    onEnterRules: [
+      {
+        beforeText: /\([^)]*$/,
+        action: { indentAction: monaco.languages.IndentAction.Indent },
+      },
+    ],
+  });
+
+  /* ================================================================
+   MONARCH TOKENIZER
+   ================================================================ */
+
+  monaco.languages.setMonarchTokensProvider("scheme", {
+    keywords: KEYWORDS,
+    builtins: BUILTINS,
+
+    tokenizer: {
+      root: [
+        [/\s+/, "white"],
+
+        // Block comment (nestable)
+        [/#\|/, "comment", "@blockComment"],
+        // Datum comment
+        [/#;/, "comment"],
+        // Line comment
+        [/;.*$/, "comment"],
+
+        // Strings
+        [/"/, "string", "@string"],
+
+        // Characters
+        [
+          /#\\(?:space|newline|tab|return|alarm|backspace|delete|escape|null|altmode|rubout|nul)/,
+          "string",
+        ],
+        [/#\\x[0-9a-fA-F]+/, "string"],
+        [/#\\./, "string"],
+
+        // Booleans
+        [/#(?:true|false)\b/, "constant"],
+        [/#[tf](?=[\s()[\]{}";]|$)/, "constant"],
+
+        // Number with radix / exactness prefix
+        [/#[bBoOdDxXeEiI][^\s()[\]{}";]*/, "number"],
+
+        // Special numeric constants
+        [/[+-](?:inf|nan)\.0/, "number"],
+        // Float
+        [/[+-]?\d+\.\d*(?:[eE][+-]?\d+)?/, "number.float"],
+        [/[+-]?\.\d+(?:[eE][+-]?\d+)?/, "number.float"],
+        // Rational
+        [/[+-]?\d+\/\d+/, "number"],
+        // Integer with exponent
+        [/[+-]?\d+[eE][+-]?\d+/, "number.float"],
+        // Integer
+        [/[+-]?\d+/, "number"],
+
+        // Vector / bytevector
+        [/#u8\(/, "delimiter"],
+        [/#\(/, "delimiter"],
+
+        // Parens / brackets
+        [/[()[\]{}]/, "delimiter.parenthesis"],
+
+        // Quote operators
+        [/,@/, "tag"],
+        [/[',`]/, "tag"],
+
+        // Ellipsis
+        [/\.\.\./, "keyword"],
+        // Dot for dotted pairs
+        [/\.(?=\s)/, "delimiter"],
+
+        // Main identifiers
+        [
+          /[a-zA-Z!$%&*/:<=>?^_~][a-zA-Z0-9!$%&*/:<=>?^_~+\-.@]*/,
+          {
+            cases: {
+              "@keywords": "keyword",
+              "@builtins": "type.identifier",
+              "@default": "identifier",
+            },
+          },
+        ],
+        // Peculiar identifiers starting with + or -
+        [
+          /[+-][a-zA-Z!$%&*/:<=>?@^_~][a-zA-Z0-9!$%&*/:<=>?@^_~+\-.@]*/,
+          {
+            cases: {
+              "@keywords": "keyword",
+              "@builtins": "type.identifier",
+              "@default": "identifier",
+            },
+          },
+        ],
+        // Standalone + -
+        [
+          /[+-]/,
+          {
+            cases: { "@builtins": "type.identifier", "@default": "identifier" },
+          },
+        ],
+      ],
+
+      string: [
+        [/[^\\"]+/, "string"],
+        [/\\x[0-9a-fA-F]+;/, "string.escape"],
+        [/\\[abtnr\\"0]/, "string.escape"],
+        [/\\\n/, "string.escape"],
+        [/\\./, "string.escape"],
+        [/"/, "string", "@pop"],
+      ],
+
+      blockComment: [
+        [/#\|/, "comment", "@push"],
+        [/\|#/, "comment", "@pop"],
+        [/[^#|]+/, "comment"],
+        [/./, "comment"],
+      ],
+    },
+  });
+
+  /* ================================================================
+   HELPER: find user definitions
+   ================================================================ */
+
+  function findUserDefs(model) {
+    const defs = [];
+    const lc = model.getLineCount();
+    const idPat = /[a-zA-Z!$%&*/:<=>?^_~+\-][a-zA-Z0-9!$%&*/:<=>?^_~+\-.@]*/;
+    for (let i = 1; i <= lc; i++) {
+      const line = model.getLineContent(i);
+      // (define (name ...) ...)
+      let m = line.match(
+        /\(\s*define\s+\(\s*([a-zA-Z!$%&*/:<=>?^_~+\-][a-zA-Z0-9!$%&*/:<=>?^_~+\-.@]*)/,
+      );
+      if (m) {
+        const col = line.indexOf(m[1], m.index) + 1;
+        defs.push({ name: m[1], line: i, col: col, kind: "function" });
+        continue;
+      }
+      // (define name ...)
+      m = line.match(
+        /\(\s*define\s+([a-zA-Z!$%&*/:<=>?^_~+\-][a-zA-Z0-9!$%&*/:<=>?^_~+\-.@]*)/,
+      );
+      if (m) {
+        const col = line.indexOf(m[1], m.index) + 1;
+        defs.push({ name: m[1], line: i, col: col, kind: "variable" });
+        continue;
+      }
+      // (define-syntax name ...)
+      m = line.match(
+        /\(\s*define-syntax\s+([a-zA-Z!$%&*/:<=>?^_~+\-][a-zA-Z0-9!$%&*/:<=>?^_~+\-.@]*)/,
+      );
+      if (m) {
+        const col = line.indexOf(m[1], m.index) + 1;
+        defs.push({ name: m[1], line: i, col: col, kind: "macro" });
+        continue;
+      }
+      // (define-record-type name ...)
+      m = line.match(
+        /\(\s*define-record-type\s+([a-zA-Z!$%&*/:<=>?^_~+\-][a-zA-Z0-9!$%&*/:<=>?^_~+\-.@]*)/,
+      );
+      if (m) {
+        const col = line.indexOf(m[1], m.index) + 1;
+        defs.push({ name: m[1], line: i, col: col, kind: "type" });
+      }
+    }
+    return defs;
+  }
+
+  function getWordAt(model, position) {
+    const wp = model.getWordAtPosition(position);
+    if (wp) return wp.word;
+    // Fallback for +, -, etc
+    const line = model.getLineContent(position.lineNumber);
+    const col = position.column - 1;
+    const ch = line[col];
+    if (ch && /[+\-*/=<>]/.test(ch)) {
+      let s = col,
+        e = col;
+      while (s > 0 && /[+\-*/=<>!?a-zA-Z0-9^~_&%$@:.]/.test(line[s - 1])) s--;
+      while (
+        e < line.length - 1 &&
+        /[+\-*/=<>!?a-zA-Z0-9^~_&%$@:.]/.test(line[e + 1])
+      )
+        e++;
+      return line.substring(s, e + 1);
+    }
+    return null;
+  }
+
+  /* ================================================================
+   COMPLETION PROVIDER
+   ================================================================ */
+
+  monaco.languages.registerCompletionItemProvider("scheme", {
+    triggerCharacters: ["("],
+    provideCompletionItems: function (model, position) {
+      const wordInfo = model.getWordUntilPosition(position);
+      const range = {
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: wordInfo.startColumn,
+        endColumn: wordInfo.endColumn,
+      };
+
+      const S = monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet;
+      const K = monaco.languages.CompletionItemKind;
+      const suggestions = [];
+
+      // Snippets
+      const snippets = [
+        {
+          label: "define (variable)",
+          detail: "Define a variable",
+          insert: "define ${1:name} ${2:value}",
+          doc: "(define name value)",
+        },
+        {
+          label: "define (function)",
+          detail: "Define a function",
+          insert: "define (${1:name} ${2:args})\n  ${3:body}",
+          doc: "(define (name args) body)",
+        },
+        {
+          label: "lambda",
+          detail: "Anonymous function",
+          insert: "lambda (${1:args})\n  ${2:body}",
+          doc: "(lambda (args) body)",
+        },
+        {
+          label: "let",
+          detail: "Let binding",
+          insert: "let ((${1:var} ${2:val}))\n  ${3:body}",
+          doc: "(let ((var val)) body)",
+        },
+        {
+          label: "let*",
+          detail: "Sequential let",
+          insert: "let* ((${1:var} ${2:val}))\n  ${3:body}",
+          doc: "(let* ((var val)) body)",
+        },
+        {
+          label: "letrec",
+          detail: "Recursive let",
+          insert:
+            "letrec ((${1:name} (lambda (${2:args}) ${3:body})))\n  ${4:expr}",
+          doc: "(letrec ((name (lambda ...))) expr)",
+        },
+        {
+          label: "cond",
+          detail: "Multi-way conditional",
+          insert: "cond\n  ((${1:test1}) ${2:expr1})\n  (else ${3:default})",
+          doc: "(cond (test expr) ... (else default))",
+        },
+        {
+          label: "case",
+          detail: "Case expression",
+          insert:
+            "case ${1:key}\n  ((${2:datum}) ${3:expr})\n  (else ${4:default})",
+          doc: "(case key ((datum) expr) (else default))",
+        },
+        {
+          label: "if",
+          detail: "Conditional",
+          insert: "if ${1:test}\n    ${2:then}\n    ${3:else}",
+          doc: "(if test then else)",
+        },
+        {
+          label: "when",
+          detail: "When expression",
+          insert: "when ${1:test}\n  ${2:body}",
+          doc: "(when test body)",
+        },
+        {
+          label: "unless",
+          detail: "Unless expression",
+          insert: "unless ${1:test}\n  ${2:body}",
+          doc: "(unless test body)",
+        },
+        {
+          label: "begin",
+          detail: "Sequential expressions",
+          insert: "begin\n  ${1:expr1}\n  ${2:expr2}",
+          doc: "(begin expr1 expr2 ...)",
+        },
+        {
+          label: "do",
+          detail: "Iteration",
+          insert:
+            "do ((${1:var} ${2:init} ${3:step}))\n    ((${4:test}) ${5:result})\n  ${6:body}",
+          doc: "(do ((var init step)) (test result) body)",
+        },
+        {
+          label: "define-record-type",
+          detail: "Define record type",
+          insert:
+            "define-record-type ${1:<name>}\n  (${2:make-name} ${3:fields})\n  ${4:name?}\n  (${5:field} ${6:field-accessor})",
+          doc: "(define-record-type <name> (ctor fields) pred (field accessor) ...)",
+        },
+        {
+          label: "define-syntax",
+          detail: "Define macro",
+          insert:
+            "define-syntax ${1:name}\n  (syntax-rules ()\n    ((${1:name} ${2:pattern}) ${3:template}))",
+          doc: "(define-syntax name (syntax-rules () ...))",
+        },
+        {
+          label: "guard",
+          detail: "Exception handling",
+          insert:
+            "guard (${1:e}\n    ((${2:pred} ${1:e}) ${3:handler}))\n  ${4:body}",
+          doc: "(guard (e (clause ...)) body)",
+        },
+        {
+          label: "import",
+          detail: "Import library",
+          insert: "import (scheme ${1:base})",
+          doc: "(import (scheme base))",
+        },
+        {
+          label: "parameterize",
+          detail: "Dynamic binding",
+          insert: "parameterize ((${1:param} ${2:value}))\n  ${3:body}",
+          doc: "(parameterize ((param value)) body)",
+        },
+        {
+          label: "call/cc",
+          detail: "Call with current continuation",
+          insert: "call/cc (lambda (${1:k})\n  ${2:body})",
+          doc: "(call/cc (lambda (k) body))",
+        },
+        {
+          label: "let loop",
+          detail: "Named let loop",
+          insert:
+            "let ${1:loop} ((${2:i} ${3:0}))\n  (when (${4:< ${2:i} 10})\n    ${5:body}\n    (${1:loop} (+ ${2:i} 1)))",
+          doc: "(let loop ((i 0)) (when (< i 10) body (loop (+ i 1))))",
+        },
+      ];
+
+      for (const sn of snippets) {
+        suggestions.push({
+          label: sn.label,
+          kind: K.Snippet,
+          insertText: sn.insert,
+          insertTextRules: S,
+          detail: "Snippet: " + sn.detail,
+          documentation: { value: "```scheme\n(" + sn.doc + ")\n```" },
+          range: range,
+          sortText: "0_" + sn.label,
+        });
+      }
+
+      // Keywords
+      for (const kw of KEYWORDS) {
+        const doc = DOCS[kw];
+        suggestions.push({
+          label: kw,
+          kind: K.Keyword,
+          insertText: kw,
+          detail: "keyword",
+          documentation: doc
+            ? { value: "```scheme\n" + doc.s + "\n```\n" + doc.d }
+            : undefined,
+          range: range,
+          sortText: "1_" + kw,
+        });
+      }
+
+      // Built-in functions
+      for (const fn of BUILTINS) {
+        if (KEYWORDS.includes(fn)) continue;
+        const doc = DOCS[fn];
+        suggestions.push({
+          label: fn,
+          kind: K.Function,
+          insertText: fn,
+          detail: "built-in",
+          documentation: doc
+            ? { value: "```scheme\n" + doc.s + "\n```\n" + doc.d }
+            : undefined,
+          range: range,
+          sortText: "2_" + fn,
+        });
+      }
+
+      // User-defined symbols
+      const userDefs = findUserDefs(model);
+      const seen = new Set([...KEYWORDS, ...BUILTINS]);
+      for (const def of userDefs) {
+        if (seen.has(def.name)) continue;
+        seen.add(def.name);
+        suggestions.push({
+          label: def.name,
+          kind:
+            def.kind === "function"
+              ? K.Function
+              : def.kind === "macro"
+                ? K.Module
+                : K.Variable,
+          insertText: def.name,
+          detail: "user-defined " + def.kind,
+          range: range,
+          sortText: "3_" + def.name,
+        });
+      }
+
+      return { suggestions: suggestions };
+    },
+  });
+
+  /* ================================================================
+   HOVER PROVIDER
+   ================================================================ */
+
+  monaco.languages.registerHoverProvider("scheme", {
+    provideHover: function (model, position) {
+      const word = getWordAt(model, position);
+      if (!word) return null;
+
+      const doc = DOCS[word];
+      if (doc) {
+        const parts = [
+          { value: "```scheme\n" + doc.s + "\n```" },
+          { value: doc.d },
+        ];
+        if (doc.e)
+          parts.push({ value: "**Example:**\n```scheme\n" + doc.e + "\n```" });
+        return {
+          range: model.getWordAtPosition(position)
+            ? new monaco.Range(
+                position.lineNumber,
+                model.getWordAtPosition(position).startColumn,
+                position.lineNumber,
+                model.getWordAtPosition(position).endColumn,
+              )
+            : undefined,
+          contents: parts,
+        };
+      }
+
+      // Check user definitions
+      const userDefs = findUserDefs(model);
+      for (const def of userDefs) {
+        if (def.name === word) {
+          const defLine = model.getLineContent(def.line).trim();
+          return {
+            contents: [
+              { value: "```scheme\n" + defLine + "\n```" },
+              {
+                value:
+                  "User-defined " + def.kind + " — *line " + def.line + "*",
+              },
+            ],
+          };
+        }
+      }
+
+      return null;
+    },
+  });
+
+  /* ================================================================
+   DEFINITION PROVIDER
+   ================================================================ */
+
+  monaco.languages.registerDefinitionProvider("scheme", {
+    provideDefinition: function (model, position) {
+      const word = getWordAt(model, position);
+      if (!word) return null;
+
+      const userDefs = findUserDefs(model);
+      const results = [];
+      for (const def of userDefs) {
+        if (def.name === word) {
+          results.push({
+            uri: model.uri,
+            range: new monaco.Range(
+              def.line,
+              def.col,
+              def.line,
+              def.col + def.name.length,
+            ),
+          });
+        }
+      }
+      return results.length ? results : null;
+    },
+  });
+
+  /* ================================================================
+   DOCUMENT SYMBOL PROVIDER  (Outline / Breadcrumbs)
+   ================================================================ */
+
+  monaco.languages.registerDocumentSymbolProvider("scheme", {
+    provideDocumentSymbols: function (model) {
+      const defs = findUserDefs(model);
+      return defs.map(function (def) {
+        const endLine = def.line;
+        return {
+          name: def.name,
+          detail: def.kind,
+          kind:
+            def.kind === "function"
+              ? monaco.languages.SymbolKind.Function
+              : def.kind === "macro"
+                ? monaco.languages.SymbolKind.Module
+                : def.kind === "type"
+                  ? monaco.languages.SymbolKind.Struct
+                  : monaco.languages.SymbolKind.Variable,
+          range: new monaco.Range(
+            def.line,
+            1,
+            endLine,
+            model.getLineContent(endLine).length + 1,
+          ),
+          selectionRange: new monaco.Range(
+            def.line,
+            def.col,
+            def.line,
+            def.col + def.name.length,
+          ),
+        };
+      });
+    },
+  });
+
+  /* ================================================================
+   REFERENCE PROVIDER  (Shift+F12)
+   ================================================================ */
+
+  monaco.languages.registerReferenceProvider("scheme", {
+    provideReferences: function (model, position, context) {
+      const word = getWordAt(model, position);
+      if (!word) return null;
+
+      const results = [];
+      const lc = model.getLineCount();
+      // Escape special regex characters
+      const escaped = word.replace(/[.*+?^${}()|[\]\\\/]/g, "\\$&");
+      const re = new RegExp(
+        "(?<=[\\s(\\[,`']|^)" + escaped + '(?=[\\s)\\]";]|$)',
+        "g",
+      );
+      for (let i = 1; i <= lc; i++) {
+        const line = model.getLineContent(i);
+        let m;
+        while ((m = re.exec(line)) !== null) {
+          results.push({
+            uri: model.uri,
+            range: new monaco.Range(
+              i,
+              m.index + 1,
+              i,
+              m.index + 1 + word.length,
+            ),
+          });
+        }
+      }
+      return results;
+    },
+  });
+
+  /* ================================================================
+   SIGNATURE HELP PROVIDER
+   ================================================================ */
+
+  monaco.languages.registerSignatureHelpProvider("scheme", {
+    signatureHelpTriggerCharacters: ["(", " "],
+    provideSignatureHelp: function (model, position) {
+      const textUntil = model.getValueInRange({
+        startLineNumber: Math.max(1, position.lineNumber - 5),
+        startColumn: 1,
+        endLineNumber: position.lineNumber,
+        endColumn: position.column,
+      });
+
+      // Find the innermost open paren and the first symbol after it
+      let depth = 0;
+      let funcStart = -1;
+      for (let i = textUntil.length - 1; i >= 0; i--) {
+        const ch = textUntil[i];
+        if (ch === ")") depth++;
+        else if (ch === "(") {
+          if (depth === 0) {
+            funcStart = i + 1;
+            break;
+          }
+          depth--;
+        }
+      }
+      if (funcStart < 0) return null;
+
+      const rest = textUntil.substring(funcStart).trim();
+      const funcMatch = rest.match(
+        /^([a-zA-Z!$%&*/:<=>?^_~+\-][a-zA-Z0-9!$%&*/:<=>?^_~+\-.@]*)/,
+      );
+      if (!funcMatch) return null;
+
+      const funcName = funcMatch[1];
+      const doc = DOCS[funcName];
+      if (!doc) return null;
+
+      // Count arguments (approximate by counting spaces at top level)
+      const afterFunc = rest.substring(funcMatch[0].length);
+      let argIdx = 0;
+      let d = 0;
+      for (let i = 0; i < afterFunc.length; i++) {
+        const c = afterFunc[i];
+        if (c === "(" || c === "[") d++;
+        else if (c === ")" || c === "]") d--;
+        else if (c === " " && d === 0) argIdx++;
+      }
+
+      return {
+        value: {
+          signatures: [
+            {
+              label: doc.s.split("\n")[0],
+              documentation: { value: doc.d },
+              parameters: [],
+            },
+          ],
+          activeSignature: 0,
+          activeParameter: argIdx,
+        },
+        dispose: function () {},
+      };
+    },
+  });
+};

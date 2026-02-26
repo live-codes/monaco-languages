@@ -1,1401 +1,1203 @@
-/* eslint-disable id-blacklist */
-// from https://github.com/DTStack/monaco-sql-languages/blob/main/src/sql/sql.ts
+import type * as Monaco from "monaco-editor";
 
-export default {
-  config: {
-    comments: {
-      lineComment: '--',
-      blockComment: ['/*', '*/'],
+export default (
+  monaco: typeof Monaco,
+  getEditor: () => Monaco.editor.IStandaloneCodeEditor,
+) => {
+  /* ================================================================
+SQL LANGUAGE CONSTANTS
+================================================================ */
+
+  const SQL_KEYWORDS = [
+    "ABORT",
+    "ADD",
+    "ALL",
+    "ALTER",
+    "ANALYZE",
+    "AND",
+    "AS",
+    "ASC",
+    "BEGIN",
+    "BETWEEN",
+    "BY",
+    "CASCADE",
+    "CASE",
+    "CHECK",
+    "COLUMN",
+    "COMMIT",
+    "CONSTRAINT",
+    "CREATE",
+    "CROSS",
+    "CURRENT",
+    "DATABASE",
+    "DECLARE",
+    "DEFAULT",
+    "DELETE",
+    "DESC",
+    "DISTINCT",
+    "DROP",
+    "ELSE",
+    "END",
+    "EXCEPT",
+    "EXISTS",
+    "EXPLAIN",
+    "FALSE",
+    "FETCH",
+    "FOLLOWING",
+    "FOR",
+    "FOREIGN",
+    "FROM",
+    "FULL",
+    "GRANT",
+    "GROUP",
+    "HAVING",
+    "IF",
+    "IGNORE",
+    "IN",
+    "INDEX",
+    "INNER",
+    "INSERT",
+    "INTERSECT",
+    "INTO",
+    "IS",
+    "JOIN",
+    "KEY",
+    "LEFT",
+    "LIKE",
+    "LIMIT",
+    "NATURAL",
+    "NEXT",
+    "NOT",
+    "NULL",
+    "OFFSET",
+    "ON",
+    "ONLY",
+    "OR",
+    "ORDER",
+    "OUTER",
+    "OVER",
+    "PARTITION",
+    "PRECEDING",
+    "PRIMARY",
+    "RANGE",
+    "RECURSIVE",
+    "REFERENCES",
+    "RENAME",
+    "REPLACE",
+    "RESTRICT",
+    "RETURNING",
+    "REVOKE",
+    "RIGHT",
+    "ROLLBACK",
+    "ROW",
+    "ROWS",
+    "SAVEPOINT",
+    "SCHEMA",
+    "SELECT",
+    "SET",
+    "TABLE",
+    "TEMPORARY",
+    "THEN",
+    "TOP",
+    "TRANSACTION",
+    "TRIGGER",
+    "TRUE",
+    "TRUNCATE",
+    "UNBOUNDED",
+    "UNION",
+    "UNIQUE",
+    "UPDATE",
+    "USING",
+    "VALUES",
+    "VIEW",
+    "WHEN",
+    "WHERE",
+    "WITH",
+    "AUTO_INCREMENT",
+    "BIGINT",
+    "BINARY",
+    "BIT",
+    "BLOB",
+    "BOOLEAN",
+    "CHAR",
+    "CHARACTER",
+    "CLOB",
+    "DATE",
+    "DATETIME",
+    "DECIMAL",
+    "DOUBLE",
+    "FLOAT",
+    "INT",
+    "INTEGER",
+    "NCHAR",
+    "NUMERIC",
+    "NVARCHAR",
+    "REAL",
+    "SERIAL",
+    "SMALLINT",
+    "TEXT",
+    "TIME",
+    "TIMESTAMP",
+    "TINYINT",
+    "VARBINARY",
+    "VARCHAR",
+  ];
+
+  const SQL_FUNCTIONS = [
+    {
+      name: "COUNT",
+      snippet: "COUNT(${1:*})",
+      detail: "Aggregate",
+      doc: "Returns the number of rows matching a criterion.",
     },
+    {
+      name: "SUM",
+      snippet: "SUM(${1:column})",
+      detail: "Aggregate",
+      doc: "Returns the total sum of a numeric column.",
+    },
+    {
+      name: "AVG",
+      snippet: "AVG(${1:column})",
+      detail: "Aggregate",
+      doc: "Returns the average value of a numeric column.",
+    },
+    {
+      name: "MIN",
+      snippet: "MIN(${1:column})",
+      detail: "Aggregate",
+      doc: "Returns the minimum value in a set.",
+    },
+    {
+      name: "MAX",
+      snippet: "MAX(${1:column})",
+      detail: "Aggregate",
+      doc: "Returns the maximum value in a set.",
+    },
+    {
+      name: "CONCAT",
+      snippet: "CONCAT(${1:str1}, ${2:str2})",
+      detail: "String",
+      doc: "Concatenates two or more strings.",
+    },
+    {
+      name: "SUBSTRING",
+      snippet: "SUBSTRING(${1:string}, ${2:start}, ${3:length})",
+      detail: "String",
+      doc: "Extracts a substring from a string.",
+    },
+    {
+      name: "LENGTH",
+      snippet: "LENGTH(${1:string})",
+      detail: "String",
+      doc: "Returns the length of a string.",
+    },
+    {
+      name: "UPPER",
+      snippet: "UPPER(${1:string})",
+      detail: "String",
+      doc: "Converts string to upper case.",
+    },
+    {
+      name: "LOWER",
+      snippet: "LOWER(${1:string})",
+      detail: "String",
+      doc: "Converts string to lower case.",
+    },
+    {
+      name: "TRIM",
+      snippet: "TRIM(${1:string})",
+      detail: "String",
+      doc: "Removes leading and trailing whitespace.",
+    },
+    {
+      name: "REPLACE",
+      snippet: "REPLACE(${1:string}, ${2:from}, ${3:to})",
+      detail: "String",
+      doc: "Replaces occurrences of a substring.",
+    },
+    {
+      name: "COALESCE",
+      snippet: "COALESCE(${1:val1}, ${2:val2})",
+      detail: "Null handling",
+      doc: "Returns the first non-null value in the list.",
+    },
+    {
+      name: "NULLIF",
+      snippet: "NULLIF(${1:expr1}, ${2:expr2})",
+      detail: "Null handling",
+      doc: "Returns NULL if two expressions are equal.",
+    },
+    {
+      name: "IFNULL",
+      snippet: "IFNULL(${1:expr}, ${2:default})",
+      detail: "Null handling",
+      doc: "Returns expr if not NULL, otherwise default.",
+    },
+    {
+      name: "CAST",
+      snippet: "CAST(${1:expr} AS ${2:type})",
+      detail: "Type conversion",
+      doc: "Converts a value to a specified data type.",
+    },
+    {
+      name: "ROUND",
+      snippet: "ROUND(${1:number}, ${2:decimals})",
+      detail: "Math",
+      doc: "Rounds to specified decimal places.",
+    },
+    {
+      name: "FLOOR",
+      snippet: "FLOOR(${1:number})",
+      detail: "Math",
+      doc: "Largest integer ≤ the argument.",
+    },
+    {
+      name: "CEIL",
+      snippet: "CEIL(${1:number})",
+      detail: "Math",
+      doc: "Smallest integer ≥ the argument.",
+    },
+    {
+      name: "ABS",
+      snippet: "ABS(${1:number})",
+      detail: "Math",
+      doc: "Returns the absolute value.",
+    },
+    {
+      name: "MOD",
+      snippet: "MOD(${1:n}, ${2:m})",
+      detail: "Math",
+      doc: "Returns the remainder of n / m.",
+    },
+    {
+      name: "POWER",
+      snippet: "POWER(${1:base}, ${2:exp})",
+      detail: "Math",
+      doc: "Returns base raised to the power of exp.",
+    },
+    {
+      name: "SQRT",
+      snippet: "SQRT(${1:number})",
+      detail: "Math",
+      doc: "Returns the square root.",
+    },
+    {
+      name: "NOW",
+      snippet: "NOW()",
+      detail: "Date/Time",
+      doc: "Returns the current date and time.",
+    },
+    {
+      name: "CURDATE",
+      snippet: "CURDATE()",
+      detail: "Date/Time",
+      doc: "Returns the current date.",
+    },
+    {
+      name: "CURTIME",
+      snippet: "CURTIME()",
+      detail: "Date/Time",
+      doc: "Returns the current time.",
+    },
+    {
+      name: "DATEDIFF",
+      snippet: "DATEDIFF(${1:date1}, ${2:date2})",
+      detail: "Date/Time",
+      doc: "Returns difference between two dates.",
+    },
+    {
+      name: "DATE_FORMAT",
+      snippet: "DATE_FORMAT(${1:date}, ${2:format})",
+      detail: "Date/Time",
+      doc: "Formats a date value.",
+    },
+    {
+      name: "EXTRACT",
+      snippet: "EXTRACT(${1:YEAR} FROM ${2:date})",
+      detail: "Date/Time",
+      doc: "Extracts a part from a date.",
+    },
+    {
+      name: "GROUP_CONCAT",
+      snippet: "GROUP_CONCAT(${1:column} SEPARATOR ${2:','})",
+      detail: "Aggregate",
+      doc: "Concatenates group values into one string.",
+    },
+    {
+      name: "STRING_AGG",
+      snippet: "STRING_AGG(${1:column}, ${2:','})",
+      detail: "Aggregate",
+      doc: "Concatenates values with a delimiter (PostgreSQL/SQL Server).",
+    },
+    {
+      name: "ROW_NUMBER",
+      snippet: "ROW_NUMBER() OVER (${1:PARTITION BY col }ORDER BY ${2:col})",
+      detail: "Window",
+      doc: "Assigns unique sequential integers within a partition.",
+    },
+    {
+      name: "RANK",
+      snippet: "RANK() OVER (${1:PARTITION BY col }ORDER BY ${2:col})",
+      detail: "Window",
+      doc: "Assigns rank with gaps for ties.",
+    },
+    {
+      name: "DENSE_RANK",
+      snippet: "DENSE_RANK() OVER (${1:PARTITION BY col }ORDER BY ${2:col})",
+      detail: "Window",
+      doc: "Assigns rank without gaps.",
+    },
+    {
+      name: "NTILE",
+      snippet: "NTILE(${1:n}) OVER (ORDER BY ${2:col})",
+      detail: "Window",
+      doc: "Divides rows into n roughly equal groups.",
+    },
+    {
+      name: "LAG",
+      snippet: "LAG(${1:column}, ${2:1}) OVER (ORDER BY ${3:col})",
+      detail: "Window",
+      doc: "Accesses data from a previous row.",
+    },
+    {
+      name: "LEAD",
+      snippet: "LEAD(${1:column}, ${2:1}) OVER (ORDER BY ${3:col})",
+      detail: "Window",
+      doc: "Accesses data from a subsequent row.",
+    },
+    {
+      name: "FIRST_VALUE",
+      snippet:
+        "FIRST_VALUE(${1:column}) OVER (${2:PARTITION BY col }ORDER BY ${3:col})",
+      detail: "Window",
+      doc: "Returns first value in an ordered partition.",
+    },
+    {
+      name: "LAST_VALUE",
+      snippet:
+        "LAST_VALUE(${1:column}) OVER (${2:PARTITION BY col }ORDER BY ${3:col})",
+      detail: "Window",
+      doc: "Returns last value in an ordered partition.",
+    },
+  ];
+
+  const SQL_SNIPPETS = [
+    {
+      label: "sel",
+      detail: "SELECT … FROM",
+      insertText: "SELECT ${1:*}\nFROM ${2:table_name}\n${0}",
+      doc: "Basic SELECT query",
+    },
+    {
+      label: "selw",
+      detail: "SELECT … WHERE",
+      insertText:
+        "SELECT ${1:*}\nFROM ${2:table_name}\nWHERE ${3:condition}\n${0}",
+      doc: "SELECT with WHERE",
+    },
+    {
+      label: "selj",
+      detail: "SELECT … INNER JOIN",
+      insertText:
+        "SELECT ${1:columns}\nFROM ${2:table1} ${3:a}\nINNER JOIN ${4:table2} ${5:b}\n    ON ${3:a}.${6:id} = ${5:b}.${7:id}\n${0}",
+      doc: "SELECT with INNER JOIN",
+    },
+    {
+      label: "sellj",
+      detail: "SELECT … LEFT JOIN",
+      insertText:
+        "SELECT ${1:columns}\nFROM ${2:table1} ${3:a}\nLEFT JOIN ${4:table2} ${5:b}\n    ON ${3:a}.${6:id} = ${5:b}.${7:id}\n${0}",
+      doc: "SELECT with LEFT JOIN",
+    },
+    {
+      label: "selg",
+      detail: "SELECT … GROUP BY",
+      insertText:
+        "SELECT ${1:column}, COUNT(*) AS cnt\nFROM ${2:table_name}\nGROUP BY ${1:column}\n${0}",
+      doc: "SELECT with GROUP BY",
+    },
+    {
+      label: "seld",
+      detail: "SELECT DISTINCT",
+      insertText: "SELECT DISTINCT ${1:columns}\nFROM ${2:table_name}\n${0}",
+      doc: "SELECT DISTINCT",
+    },
+    {
+      label: "selo",
+      detail: "SELECT … ORDER BY",
+      insertText:
+        "SELECT ${1:*}\nFROM ${2:table_name}\nORDER BY ${3:column} ${4:ASC}\n${0}",
+      doc: "SELECT with ORDER BY",
+    },
+    {
+      label: "ins",
+      detail: "INSERT INTO … VALUES",
+      insertText:
+        "INSERT INTO ${1:table_name} (${2:columns})\nVALUES (${3:values});\n${0}",
+      doc: "Insert rows",
+    },
+    {
+      label: "upd",
+      detail: "UPDATE … SET … WHERE",
+      insertText:
+        "UPDATE ${1:table_name}\nSET ${2:column} = ${3:value}\nWHERE ${4:condition};\n${0}",
+      doc: "Update rows",
+    },
+    {
+      label: "del",
+      detail: "DELETE FROM … WHERE",
+      insertText: "DELETE FROM ${1:table_name}\nWHERE ${2:condition};\n${0}",
+      doc: "Delete rows",
+    },
+    {
+      label: "crt",
+      detail: "CREATE TABLE",
+      insertText:
+        "CREATE TABLE ${1:table_name} (\n    ${2:id} INT NOT NULL,\n    ${3:name} VARCHAR(${4:255}),\n    PRIMARY KEY (${2:id})\n);\n${0}",
+      doc: "Create a new table",
+    },
+    {
+      label: "crtifne",
+      detail: "CREATE TABLE IF NOT EXISTS",
+      insertText:
+        "CREATE TABLE IF NOT EXISTS ${1:table_name} (\n    ${2:id} INT NOT NULL,\n    ${3:name} VARCHAR(${4:255}),\n    PRIMARY KEY (${2:id})\n);\n${0}",
+      doc: "Create table if not exists",
+    },
+    {
+      label: "altadd",
+      detail: "ALTER TABLE ADD COLUMN",
+      insertText:
+        "ALTER TABLE ${1:table_name}\nADD COLUMN ${2:col_name} ${3:type};\n${0}",
+      doc: "Add column",
+    },
+    {
+      label: "altdrop",
+      detail: "ALTER TABLE DROP COLUMN",
+      insertText:
+        "ALTER TABLE ${1:table_name}\nDROP COLUMN ${2:col_name};\n${0}",
+      doc: "Drop column",
+    },
+    {
+      label: "cridx",
+      detail: "CREATE INDEX",
+      insertText:
+        "CREATE INDEX ${1:idx_name}\nON ${2:table_name} (${3:column});\n${0}",
+      doc: "Create index",
+    },
+    {
+      label: "casew",
+      detail: "CASE WHEN … END",
+      insertText:
+        "CASE\n    WHEN ${1:condition} THEN ${2:result}\n    ELSE ${3:default}\nEND",
+      doc: "CASE expression",
+    },
+    {
+      label: "cte",
+      detail: "WITH … AS (CTE)",
+      insertText:
+        "WITH ${1:cte_name} AS (\n    SELECT ${2:*}\n    FROM ${3:table_name}\n    WHERE ${4:condition}\n)\nSELECT *\nFROM ${1:cte_name}\n${0}",
+      doc: "Common Table Expression",
+    },
+    {
+      label: "subq",
+      detail: "Subquery in WHERE",
+      insertText:
+        "SELECT ${1:*}\nFROM ${2:table_name}\nWHERE ${3:column} IN (\n    SELECT ${4:column}\n    FROM ${5:table2}\n    WHERE ${6:condition}\n)\n${0}",
+      doc: "Subquery in WHERE",
+    },
+    {
+      label: "winfn",
+      detail: "Window Function",
+      insertText:
+        "SELECT ${1:*},\n    ${2:ROW_NUMBER}() OVER (\n        PARTITION BY ${3:column}\n        ORDER BY ${4:column} ${5|ASC,DESC|}\n    ) AS ${6:rn}\nFROM ${7:table_name}\n${0}",
+      doc: "Window function template",
+    },
+    {
+      label: "exst",
+      detail: "WHERE EXISTS (…)",
+      insertText:
+        "SELECT ${1:*}\nFROM ${2:table1} ${3:a}\nWHERE EXISTS (\n    SELECT 1\n    FROM ${4:table2} ${5:b}\n    WHERE ${5:b}.${6:id} = ${3:a}.${7:id}\n)\n${0}",
+      doc: "EXISTS subquery",
+    },
+    {
+      label: "piv",
+      detail: "Pivot with CASE",
+      insertText:
+        "SELECT ${1:group_col},\n    SUM(CASE WHEN ${2:pivot_col} = ${3:'val1'} THEN ${4:val_col} ELSE 0 END) AS ${5:alias1},\n    SUM(CASE WHEN ${2:pivot_col} = ${6:'val2'} THEN ${4:val_col} ELSE 0 END) AS ${7:alias2}\nFROM ${8:table_name}\nGROUP BY ${1:group_col}\n${0}",
+      doc: "Manual pivot using CASE",
+    },
+    {
+      label: "merge",
+      detail: "MERGE / UPSERT",
+      insertText:
+        "MERGE INTO ${1:target} t\nUSING ${2:source} s\nON t.${3:id} = s.${3:id}\nWHEN MATCHED THEN\n    UPDATE SET t.${4:col} = s.${4:col}\nWHEN NOT MATCHED THEN\n    INSERT (${5:columns}) VALUES (${6:values});\n${0}",
+      doc: "MERGE statement (upsert)",
+    },
+  ];
+
+  const ALL_RESERVED_UPPER = new Set([
+    ...SQL_KEYWORDS.map((k) => k.toUpperCase()),
+    ...SQL_FUNCTIONS.map((f) => f.name.toUpperCase()),
+    "ASC",
+    "DESC",
+    "INNER",
+    "OUTER",
+    "CROSS",
+    "NATURAL",
+    "LEFT",
+    "RIGHT",
+    "FULL",
+  ]);
+
+  /* ================================================================
+SCHEMA PARSER
+================================================================ */
+
+  let schema = {};
+
+  function splitByTopLevelComma(text) {
+    const parts = [];
+    let depth = 0,
+      current = "";
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (ch === "(") depth++;
+      else if (ch === ")") depth--;
+      if (ch === "," && depth === 0) {
+        parts.push(current);
+        current = "";
+      } else {
+        current += ch;
+      }
+    }
+    if (current.trim()) parts.push(current);
+    return parts;
+  }
+
+  function parseSchema(text) {
+    const tables = {};
+    const regex =
+      /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`?(\w+)`?\s*\(([\s\S]*?)\)\s*;/gi;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+      const tableName = match[1];
+      const body = match[2];
+      const createLine = text.substring(0, match.index).split("\n").length;
+      const matchLines = match[0].split("\n");
+
+      const columns = [];
+      let primaryKey = [];
+      const parts = splitByTopLevelComma(body);
+
+      for (const part of parts) {
+        const trimmed = part.trim();
+        if (!trimmed) continue;
+
+        const pkMatch = trimmed.match(/PRIMARY\s+KEY\s*\(([^)]+)\)/i);
+        if (pkMatch) {
+          primaryKey = pkMatch[1]
+            .split(",")
+            .map((c) => c.trim().replace(/`/g, ""));
+          continue;
+        }
+        if (
+          /^(CONSTRAINT|FOREIGN\s+KEY|UNIQUE\s*\(|CHECK\s*\(|INDEX|KEY\s)/i.test(
+            trimmed,
+          )
+        )
+          continue;
+
+        const colMatch = trimmed.match(
+          /^`?(\w+)`?\s+(\w+(?:\s*\(\s*[\d,\s]+\s*\))?)\s*(.*)/i,
+        );
+        if (colMatch) {
+          const colName = colMatch[1];
+          const colType = colMatch[2].toUpperCase();
+          const rest = colMatch[3].trim();
+
+          let colLine = createLine;
+          for (let i = 0; i < matchLines.length; i++) {
+            const re = new RegExp("^\\s*`?" + colName + "`?\\s+\\w", "i");
+            if (re.test(matchLines[i])) {
+              colLine = createLine + i;
+              break;
+            }
+          }
+
+          columns.push({
+            name: colName,
+            type: colType,
+            constraints: rest,
+            nullable: !/NOT\s+NULL/i.test(rest),
+            isPrimaryKey: false,
+            line: colLine,
+          });
+        }
+      }
+
+      for (const col of columns) {
+        col.isPrimaryKey = primaryKey.some(
+          (pk) => pk.toLowerCase() === col.name.toLowerCase(),
+        );
+      }
+
+      tables[tableName.toLowerCase()] = {
+        name: tableName,
+        columns,
+        primaryKey,
+        line: createLine,
+        endLine: createLine + matchLines.length - 1,
+      };
+    }
+    return tables;
+  }
+
+  /* ================================================================
+       CONTEXT HELPERS
+       ================================================================ */
+
+  function getStatementAtOffset(text, offset) {
+    let start = 0,
+      inStr = false,
+      strCh = "";
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (inStr) {
+        if (ch === strCh) {
+          if (i + 1 < text.length && text[i + 1] === strCh) {
+            i++;
+          } else {
+            inStr = false;
+          }
+        }
+      } else {
+        if (ch === "'" || ch === '"') {
+          inStr = true;
+          strCh = ch;
+        } else if (ch === "-" && text[i + 1] === "-") {
+          const eol = text.indexOf("\n", i);
+          i = eol < 0 ? text.length - 1 : eol;
+        } else if (ch === "/" && text[i + 1] === "*") {
+          const ec = text.indexOf("*/", i + 2);
+          i = ec < 0 ? text.length - 1 : ec + 1;
+        } else if (ch === ";") {
+          if (offset >= start && offset <= i) return text.substring(start, i);
+          start = i + 1;
+        }
+      }
+    }
+    return text.substring(start);
+  }
+
+  function getAliasMap(stmtText) {
+    const aliases = {};
+    const rgx = /\b(?:FROM|JOIN)\s+`?(\w+)`?(?:\s+(?:AS\s+)?`?(\w+)`?)?/gi;
+    let m;
+    while ((m = rgx.exec(stmtText)) !== null) {
+      const tbl = m[1].toLowerCase();
+      const alias = m[2] ? m[2].toLowerCase() : null;
+      if (schema[tbl]) {
+        if (alias && !ALL_RESERVED_UPPER.has(alias.toUpperCase()))
+          aliases[alias] = tbl;
+        aliases[tbl] = tbl;
+      }
+    }
+    const rgx2 = /\b(?:UPDATE|INTO)\s+`?(\w+)`?(?:\s+(?:AS\s+)?`?(\w+)`?)?/gi;
+    while ((m = rgx2.exec(stmtText)) !== null) {
+      const tbl = m[1].toLowerCase();
+      const alias = m[2] ? m[2].toLowerCase() : null;
+      if (schema[tbl]) {
+        if (alias && !ALL_RESERVED_UPPER.has(alias.toUpperCase()))
+          aliases[alias] = tbl;
+        aliases[tbl] = tbl;
+      }
+    }
+    return aliases;
+  }
+
+  function formatTableDoc(table) {
+    let d = `**Table: ${table.name}**\n\n`;
+    d += "| Column | Type | Nullable | PK |\n|---|---|---|---|\n";
+    for (const c of table.columns) {
+      d += `| \`${c.name}\` | ${c.type} | ${c.nullable ? "YES" : "NO"} | ${c.isPrimaryKey ? "✓" : ""} |\n`;
+    }
+    if (table.primaryKey.length)
+      d += `\n**Primary Key:** (${table.primaryKey.join(", ")})`;
+    return d;
+  }
+
+  function formatColumnDoc(col, tblName) {
+    return (
+      `**Column: \`${col.name}\`**\n\n` +
+      `**Type:** ${col.type}  \n` +
+      `**Nullable:** ${col.nullable ? "YES" : "NO"}  \n` +
+      `**Table:** ${tblName}  \n` +
+      (col.isPrimaryKey ? "**Primary Key:** YES  \n" : "") +
+      (col.constraints ? `**Constraints:** ${col.constraints}` : "")
+    );
+  }
+
+  // --- Language Configuration ---
+  monaco.languages.setLanguageConfiguration("sql", {
+    comments: { lineComment: "--", blockComment: ["/*", "*/"] },
     brackets: [
-      ['{', '}'],
-      ['[', ']'],
-      ['(', ')'],
+      ["(", ")"],
+      ["[", "]"],
     ],
     autoClosingPairs: [
-      { open: '{', close: '}' },
-      { open: '[', close: ']' },
-      { open: '(', close: ')' },
-      { open: '"', close: '"' },
-      { open: "'", close: "'" },
+      { open: "(", close: ")" },
+      { open: "[", close: "]" },
+      { open: "'", close: "'", notIn: ["string"] },
+      { open: '"', close: '"', notIn: ["string"] },
+      { open: "`", close: "`", notIn: ["string"] },
     ],
     surroundingPairs: [
-      { open: '{', close: '}' },
-      { open: '[', close: ']' },
-      { open: '(', close: ')' },
-      { open: '"', close: '"' },
+      { open: "(", close: ")" },
       { open: "'", close: "'" },
+      { open: '"', close: '"' },
+      { open: "`", close: "`" },
     ],
-  },
+  });
 
-  tokens: {
-    defaultToken: '',
-    tokenPostfix: '.sql',
-    ignoreCase: true,
+  // ===================== COMPLETION PROVIDER =====================
 
-    brackets: [
-      { open: '[', close: ']', token: 'delimiter.square' },
-      { open: '(', close: ')', token: 'delimiter.parenthesis' },
-    ],
+  monaco.languages.registerCompletionItemProvider("sql", {
+    triggerCharacters: ["."],
 
-    keywords: [
-      'ABORT_AFTER_WAIT',
-      'ABSENT',
-      'ABSOLUTE',
-      'ACCENT_SENSITIVITY',
-      'ACTION',
-      'ACTIVATION',
-      'ACTIVE',
-      'ADD',
-      'ADDRESS',
-      'ADMIN',
-      'AES',
-      'AES_128',
-      'AES_192',
-      'AES_256',
-      'AFFINITY',
-      'AFTER',
-      'AGGREGATE',
-      'ALGORITHM',
-      'ALL_CONSTRAINTS',
-      'ALL_ERRORMSGS',
-      'ALL_INDEXES',
-      'ALL_LEVELS',
-      'ALL_SPARSE_COLUMNS',
-      'ALLOW_CONNECTIONS',
-      'ALLOW_MULTIPLE_EVENT_LOSS',
-      'ALLOW_PAGE_LOCKS',
-      'ALLOW_ROW_LOCKS',
-      'ALLOW_SINGLE_EVENT_LOSS',
-      'ALLOW_SNAPSHOT_ISOLATION',
-      'ALLOWED',
-      'ALTER',
-      'ANONYMOUS',
-      'ANSI_DEFAULTS',
-      'ANSI_NULL_DEFAULT',
-      'ANSI_NULL_DFLT_OFF',
-      'ANSI_NULL_DFLT_ON',
-      'ANSI_NULLS',
-      'ANSI_PADDING',
-      'ANSI_WARNINGS',
-      'APPEND',
-      'APPLICATION',
-      'APPLICATION_LOG',
-      'ARITHABORT',
-      'ARITHIGNORE',
-      'AS',
-      'ASC',
-      'ASSEMBLY',
-      'ASYMMETRIC',
-      'ASYNCHRONOUS_COMMIT',
-      'AT',
-      'ATOMIC',
-      'ATTACH',
-      'ATTACH_REBUILD_LOG',
-      'AUDIT',
-      'AUDIT_GUID',
-      'AUTHENTICATION',
-      'AUTHORIZATION',
-      'AUTO',
-      'AUTO_CLEANUP',
-      'AUTO_CLOSE',
-      'AUTO_CREATE_STATISTICS',
-      'AUTO_SHRINK',
-      'AUTO_UPDATE_STATISTICS',
-      'AUTO_UPDATE_STATISTICS_ASYNC',
-      'AUTOMATED_BACKUP_PREFERENCE',
-      'AUTOMATIC',
-      'AVAILABILITY',
-      'AVAILABILITY_MODE',
-      'BACKUP',
-      'BACKUP_PRIORITY',
-      'BASE64',
-      'BATCHSIZE',
-      'BEGIN',
-      'BEGIN_DIALOG',
-      'BIGINT',
-      'BINARY',
-      'BINDING',
-      'BIT',
-      'BLOCKERS',
-      'BLOCKSIZE',
-      'BOUNDING_BOX',
-      'BREAK',
-      'BROKER',
-      'BROKER_INSTANCE',
-      'BROWSE',
-      'BUCKET_COUNT',
-      'BUFFER',
-      'BUFFERCOUNT',
-      'BULK',
-      'BULK_LOGGED',
-      'BY',
-      'CACHE',
-      'CALL',
-      'CALLED',
-      'CALLER',
-      'CAP_CPU_PERCENT',
-      'CASCADE',
-      'CASE',
-      'CATALOG',
-      'CATCH',
-      'CELLS_PER_OBJECT',
-      'CERTIFICATE',
-      'CHANGE_RETENTION',
-      'CHANGE_TRACKING',
-      'CHANGES',
-      'CHAR',
-      'CHARACTER',
-      'CHECK',
-      'CHECK_CONSTRAINTS',
-      'CHECK_EXPIRATION',
-      'CHECK_POLICY',
-      'CHECKALLOC',
-      'CHECKCATALOG',
-      'CHECKCONSTRAINTS',
-      'CHECKDB',
-      'CHECKFILEGROUP',
-      'CHECKIDENT',
-      'CHECKPOINT',
-      'CHECKTABLE',
-      'CLASSIFIER_FUNCTION',
-      'CLEANTABLE',
-      'CLEANUP',
-      'CLEAR',
-      'CLOSE',
-      'CLUSTER',
-      'CLUSTERED',
-      'CODEPAGE',
-      'COLLATE',
-      'COLLECTION',
-      'COLUMN',
-      'COLUMN_SET',
-      'COLUMNS',
-      'COLUMNSTORE',
-      'COLUMNSTORE_ARCHIVE',
-      'COMMIT',
-      'COMMITTED',
-      'COMPATIBILITY_LEVEL',
-      'COMPRESSION',
-      'COMPUTE',
-      'CONCAT',
-      'CONCAT_NULL_YIELDS_NULL',
-      'CONFIGURATION',
-      'CONNECT',
-      'CONSTRAINT',
-      'CONTAINMENT',
-      'CONTENT',
-      'CONTEXT',
-      'CONTINUE',
-      'CONTINUE_AFTER_ERROR',
-      'CONTRACT',
-      'CONTRACT_NAME',
-      'CONTROL',
-      'CONVERSATION',
-      'COOKIE',
-      'COPY_ONLY',
-      'COUNTER',
-      'CPU',
-      'CREATE',
-      'CREATE_NEW',
-      'CREATION_DISPOSITION',
-      'CREDENTIAL',
-      'CRYPTOGRAPHIC',
-      'CUBE',
-      'CURRENT',
-      'CURRENT_DATE',
-      'CURSOR',
-      'CURSOR_CLOSE_ON_COMMIT',
-      'CURSOR_DEFAULT',
-      'CYCLE',
-      'DATA',
-      'DATA_COMPRESSION',
-      'DATA_PURITY',
-      'DATABASE',
-      'DATABASE_DEFAULT',
-      'DATABASE_MIRRORING',
-      'DATABASE_SNAPSHOT',
-      'DATAFILETYPE',
-      'DATE',
-      'DATE_CORRELATION_OPTIMIZATION',
-      'DATEFIRST',
-      'DATEFORMAT',
-      'DATETIME',
-      'DATETIME2',
-      'DATETIMEOFFSET',
-      'DAY',
-      'DAYOFYEAR',
-      'DAYS',
-      'DB_CHAINING',
-      'DBCC',
-      'DBREINDEX',
-      'DDL_DATABASE_LEVEL_EVENTS',
-      'DEADLOCK_PRIORITY',
-      'DEALLOCATE',
-      'DEC',
-      'DECIMAL',
-      'DECLARE',
-      'DECRYPTION',
-      'DEFAULT',
-      'DEFAULT_DATABASE',
-      'DEFAULT_FULLTEXT_LANGUAGE',
-      'DEFAULT_LANGUAGE',
-      'DEFAULT_SCHEMA',
-      'DEFINITION',
-      'DELAY',
-      'DELAYED_DURABILITY',
-      'DELETE',
-      'DELETED',
-      'DENSITY_VECTOR',
-      'DENY',
-      'DEPENDENTS',
-      'DES',
-      'DESC',
-      'DESCRIPTION',
-      'DESX',
-      'DHCP',
-      'DIAGNOSTICS',
-      'DIALOG',
-      'DIFFERENTIAL',
-      'DIRECTORY_NAME',
-      'DISABLE',
-      'DISABLE_BROKER',
-      'DISABLED',
-      'DISK',
-      'DISTINCT',
-      'DISTRIBUTED',
-      'DOCUMENT',
-      'DOUBLE',
-      'DROP',
-      'DROP_EXISTING',
-      'DROPCLEANBUFFERS',
-      'DUMP',
-      'DURABILITY',
-      'DYNAMIC',
-      'EDITION',
-      'ELEMENTS',
-      'ELSE',
-      'EMERGENCY',
-      'EMPTY',
-      'EMPTYFILE',
-      'ENABLE',
-      'ENABLE_BROKER',
-      'ENABLED',
-      'ENCRYPTION',
-      'END',
-      'ENDPOINT',
-      'ENDPOINT_URL',
-      'ERRLVL',
-      'ERROR',
-      'ERROR_BROKER_CONVERSATIONS',
-      'ERRORFILE',
-      'ESCAPE',
-      'ESTIMATEONLY',
-      'EVENT',
-      'EVENT_RETENTION_MODE',
-      'EXEC',
-      'EXECUTABLE',
-      'EXECUTE',
-      'EXIT',
-      'EXPAND',
-      'EXPIREDATE',
-      'EXPIRY_DATE',
-      'EXPLICIT',
-      'EXTENDED_LOGICAL_CHECKS',
-      'EXTENSION',
-      'EXTERNAL',
-      'EXTERNAL_ACCESS',
-      'FAIL_OPERATION',
-      'FAILOVER',
-      'FAILOVER_MODE',
-      'FAILURE_CONDITION_LEVEL',
-      'FALSE',
-      'FAN_IN',
-      'FAST',
-      'FAST_FORWARD',
-      'FETCH',
-      'FIELDTERMINATOR',
-      'FILE',
-      'FILEGROUP',
-      'FILEGROWTH',
-      'FILELISTONLY',
-      'FILENAME',
-      'FILEPATH',
-      'FILESTREAM',
-      'FILESTREAM_ON',
-      'FILETABLE_COLLATE_FILENAME',
-      'FILETABLE_DIRECTORY',
-      'FILETABLE_FULLPATH_UNIQUE_CONSTRAINT_NAME',
-      'FILETABLE_NAMESPACE',
-      'FILETABLE_PRIMARY_KEY_CONSTRAINT_NAME',
-      'FILETABLE_STREAMID_UNIQUE_CONSTRAINT_NAME',
-      'FILLFACTOR',
-      'FILTERING',
-      'FIRE_TRIGGERS',
-      'FIRST',
-      'FIRSTROW',
-      'FLOAT',
-      'FMTONLY',
-      'FOLLOWING',
-      'FOR',
-      'FORCE',
-      'FORCE_FAILOVER_ALLOW_DATA_LOSS',
-      'FORCE_SERVICE_ALLOW_DATA_LOSS',
-      'FORCED',
-      'FORCEPLAN',
-      'FORCESCAN',
-      'FORCESEEK',
-      'FOREIGN',
-      'FORMATFILE',
-      'FORMSOF',
-      'FORWARD_ONLY',
-      'FREE',
-      'FREEPROCCACHE',
-      'FREESESSIONCACHE',
-      'FREESYSTEMCACHE',
-      'FROM',
-      'FULL',
-      'FULLSCAN',
-      'FULLTEXT',
-      'FUNCTION',
-      'GB',
-      'GEOGRAPHY_AUTO_GRID',
-      'GEOGRAPHY_GRID',
-      'GEOMETRY_AUTO_GRID',
-      'GEOMETRY_GRID',
-      'GET',
-      'GLOBAL',
-      'GO',
-      'GOTO',
-      'GOVERNOR',
-      'GRANT',
-      'GRIDS',
-      'GROUP',
-      'GROUP_MAX_REQUESTS',
-      'HADR',
-      'HASH',
-      'HASHED',
-      'HAVING',
-      'HEADERONLY',
-      'HEALTH_CHECK_TIMEOUT',
-      'HELP',
-      'HIERARCHYID',
-      'HIGH',
-      'HINT',
-      'HISTOGRAM',
-      'HOLDLOCK',
-      'HONOR_BROKER_PRIORITY',
-      'HOUR',
-      'HOURS',
-      'IDENTITY',
-      'IDENTITY_INSERT',
-      'IDENTITY_VALUE',
-      'IDENTITYCOL',
-      'IF',
-      'IGNORE_CONSTRAINTS',
-      'IGNORE_DUP_KEY',
-      'IGNORE_NONCLUSTERED_COLUMNSTORE_INDEX',
-      'IGNORE_TRIGGERS',
-      'IMAGE',
-      'IMMEDIATE',
-      'IMPERSONATE',
-      'IMPLICIT_TRANSACTIONS',
-      'IMPORTANCE',
-      'INCLUDE',
-      'INCREMENT',
-      'INCREMENTAL',
-      'INDEX',
-      'INDEXDEFRAG',
-      'INFINITE',
-      'INFLECTIONAL',
-      'INIT',
-      'INITIATOR',
-      'INPUT',
-      'INPUTBUFFER',
-      'INSENSITIVE',
-      'INSERT',
-      'INSERTED',
-      'INSTEAD',
-      'INT',
-      'INTEGER',
-      'INTO',
-      'IO',
-      'IP',
-      'ISABOUT',
-      'ISOLATION',
-      'JOB',
-      'KB',
-      'KEEP',
-      'KEEP_CDC',
-      'KEEP_NULLS',
-      'KEEP_REPLICATION',
-      'KEEPDEFAULTS',
-      'KEEPFIXED',
-      'KEEPIDENTITY',
-      'KEEPNULLS',
-      'KERBEROS',
-      'KEY',
-      'KEY_SOURCE',
-      'KEYS',
-      'KEYSET',
-      'KILL',
-      'KILOBYTES_PER_BATCH',
-      'LABELONLY',
-      'LANGUAGE',
-      'LAST',
-      'LASTROW',
-      'LEVEL',
-      'LEVEL_1',
-      'LEVEL_2',
-      'LEVEL_3',
-      'LEVEL_4',
-      'LIFETIME',
-      'LIMIT',
-      'LINENO',
-      'LIST',
-      'LISTENER',
-      'LISTENER_IP',
-      'LISTENER_PORT',
-      'LOAD',
-      'LOADHISTORY',
-      'LOB_COMPACTION',
-      'LOCAL',
-      'LOCAL_SERVICE_NAME',
-      'LOCK_ESCALATION',
-      'LOCK_TIMEOUT',
-      'LOGIN',
-      'LOGSPACE',
-      'LOOP',
-      'LOW',
-      'MANUAL',
-      'MARK',
-      'MARK_IN_USE_FOR_REMOVAL',
-      'MASTER',
-      'MAX_CPU_PERCENT',
-      'MAX_DISPATCH_LATENCY',
-      'MAX_DOP',
-      'MAX_DURATION',
-      'MAX_EVENT_SIZE',
-      'MAX_FILES',
-      'MAX_IOPS_PER_VOLUME',
-      'MAX_MEMORY',
-      'MAX_MEMORY_PERCENT',
-      'MAX_QUEUE_READERS',
-      'MAX_ROLLOVER_FILES',
-      'MAX_SIZE',
-      'MAXDOP',
-      'MAXERRORS',
-      'MAXLENGTH',
-      'MAXRECURSION',
-      'MAXSIZE',
-      'MAXTRANSFERSIZE',
-      'MAXVALUE',
-      'MB',
-      'MEDIADESCRIPTION',
-      'MEDIANAME',
-      'MEDIAPASSWORD',
-      'MEDIUM',
-      'MEMBER',
-      'MEMORY_OPTIMIZED',
-      'MEMORY_OPTIMIZED_DATA',
-      'MEMORY_OPTIMIZED_ELEVATE_TO_SNAPSHOT',
-      'MEMORY_PARTITION_MODE',
-      'MERGE',
-      'MESSAGE',
-      'MESSAGE_FORWARD_SIZE',
-      'MESSAGE_FORWARDING',
-      'MICROSECOND',
-      'MILLISECOND',
-      'MIN_CPU_PERCENT',
-      'MIN_IOPS_PER_VOLUME',
-      'MIN_MEMORY_PERCENT',
-      'MINUTE',
-      'MINUTES',
-      'MINVALUE',
-      'MIRROR',
-      'MIRROR_ADDRESS',
-      'MODIFY',
-      'MONEY',
-      'MONTH',
-      'MOVE',
-      'MULTI_USER',
-      'MUST_CHANGE',
-      'NAME',
-      'NANOSECOND',
-      'NATIONAL',
-      'NATIVE_COMPILATION',
-      'NCHAR',
-      'NEGOTIATE',
-      'NESTED_TRIGGERS',
-      'NEW_ACCOUNT',
-      'NEW_BROKER',
-      'NEW_PASSWORD',
-      'NEWNAME',
-      'NEXT',
-      'NO',
-      'NO_BROWSETABLE',
-      'NO_CHECKSUM',
-      'NO_COMPRESSION',
-      'NO_EVENT_LOSS',
-      'NO_INFOMSGS',
-      'NO_TRUNCATE',
-      'NO_WAIT',
-      'NOCHECK',
-      'NOCOUNT',
-      'NOEXEC',
-      'NOEXPAND',
-      'NOFORMAT',
-      'NOINDEX',
-      'NOINIT',
-      'NOLOCK',
-      'NON',
-      'NON_TRANSACTED_ACCESS',
-      'NONCLUSTERED',
-      'NONE',
-      'NORECOMPUTE',
-      'NORECOVERY',
-      'NORESEED',
-      'NORESET',
-      'NOREWIND',
-      'NORMAL',
-      'NOSKIP',
-      'NOTIFICATION',
-      'NOTRUNCATE',
-      'NOUNLOAD',
-      'NOWAIT',
-      'NTEXT',
-      'NTLM',
-      'NUMANODE',
-      'NUMERIC',
-      'NUMERIC_ROUNDABORT',
-      'NVARCHAR',
-      'OBJECT',
-      'OF',
-      'OFF',
-      'OFFLINE',
-      'OFFSET',
-      'OFFSETS',
-      'OLD_ACCOUNT',
-      'OLD_PASSWORD',
-      'ON',
-      'ON_FAILURE',
-      'ONLINE',
-      'ONLY',
-      'OPEN',
-      'OPEN_EXISTING',
-      'OPENTRAN',
-      'OPTIMISTIC',
-      'OPTIMIZE',
-      'OPTION',
-      'ORDER',
-      'OUT',
-      'OUTPUT',
-      'OUTPUTBUFFER',
-      'OVER',
-      'OVERRIDE',
-      'OWNER',
-      'OWNERSHIP',
-      'PAD_INDEX',
-      'PAGE',
-      'PAGE_VERIFY',
-      'PAGECOUNT',
-      'PAGLOCK',
-      'PARAMETERIZATION',
-      'PARSEONLY',
-      'PARTIAL',
-      'PARTITION',
-      'PARTITIONS',
-      'PARTNER',
-      'PASSWORD',
-      'PATH',
-      'PER_CPU',
-      'PER_NODE',
-      'PERCENT',
-      'PERMISSION_SET',
-      'PERSISTED',
-      'PHYSICAL_ONLY',
-      'PLAN',
-      'POISON_MESSAGE_HANDLING',
-      'POOL',
-      'POPULATION',
-      'PORT',
-      'PRECEDING',
-      'PRECISION',
-      'PRIMARY',
-      'PRIMARY_ROLE',
-      'PRINT',
-      'PRIOR',
-      'PRIORITY',
-      'PRIORITY_LEVEL',
-      'PRIVATE',
-      'PRIVILEGES',
-      'PROC',
-      'PROCCACHE',
-      'PROCEDURE',
-      'PROCEDURE_NAME',
-      'PROCESS',
-      'PROFILE',
-      'PROPERTY',
-      'PROPERTY_DESCRIPTION',
-      'PROPERTY_INT_ID',
-      'PROPERTY_SET_GUID',
-      'PROVIDER',
-      'PROVIDER_KEY_NAME',
-      'PUBLIC',
-      'PUT',
-      'QUARTER',
-      'QUERY',
-      'QUERY_GOVERNOR_COST_LIMIT',
-      'QUEUE',
-      'QUEUE_DELAY',
-      'QUOTED_IDENTIFIER',
-      'RAISERROR',
-      'RANGE',
-      'RAW',
-      'RC2',
-      'RC4',
-      'RC4_128',
-      'READ',
-      'READ_COMMITTED_SNAPSHOT',
-      'READ_ONLY',
-      'READ_ONLY_ROUTING_LIST',
-      'READ_ONLY_ROUTING_URL',
-      'READ_WRITE',
-      'READ_WRITE_FILEGROUPS',
-      'READCOMMITTED',
-      'READCOMMITTEDLOCK',
-      'READONLY',
-      'READPAST',
-      'READTEXT',
-      'READUNCOMMITTED',
-      'READWRITE',
-      'REAL',
-      'REBUILD',
-      'RECEIVE',
-      'RECOMPILE',
-      'RECONFIGURE',
-      'RECOVERY',
-      'RECURSIVE',
-      'RECURSIVE_TRIGGERS',
-      'REFERENCES',
-      'REGENERATE',
-      'RELATED_CONVERSATION',
-      'RELATED_CONVERSATION_GROUP',
-      'RELATIVE',
-      'REMOTE',
-      'REMOTE_PROC_TRANSACTIONS',
-      'REMOTE_SERVICE_NAME',
-      'REMOVE',
-      'REORGANIZE',
-      'REPAIR_ALLOW_DATA_LOSS',
-      'REPAIR_FAST',
-      'REPAIR_REBUILD',
-      'REPEATABLE',
-      'REPEATABLEREAD',
-      'REPLICA',
-      'REPLICATION',
-      'REQUEST_MAX_CPU_TIME_SEC',
-      'REQUEST_MAX_MEMORY_GRANT_PERCENT',
-      'REQUEST_MEMORY_GRANT_TIMEOUT_SEC',
-      'REQUIRED',
-      'RESAMPLE',
-      'RESEED',
-      'RESERVE_DISK_SPACE',
-      'RESET',
-      'RESOURCE',
-      'RESTART',
-      'RESTORE',
-      'RESTRICT',
-      'RESTRICTED_USER',
-      'RESULT',
-      'RESUME',
-      'RETAINDAYS',
-      'RETENTION',
-      'RETURN',
-      'RETURNS',
-      'REVERT',
-      'REVOKE',
-      'REWIND',
-      'REWINDONLY',
-      'ROBUST',
-      'ROLE',
-      'ROLLBACK',
-      'ROLLUP',
-      'ROOT',
-      'ROUTE',
-      'ROW',
-      'ROWCOUNT',
-      'ROWGUIDCOL',
-      'ROWLOCK',
-      'ROWS',
-      'ROWS_PER_BATCH',
-      'ROWTERMINATOR',
-      'ROWVERSION',
-      'RSA_1024',
-      'RSA_2048',
-      'RSA_512',
-      'RULE',
-      'SAFE',
-      'SAFETY',
-      'SAMPLE',
-      'SAVE',
-      'SCHEDULER',
-      'SCHEMA',
-      'SCHEMA_AND_DATA',
-      'SCHEMA_ONLY',
-      'SCHEMABINDING',
-      'SCHEME',
-      'SCROLL',
-      'SCROLL_LOCKS',
-      'SEARCH',
-      'SECOND',
-      'SECONDARY',
-      'SECONDARY_ONLY',
-      'SECONDARY_ROLE',
-      'SECONDS',
-      'SECRET',
-      'SECURITY_LOG',
-      'SECURITYAUDIT',
-      'SELECT',
-      'SELECTIVE',
-      'SELF',
-      'SEND',
-      'SENT',
-      'SEQUENCE',
-      'SERIALIZABLE',
-      'SERVER',
-      'SERVICE',
-      'SERVICE_BROKER',
-      'SERVICE_NAME',
-      'SESSION',
-      'SESSION_TIMEOUT',
-      'SET',
-      'SETS',
-      'SETUSER',
-      'SHOW_STATISTICS',
-      'SHOWCONTIG',
-      'SHOWPLAN',
-      'SHOWPLAN_ALL',
-      'SHOWPLAN_TEXT',
-      'SHOWPLAN_XML',
-      'SHRINKDATABASE',
-      'SHRINKFILE',
-      'SHUTDOWN',
-      'SID',
-      'SIGNATURE',
-      'SIMPLE',
-      'SINGLE_BLOB',
-      'SINGLE_CLOB',
-      'SINGLE_NCLOB',
-      'SINGLE_USER',
-      'SINGLETON',
-      'SIZE',
-      'SKIP',
-      'SMALLDATETIME',
-      'SMALLINT',
-      'SMALLMONEY',
-      'SNAPSHOT',
-      'SORT_IN_TEMPDB',
-      'SOURCE',
-      'SPARSE',
-      'SPATIAL',
-      'SPATIAL_WINDOW_MAX_CELLS',
-      'SPECIFICATION',
-      'SPLIT',
-      'SQL',
-      'SQL_VARIANT',
-      'SQLPERF',
-      'STANDBY',
-      'START',
-      'START_DATE',
-      'STARTED',
-      'STARTUP_STATE',
-      'STAT_HEADER',
-      'STATE',
-      'STATEMENT',
-      'STATIC',
-      'STATISTICAL_SEMANTICS',
-      'STATISTICS',
-      'STATISTICS_INCREMENTAL',
-      'STATISTICS_NORECOMPUTE',
-      'STATS',
-      'STATS_STREAM',
-      'STATUS',
-      'STATUSONLY',
-      'STOP',
-      'STOP_ON_ERROR',
-      'STOPAT',
-      'STOPATMARK',
-      'STOPBEFOREMARK',
-      'STOPLIST',
-      'STOPPED',
-      'SUBJECT',
-      'SUBSCRIPTION',
-      'SUPPORTED',
-      'SUSPEND',
-      'SWITCH',
-      'SYMMETRIC',
-      'SYNCHRONOUS_COMMIT',
-      'SYNONYM',
-      'SYSNAME',
-      'SYSTEM',
-      'TABLE',
-      'TABLERESULTS',
-      'TABLESAMPLE',
-      'TABLOCK',
-      'TABLOCKX',
-      'TAKE',
-      'TAPE',
-      'TARGET',
-      'TARGET_RECOVERY_TIME',
-      'TB',
-      'TCP',
-      'TEXT',
-      'TEXTIMAGE_ON',
-      'TEXTSIZE',
-      'THEN',
-      'THESAURUS',
-      'THROW',
-      'TIES',
-      'TIME',
-      'TIMEOUT',
-      'TIMER',
-      'TIMESTAMP',
-      'TINYINT',
-      'TO',
-      'TOP',
-      'TORN_PAGE_DETECTION',
-      'TRACEOFF',
-      'TRACEON',
-      'TRACESTATUS',
-      'TRACK_CAUSALITY',
-      'TRACK_COLUMNS_UPDATED',
-      'TRAN',
-      'TRANSACTION',
-      'TRANSFER',
-      'TRANSFORM_NOISE_WORDS',
-      'TRIGGER',
-      'TRIPLE_DES',
-      'TRIPLE_DES_3KEY',
-      'TRUE',
-      'TRUNCATE',
-      'TRUNCATEONLY',
-      'TRUSTWORTHY',
-      'TRY',
-      'TSQL',
-      'TWO_DIGIT_YEAR_CUTOFF',
-      'TYPE',
-      'TYPE_WARNING',
-      'UNBOUNDED',
-      'UNCHECKED',
-      'UNCOMMITTED',
-      'UNDEFINED',
-      'UNIQUE',
-      'UNIQUEIDENTIFIER',
-      'UNKNOWN',
-      'UNLIMITED',
-      'UNLOAD',
-      'UNSAFE',
-      'UPDATE',
-      'UPDATETEXT',
-      'UPDATEUSAGE',
-      'UPDLOCK',
-      'URL',
-      'USE',
-      'USED',
-      'USER',
-      'USEROPTIONS',
-      'USING',
-      'VALID_XML',
-      'VALIDATION',
-      'VALUE',
-      'VALUES',
-      'VARBINARY',
-      'VARCHAR',
-      'VARYING',
-      'VERIFYONLY',
-      'VERSION',
-      'VIEW',
-      'VIEW_METADATA',
-      'VIEWS',
-      'VISIBILITY',
-      'WAIT_AT_LOW_PRIORITY',
-      'WAITFOR',
-      'WEEK',
-      'WEIGHT',
-      'WELL_FORMED_XML',
-      'WHEN',
-      'WHERE',
-      'WHILE',
-      'WINDOWS',
-      'WITH',
-      'WITHIN',
-      'WITHOUT',
-      'WITNESS',
-      'WORK',
-      'WORKLOAD',
-      'WRITETEXT',
-      'XACT_ABORT',
-      'XLOCK',
-      'XMAX',
-      'XMIN',
-      'XML',
-      'XMLDATA',
-      'XMLNAMESPACES',
-      'XMLSCHEMA',
-      'XQUERY',
-      'XSINIL',
-      'YEAR',
-      'YMAX',
-      'YMIN',
-    ],
-    operators: [
-      // Logical
-      'ALL',
-      'AND',
-      'ANY',
-      'BETWEEN',
-      'EXISTS',
-      'IN',
-      'LIKE',
-      'NOT',
-      'OR',
-      'SOME',
-      // Set
-      'EXCEPT',
-      'INTERSECT',
-      'UNION',
-      // Join
-      'APPLY',
-      'CROSS',
-      'FULL',
-      'INNER',
-      'JOIN',
-      'LEFT',
-      'OUTER',
-      'RIGHT',
-      // Predicates
-      'CONTAINS',
-      'FREETEXT',
-      'IS',
-      'NULL',
-      // Pivoting
-      'PIVOT',
-      'UNPIVOT',
-      // Merging
-      'MATCHED',
-    ],
-    builtinFunctions: [
-      // Aggregate
-      'AVG',
-      'CHECKSUM_AGG',
-      'COUNT',
-      'COUNT_BIG',
-      'GROUPING',
-      'GROUPING_ID',
-      'MAX',
-      'MIN',
-      'SUM',
-      'STDEV',
-      'STDEVP',
-      'VAR',
-      'VARP',
-      // Analytic
-      'CUME_DIST',
-      'FIRST_VALUE',
-      'LAG',
-      'LAST_VALUE',
-      'LEAD',
-      'PERCENTILE_CONT',
-      'PERCENTILE_DISC',
-      'PERCENT_RANK',
-      // Collation
-      'COLLATE',
-      'COLLATIONPROPERTY',
-      'TERTIARY_WEIGHTS',
-      // Azure
-      'FEDERATION_FILTERING_VALUE',
-      // Conversion
-      'CAST',
-      'CONVERT',
-      'PARSE',
-      'TRY_CAST',
-      'TRY_CONVERT',
-      'TRY_PARSE',
-      // Cryptographic
-      'ASYMKEY_ID',
-      'ASYMKEYPROPERTY',
-      'CERTPROPERTY',
-      'CERT_ID',
-      'CRYPT_GEN_RANDOM',
-      'DECRYPTBYASYMKEY',
-      'DECRYPTBYCERT',
-      'DECRYPTBYKEY',
-      'DECRYPTBYKEYAUTOASYMKEY',
-      'DECRYPTBYKEYAUTOCERT',
-      'DECRYPTBYPASSPHRASE',
-      'ENCRYPTBYASYMKEY',
-      'ENCRYPTBYCERT',
-      'ENCRYPTBYKEY',
-      'ENCRYPTBYPASSPHRASE',
-      'HASHBYTES',
-      'IS_OBJECTSIGNED',
-      'KEY_GUID',
-      'KEY_ID',
-      'KEY_NAME',
-      'SIGNBYASYMKEY',
-      'SIGNBYCERT',
-      'SYMKEYPROPERTY',
-      'VERIFYSIGNEDBYCERT',
-      'VERIFYSIGNEDBYASYMKEY',
-      // Cursor
-      'CURSOR_STATUS',
-      // Datatype
-      'DATALENGTH',
-      'IDENT_CURRENT',
-      'IDENT_INCR',
-      'IDENT_SEED',
-      'IDENTITY',
-      'SQL_VARIANT_PROPERTY',
-      // Datetime
-      'CURRENT_TIMESTAMP',
-      'DATEADD',
-      'DATEDIFF',
-      'DATEFROMPARTS',
-      'DATENAME',
-      'DATEPART',
-      'DATETIME2FROMPARTS',
-      'DATETIMEFROMPARTS',
-      'DATETIMEOFFSETFROMPARTS',
-      'DAY',
-      'EOMONTH',
-      'GETDATE',
-      'GETUTCDATE',
-      'ISDATE',
-      'MONTH',
-      'SMALLDATETIMEFROMPARTS',
-      'SWITCHOFFSET',
-      'SYSDATETIME',
-      'SYSDATETIMEOFFSET',
-      'SYSUTCDATETIME',
-      'TIMEFROMPARTS',
-      'TODATETIMEOFFSET',
-      'YEAR',
-      // Logical
-      'CHOOSE',
-      'COALESCE',
-      'IIF',
-      'NULLIF',
-      // Mathematical
-      'ABS',
-      'ACOS',
-      'ASIN',
-      'ATAN',
-      'ATN2',
-      'CEILING',
-      'COS',
-      'COT',
-      'DEGREES',
-      'EXP',
-      'FLOOR',
-      'LOG',
-      'LOG10',
-      'PI',
-      'POWER',
-      'RADIANS',
-      'RAND',
-      'ROUND',
-      'SIGN',
-      'SIN',
-      'SQRT',
-      'SQUARE',
-      'TAN',
-      // Metadata
-      'APP_NAME',
-      'APPLOCK_MODE',
-      'APPLOCK_TEST',
-      'ASSEMBLYPROPERTY',
-      'COL_LENGTH',
-      'COL_NAME',
-      'COLUMNPROPERTY',
-      'DATABASE_PRINCIPAL_ID',
-      'DATABASEPROPERTYEX',
-      'DB_ID',
-      'DB_NAME',
-      'FILE_ID',
-      'FILE_IDEX',
-      'FILE_NAME',
-      'FILEGROUP_ID',
-      'FILEGROUP_NAME',
-      'FILEGROUPPROPERTY',
-      'FILEPROPERTY',
-      'FULLTEXTCATALOGPROPERTY',
-      'FULLTEXTSERVICEPROPERTY',
-      'INDEX_COL',
-      'INDEXKEY_PROPERTY',
-      'INDEXPROPERTY',
-      'OBJECT_DEFINITION',
-      'OBJECT_ID',
-      'OBJECT_NAME',
-      'OBJECT_SCHEMA_NAME',
-      'OBJECTPROPERTY',
-      'OBJECTPROPERTYEX',
-      'ORIGINAL_DB_NAME',
-      'PARSENAME',
-      'SCHEMA_ID',
-      'SCHEMA_NAME',
-      'SCOPE_IDENTITY',
-      'SERVERPROPERTY',
-      'STATS_DATE',
-      'TYPE_ID',
-      'TYPE_NAME',
-      'TYPEPROPERTY',
-      // Ranking
-      'DENSE_RANK',
-      'NTILE',
-      'RANK',
-      'ROW_NUMBER',
-      // Replication
-      'PUBLISHINGSERVERNAME',
-      // Rowset
-      'OPENDATASOURCE',
-      'OPENQUERY',
-      'OPENROWSET',
-      'OPENXML',
-      // Security
-      'CERTENCODED',
-      'CERTPRIVATEKEY',
-      'CURRENT_USER',
-      'HAS_DBACCESS',
-      'HAS_PERMS_BY_NAME',
-      'IS_MEMBER',
-      'IS_ROLEMEMBER',
-      'IS_SRVROLEMEMBER',
-      'LOGINPROPERTY',
-      'ORIGINAL_LOGIN',
-      'PERMISSIONS',
-      'PWDENCRYPT',
-      'PWDCOMPARE',
-      'SESSION_USER',
-      'SESSIONPROPERTY',
-      'SUSER_ID',
-      'SUSER_NAME',
-      'SUSER_SID',
-      'SUSER_SNAME',
-      'SYSTEM_USER',
-      'USER',
-      'USER_ID',
-      'USER_NAME',
-      // String
-      'ASCII',
-      'CHAR',
-      'CHARINDEX',
-      'CONCAT',
-      'DIFFERENCE',
-      'FORMAT',
-      'LEFT',
-      'LEN',
-      'LOWER',
-      'LTRIM',
-      'NCHAR',
-      'PATINDEX',
-      'QUOTENAME',
-      'REPLACE',
-      'REPLICATE',
-      'REVERSE',
-      'RIGHT',
-      'RTRIM',
-      'SOUNDEX',
-      'SPACE',
-      'STR',
-      'STUFF',
-      'SUBSTRING',
-      'UNICODE',
-      'UPPER',
-      // System
-      'BINARY_CHECKSUM',
-      'CHECKSUM',
-      'CONNECTIONPROPERTY',
-      'CONTEXT_INFO',
-      'CURRENT_REQUEST_ID',
-      'ERROR_LINE',
-      'ERROR_NUMBER',
-      'ERROR_MESSAGE',
-      'ERROR_PROCEDURE',
-      'ERROR_SEVERITY',
-      'ERROR_STATE',
-      'FORMATMESSAGE',
-      'GETANSINULL',
-      'GET_FILESTREAM_TRANSACTION_CONTEXT',
-      'HOST_ID',
-      'HOST_NAME',
-      'ISNULL',
-      'ISNUMERIC',
-      'MIN_ACTIVE_ROWVERSION',
-      'NEWID',
-      'NEWSEQUENTIALID',
-      'ROWCOUNT_BIG',
-      'XACT_STATE',
-      // TextImage
-      'TEXTPTR',
-      'TEXTVALID',
-      // Trigger
-      'COLUMNS_UPDATED',
-      'EVENTDATA',
-      'TRIGGER_NESTLEVEL',
-      'UPDATE',
-      // ChangeTracking
-      'CHANGETABLE',
-      'CHANGE_TRACKING_CONTEXT',
-      'CHANGE_TRACKING_CURRENT_VERSION',
-      'CHANGE_TRACKING_IS_COLUMN_IN_MASK',
-      'CHANGE_TRACKING_MIN_VALID_VERSION',
-      // FullTextSearch
-      'CONTAINSTABLE',
-      'FREETEXTTABLE',
-      // SemanticTextSearch
-      'SEMANTICKEYPHRASETABLE',
-      'SEMANTICSIMILARITYDETAILSTABLE',
-      'SEMANTICSIMILARITYTABLE',
-      // FileStream
-      'FILETABLEROOTPATH',
-      'GETFILENAMESPACEPATH',
-      'GETPATHLOCATOR',
-      'PATHNAME',
-      // ServiceBroker
-      'GET_TRANSMISSION_STATUS',
-    ],
-    builtinVariables: [
-      // Configuration
-      '@@DATEFIRST',
-      '@@DBTS',
-      '@@LANGID',
-      '@@LANGUAGE',
-      '@@LOCK_TIMEOUT',
-      '@@MAX_CONNECTIONS',
-      '@@MAX_PRECISION',
-      '@@NESTLEVEL',
-      '@@OPTIONS',
-      '@@REMSERVER',
-      '@@SERVERNAME',
-      '@@SERVICENAME',
-      '@@SPID',
-      '@@TEXTSIZE',
-      '@@VERSION',
-      // Cursor
-      '@@CURSOR_ROWS',
-      '@@FETCH_STATUS',
-      // Datetime
-      '@@DATEFIRST',
-      // Metadata
-      '@@PROCID',
-      // System
-      '@@ERROR',
-      '@@IDENTITY',
-      '@@ROWCOUNT',
-      '@@TRANCOUNT',
-      // Stats
-      '@@CONNECTIONS',
-      '@@CPU_BUSY',
-      '@@IDLE',
-      '@@IO_BUSY',
-      '@@PACKET_ERRORS',
-      '@@PACK_RECEIVED',
-      '@@PACK_SENT',
-      '@@TIMETICKS',
-      '@@TOTAL_ERRORS',
-      '@@TOTAL_READ',
-      '@@TOTAL_WRITE',
-    ],
-    pseudoColumns: ['$ACTION', '$IDENTITY', '$ROWGUID', '$PARTITION'],
-    tokenizer: {
-      root: [
-        { include: '@comments' },
-        { include: '@whitespace' },
-        { include: '@pseudoColumns' },
-        { include: '@numbers' },
-        { include: '@strings' },
-        { include: '@complexIdentifiers' },
-        { include: '@scopes' },
-        [/[;,.]/, 'delimiter'],
-        [/[()]/, '@brackets'],
-        [
-          /[\w@#$]+/,
-          {
-            cases: {
-              '@keywords': 'keyword',
-              '@operators': 'operator',
-              '@builtinVariables': 'predefined',
-              '@builtinFunctions': 'predefined',
-              '@default': 'identifier',
+    provideCompletionItems: function (model, position) {
+      const word = model.getWordUntilPosition(position);
+      const range = {
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: word.startColumn,
+        endColumn: word.endColumn,
+      };
+      const lineContent = model.getLineContent(position.lineNumber);
+      const textBeforeWord = lineContent.substring(0, word.startColumn - 1);
+
+      // ---- DOT COMPLETION: alias.column ----
+      const dotMatch = textBeforeWord.match(/(\w+)\.\s*$/);
+      if (dotMatch) {
+        const prefix = dotMatch[1].toLowerCase();
+        const fullText = model.getValue();
+        const offset = model.getOffsetAt(position);
+        const stmtText = getStatementAtOffset(fullText, offset);
+        const aliases = getAliasMap(stmtText);
+        const tableName = aliases[prefix];
+        if (tableName && schema[tableName]) {
+          const sugg = schema[tableName].columns.map((col) => ({
+            label: col.name,
+            kind: monaco.languages.CompletionItemKind.Field,
+            insertText: col.name,
+            detail: `${col.type}${col.isPrimaryKey ? " [PK]" : ""}${col.nullable ? "" : " NOT NULL"}`,
+            documentation: {
+              value: formatColumnDoc(col, schema[tableName].name),
             },
-          },
-        ],
-        [/[<>=!%&+\-*/|~^]/, 'operator'],
-      ],
-      whitespace: [[/\s+/, 'white']],
-      comments: [
-        [/--+.*/, 'comment'],
-        [/\/\*/, { token: 'comment.quote', next: '@comment' }],
-      ],
-      comment: [
-        [/[^*/]+/, 'comment'],
-        // Not supporting nested comments, as nested comments seem to not be standard?
-        // i.e. http://stackoverflow.com/questions/728172/are-there-multiline-comment-delimiters-in-sql-that-are-vendor-agnostic
-        // [/\/\*/, { token: 'comment.quote', next: '@push' }],    // nested comment not allowed :-(
-        [/\*\//, { token: 'comment.quote', next: '@pop' }],
-        [/./, 'comment'],
-      ],
-      pseudoColumns: [
-        [
-          /[$][A-Za-z_][\w@#$]*/,
-          {
-            cases: {
-              '@pseudoColumns': 'predefined',
-              '@default': 'identifier',
-            },
-          },
-        ],
-      ],
-      numbers: [
-        [/0[xX][0-9a-fA-F]*/, 'number'],
-        [/[$][+-]*\d*(\.\d*)?/, 'number'],
-        [/((\d+(\.\d*)?)|(\.\d+))([eE][\-+]?\d+)?/, 'number'],
-      ],
-      strings: [
-        [/N'/, { token: 'string', next: '@string' }],
-        [/'/, { token: 'string', next: '@string' }],
-      ],
-      string: [
-        [/[^']+/, 'string'],
-        [/''/, 'string'],
-        [/'/, { token: 'string', next: '@pop' }],
-      ],
-      complexIdentifiers: [
-        [/\[/, { token: 'identifier.quote', next: '@bracketedIdentifier' }],
-        [/"/, { token: 'identifier.quote', next: '@quotedIdentifier' }],
-      ],
-      bracketedIdentifier: [
-        [/[^\]]+/, 'identifier'],
-        [/]]/, 'identifier'],
-        [/]/, { token: 'identifier.quote', next: '@pop' }],
-      ],
-      quotedIdentifier: [
-        [/[^"]+/, 'identifier'],
-        [/""/, 'identifier'],
-        [/"/, { token: 'identifier.quote', next: '@pop' }],
-      ],
-      scopes: [
-        [/BEGIN\s+(DISTRIBUTED\s+)?TRAN(SACTION)?\b/i, 'keyword'],
-        [/BEGIN\s+TRY\b/i, { token: 'keyword.try' }],
-        [/END\s+TRY\b/i, { token: 'keyword.try' }],
-        [/BEGIN\s+CATCH\b/i, { token: 'keyword.catch' }],
-        [/END\s+CATCH\b/i, { token: 'keyword.catch' }],
-        [/(BEGIN|CASE)\b/i, { token: 'keyword.block' }],
-        [/END\b/i, { token: 'keyword.block' }],
-        [/WHEN\b/i, { token: 'keyword.choice' }],
-        [/THEN\b/i, { token: 'keyword.choice' }],
-      ],
+            range,
+            sortText: "0" + col.name,
+          }));
+          sugg.push({
+            label: "*",
+            kind: monaco.languages.CompletionItemKind.Operator,
+            insertText: "*",
+            detail: "All columns from " + schema[tableName].name,
+            range,
+            sortText: "00",
+          });
+          return { suggestions: sugg };
+        }
+        return { suggestions: [] };
+      }
+
+      // ---- CONTEXT DETECTION ----
+      const startLn = Math.max(1, position.lineNumber - 30);
+      const textBefore = model
+        .getValueInRange({
+          startLineNumber: startLn,
+          startColumn: 1,
+          endLineNumber: position.lineNumber,
+          endColumn: word.startColumn,
+        })
+        .replace(/\s+/g, " ")
+        .trimEnd();
+
+      const isTableCtx = /\b(FROM|JOIN|INTO|UPDATE|TABLE)\s*$/i.test(
+        textBefore,
+      );
+      const isColCtx =
+        /\b(SELECT|WHERE|ON|SET|AND|OR|BY|HAVING)\s*$/i.test(textBefore) ||
+        /,\s*$/.test(textBefore);
+      const insertColMatch = textBefore.match(
+        /INSERT\s+INTO\s+`?(\w+)`?\s*\([^)]*$/i,
+      );
+
+      const suggestions = [];
+
+      // ---- TABLE SUGGESTIONS ----
+      for (const table of Object.values(schema)) {
+        suggestions.push({
+          label: table.name,
+          kind: monaco.languages.CompletionItemKind.Class,
+          insertText: table.name,
+          detail: `Table (${table.columns.length} columns)`,
+          documentation: { value: formatTableDoc(table) },
+          range,
+          sortText: isTableCtx ? "00" + table.name : "30" + table.name,
+        });
+      }
+
+      // ---- COLUMN SUGGESTIONS ----
+      if (insertColMatch) {
+        const tbl = insertColMatch[1].toLowerCase();
+        if (schema[tbl]) {
+          for (const col of schema[tbl].columns) {
+            suggestions.push({
+              label: col.name,
+              kind: monaco.languages.CompletionItemKind.Field,
+              insertText: col.name,
+              detail: `${col.type} — ${schema[tbl].name}`,
+              documentation: { value: formatColumnDoc(col, schema[tbl].name) },
+              range,
+              sortText: "01" + col.name,
+            });
+          }
+        }
+      } else {
+        const fullText = model.getValue();
+        const offset = model.getOffsetAt(position);
+        const stmtText = getStatementAtOffset(fullText, offset);
+        const aliases = getAliasMap(stmtText);
+        const seen = new Set();
+
+        const addCols = (tblName, priority) => {
+          if (!schema[tblName]) return;
+          for (const col of schema[tblName].columns) {
+            const k = tblName + "." + col.name;
+            if (seen.has(k)) continue;
+            seen.add(k);
+            suggestions.push({
+              label: col.name,
+              kind: monaco.languages.CompletionItemKind.Field,
+              insertText: col.name,
+              detail: `${col.type} — ${schema[tblName].name}`,
+              documentation: {
+                value: formatColumnDoc(col, schema[tblName].name),
+              },
+              range,
+              sortText: priority + col.name,
+            });
+          }
+        };
+
+        if (Object.keys(aliases).length > 0) {
+          for (const tblName of Object.values(aliases))
+            addCols(tblName, isColCtx ? "05" : "20");
+        } else {
+          for (const tblName of Object.keys(schema)) addCols(tblName, "20");
+        }
+      }
+
+      if (!isTableCtx) {
+        // ---- KEYWORD SUGGESTIONS ----
+        for (const kw of SQL_KEYWORDS) {
+          suggestions.push({
+            label: kw,
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: kw,
+            range,
+            sortText: "40" + kw,
+          });
+        }
+
+        // ---- FUNCTION SUGGESTIONS ----
+        for (const fn of SQL_FUNCTIONS) {
+          suggestions.push({
+            label: fn.name,
+            kind: monaco.languages.CompletionItemKind.Function,
+            insertText: fn.snippet,
+            insertTextRules:
+              monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            detail: fn.detail,
+            documentation: { value: fn.doc },
+            range,
+            sortText: "10" + fn.name,
+          });
+        }
+
+        // ---- SNIPPET SUGGESTIONS ----
+        for (const s of SQL_SNIPPETS) {
+          suggestions.push({
+            label: s.label,
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: s.insertText,
+            insertTextRules:
+              monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            detail: s.detail,
+            documentation: { value: s.doc },
+            range,
+            sortText: "50" + s.label,
+          });
+        }
+      }
+      return { suggestions };
     },
-  },
+  });
+
+  // ===================== HOVER PROVIDER =====================
+
+  monaco.languages.registerHoverProvider("sql", {
+    provideHover: function (model, position) {
+      const wi = model.getWordAtPosition(position);
+      if (!wi) return null;
+      const wordLower = wi.word.toLowerCase();
+      const hoverRange = {
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: wi.startColumn,
+        endColumn: wi.endColumn,
+      };
+      const lineContent = model.getLineContent(position.lineNumber);
+
+      // Dot prefix?
+      let prefix = null;
+      if (
+        wi.startColumn > 1 &&
+        lineContent.charAt(wi.startColumn - 2) === "."
+      ) {
+        if (wi.startColumn > 2) {
+          const bw = model.getWordAtPosition({
+            lineNumber: position.lineNumber,
+            column: wi.startColumn - 2,
+          });
+          if (bw) prefix = bw.word.toLowerCase();
+        }
+      }
+
+      if (prefix) {
+        const fullText = model.getValue();
+        const offset = model.getOffsetAt(position);
+        const aliases = getAliasMap(getStatementAtOffset(fullText, offset));
+        const tblName = aliases[prefix];
+        if (tblName && schema[tblName]) {
+          const col = schema[tblName].columns.find(
+            (c) => c.name.toLowerCase() === wordLower,
+          );
+          if (col)
+            return {
+              range: hoverRange,
+              contents: [
+                {
+                  value:
+                    "```sql\n" +
+                    col.name +
+                    " " +
+                    col.type +
+                    (col.nullable ? "" : " NOT NULL") +
+                    (col.isPrimaryKey ? " -- PRIMARY KEY" : "") +
+                    "\n```",
+                },
+                { value: formatColumnDoc(col, schema[tblName].name) },
+              ],
+            };
+        }
+        return null;
+      }
+
+      // Table?
+      if (schema[wordLower]) {
+        const t = schema[wordLower];
+        return {
+          range: hoverRange,
+          contents: [
+            {
+              value:
+                "```sql\nTABLE " +
+                t.name +
+                " (" +
+                t.columns.length +
+                " columns)\n```",
+            },
+            { value: formatTableDoc(t) },
+          ],
+        };
+      }
+
+      // Column in any table? (try statement context first)
+      const fullText = model.getValue();
+      const offset = model.getOffsetAt(position);
+      const aliases = getAliasMap(getStatementAtOffset(fullText, offset));
+      for (const tn of new Set(Object.values(aliases))) {
+        if (!schema[tn]) continue;
+        const col = schema[tn].columns.find(
+          (c) => c.name.toLowerCase() === wordLower,
+        );
+        if (col)
+          return {
+            range: hoverRange,
+            contents: [
+              {
+                value:
+                  "```sql\n" +
+                  col.name +
+                  " " +
+                  col.type +
+                  (col.nullable ? "" : " NOT NULL") +
+                  (col.isPrimaryKey ? " -- PRIMARY KEY" : "") +
+                  "\n```",
+              },
+              { value: formatColumnDoc(col, schema[tn].name) },
+            ],
+          };
+      }
+      // Fallback all tables
+      for (const [tn, tbl] of Object.entries(schema)) {
+        const col = tbl.columns.find((c) => c.name.toLowerCase() === wordLower);
+        if (col)
+          return {
+            range: hoverRange,
+            contents: [
+              {
+                value:
+                  "```sql\n" +
+                  col.name +
+                  " " +
+                  col.type +
+                  (col.nullable ? "" : " NOT NULL") +
+                  (col.isPrimaryKey ? " -- PRIMARY KEY" : "") +
+                  "\n```",
+              },
+              { value: formatColumnDoc(col, tbl.name) },
+            ],
+          };
+      }
+
+      // Function?
+      const fn = SQL_FUNCTIONS.find(
+        (f) => f.name.toUpperCase() === wi.word.toUpperCase(),
+      );
+      if (fn)
+        return {
+          range: hoverRange,
+          contents: [
+            { value: "```sql\n" + fn.name + "(…)\n```" },
+            { value: "**" + fn.detail + "**\n\n" + fn.doc },
+          ],
+        };
+
+      return null;
+    },
+  });
+
+  // ===================== DEFINITION PROVIDER =====================
+
+  monaco.languages.registerDefinitionProvider("sql", {
+    provideDefinition: function (model, position) {
+      const wi = model.getWordAtPosition(position);
+      if (!wi) return null;
+      const wordLower = wi.word.toLowerCase();
+      const lineContent = model.getLineContent(position.lineNumber);
+
+      let prefix = null;
+      if (
+        wi.startColumn > 1 &&
+        lineContent.charAt(wi.startColumn - 2) === "."
+      ) {
+        if (wi.startColumn > 2) {
+          const bw = model.getWordAtPosition({
+            lineNumber: position.lineNumber,
+            column: wi.startColumn - 2,
+          });
+          if (bw) prefix = bw.word.toLowerCase();
+        }
+      }
+
+      // alias.column → column definition line
+      if (prefix) {
+        const fullText = model.getValue();
+        const offset = model.getOffsetAt(position);
+        const aliases = getAliasMap(getStatementAtOffset(fullText, offset));
+        const tblName = aliases[prefix];
+        if (tblName && schema[tblName]) {
+          const col = schema[tblName].columns.find(
+            (c) => c.name.toLowerCase() === wordLower,
+          );
+          if (col)
+            return {
+              uri: model.uri,
+              range: new monaco.Range(
+                col.line,
+                1,
+                col.line,
+                model.getLineLength(col.line) + 1,
+              ),
+            };
+        }
+        return null;
+      }
+
+      // Table name → CREATE TABLE line
+      if (schema[wordLower]) {
+        const t = schema[wordLower];
+        return {
+          uri: model.uri,
+          range: new monaco.Range(
+            t.line,
+            1,
+            t.line,
+            model.getLineLength(t.line) + 1,
+          ),
+        };
+      }
+
+      // Alias → CREATE TABLE of aliased table
+      const fullText = model.getValue();
+      const offset = model.getOffsetAt(position);
+      const aliases = getAliasMap(getStatementAtOffset(fullText, offset));
+      if (aliases[wordLower] && schema[aliases[wordLower]]) {
+        const t = schema[aliases[wordLower]];
+        return {
+          uri: model.uri,
+          range: new monaco.Range(
+            t.line,
+            1,
+            t.line,
+            model.getLineLength(t.line) + 1,
+          ),
+        };
+      }
+
+      // Column name → first matching table column line
+      for (const tbl of Object.values(schema)) {
+        const col = tbl.columns.find((c) => c.name.toLowerCase() === wordLower);
+        if (col)
+          return {
+            uri: model.uri,
+            range: new monaco.Range(
+              col.line,
+              1,
+              col.line,
+              model.getLineLength(col.line) + 1,
+            ),
+          };
+      }
+
+      return null;
+    },
+  });
+
+  setTimeout(() => {
+    let parseTimeout: number | NodeJS.Timeout | undefined;
+    function updateSchema() {
+      schema = parseSchema(getEditor().getValue());
+    }
+
+    getEditor().onDidChangeModelContent(function () {
+      clearTimeout(parseTimeout);
+      parseTimeout = setTimeout(updateSchema, 400);
+    });
+
+    updateSchema();
+  }, 50);
 };

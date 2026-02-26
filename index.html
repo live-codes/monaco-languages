@@ -12,15 +12,7 @@
       import { monaco } from "https://cdn.jsdelivr.net/npm/@live-codes/monaco-editor/monaco.js";
       import rippleSupport from "./dist/ripple.js";
 
-      const lang = "ripple";
-      monaco.languages.register({ id: lang });
-      monaco.languages.setLanguageConfiguration(lang, rippleSupport.config);
-      monaco.languages.setMonarchTokensProvider(lang, rippleSupport.tokens);
-      monaco.languages.registerDefinitionProvider(
-        lang,
-        rippleSupport.definitions,
-      );
-      rippleSupport.init(monaco);
+      rippleSupport(monaco);
 
       const code = `
 import { track } from "ripple";
@@ -68,7 +60,7 @@ export component Counter() {
         document.getElementById("container"),
         {
           value: code,
-          language: lang,
+          language: "ripple",
           automaticLayout: true,
           theme: "vs-dark",
         },

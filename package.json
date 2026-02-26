@@ -1,6 +1,6 @@
 {
   "name": "@live-codes/monaco-languages",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Language support for Monaco Editor",
   "repository": {
     "url": "https://github.com/live-codes/monaco-languages"
@@ -8,11 +8,22 @@
   "exports": {
     "astro": "./dist/astro.js",
     "clio": "./dist/clio.js",
+    "commonlisp": "./dist/commonlisp.js",
+    "cpp": "./dist/cpp.js",
+    "csharp": "./dist/csharp.js",
+    "go": "./dist/go.js",
     "imba": "./dist/imba.js",
+    "java": "./dist/java.js",
     "json5": "./dist/json5.js",
+    "lua": "./dist/lua.js",
     "minizinc": "./dist/minizinc.js",
+    "php": "./dist/php.js",
     "prolog": "./dist/prolog.js",
+    "python": "./dist/python.js",
+    "r": "./dist/r.js",
     "ripple": "./dist/ripple.js",
+    "ruby": "./dist/ruby.js",
+    "scheme": "./dist/scheme.js",
     "sql": "./dist/sql.js",
     "vue": "./dist/vue.js",
     "wat": "./dist/wat.js"
