@@ -1,0 +1,2252 @@
+import type * as Monaco from "monaco-editor";
+
+export default (monaco: typeof Monaco) => {
+  // ─── Julia Language Data ────────────────────────────────────────────
+
+  const juliaKeywords = [
+    "function",
+    "end",
+    "if",
+    "else",
+    "elseif",
+    "for",
+    "while",
+    "begin",
+    "let",
+    "local",
+    "global",
+    "const",
+    "return",
+    "break",
+    "continue",
+    "try",
+    "catch",
+    "finally",
+    "throw",
+    "import",
+    "using",
+    "export",
+    "module",
+    "baremodule",
+    "struct",
+    "mutable",
+    "abstract",
+    "primitive",
+    "type",
+    "where",
+    "do",
+    "in",
+    "isa",
+    "macro",
+    "quote",
+    "new",
+    "outer",
+  ];
+
+  const juliaTypes = [
+    "Int",
+    "Int8",
+    "Int16",
+    "Int32",
+    "Int64",
+    "Int128",
+    "UInt",
+    "UInt8",
+    "UInt16",
+    "UInt32",
+    "UInt64",
+    "UInt128",
+    "Float16",
+    "Float32",
+    "Float64",
+    "BigFloat",
+    "BigInt",
+    "Bool",
+    "Char",
+    "String",
+    "Symbol",
+    "Expr",
+    "Module",
+    "Array",
+    "Vector",
+    "Matrix",
+    "Dict",
+    "Set",
+    "Pair",
+    "Tuple",
+    "NamedTuple",
+    "Nothing",
+    "Missing",
+    "Any",
+    "Union",
+    "UnionAll",
+    "Type",
+    "DataType",
+    "Number",
+    "Real",
+    "Complex",
+    "Rational",
+    "Integer",
+    "Signed",
+    "Unsigned",
+    "AbstractFloat",
+    "AbstractArray",
+    "AbstractString",
+    "AbstractDict",
+    "AbstractSet",
+    "AbstractVector",
+    "AbstractMatrix",
+    "IO",
+    "IOStream",
+    "IOBuffer",
+    "Function",
+    "Method",
+    "Regex",
+    "RegexMatch",
+    "SubString",
+    "UnitRange",
+    "StepRange",
+    "LinRange",
+    "Ref",
+    "Ptr",
+    "Task",
+    "Channel",
+    "Exception",
+    "ErrorException",
+    "DomainError",
+    "BoundsError",
+    "Enum",
+    "Val",
+    "Some",
+    "Cvoid",
+  ];
+
+  const juliaBuiltins = [
+    "println",
+    "print",
+    "printstyled",
+    "show",
+    "display",
+    "repr",
+    "summary",
+    "typeof",
+    "sizeof",
+    "length",
+    "size",
+    "ndims",
+    "eltype",
+    "fieldnames",
+    "push!",
+    "pop!",
+    "append!",
+    "prepend!",
+    "insert!",
+    "deleteat!",
+    "splice!",
+    "empty!",
+    "resize!",
+    "map",
+    "map!",
+    "filter",
+    "filter!",
+    "reduce",
+    "foldl",
+    "foldr",
+    "foreach",
+    "collect",
+    "range",
+    "enumerate",
+    "zip",
+    "pairs",
+    "zeros",
+    "ones",
+    "rand",
+    "randn",
+    "fill",
+    "similar",
+    "copy",
+    "deepcopy",
+    "trues",
+    "falses",
+    "sort",
+    "sort!",
+    "sortperm",
+    "reverse",
+    "reverse!",
+    "unique",
+    "unique!",
+    "sum",
+    "prod",
+    "maximum",
+    "minimum",
+    "extrema",
+    "cumsum",
+    "cumprod",
+    "count",
+    "abs",
+    "abs2",
+    "sqrt",
+    "cbrt",
+    "exp",
+    "exp2",
+    "exp10",
+    "log",
+    "log2",
+    "log10",
+    "sin",
+    "cos",
+    "tan",
+    "asin",
+    "acos",
+    "atan",
+    "sinh",
+    "cosh",
+    "tanh",
+    "floor",
+    "ceil",
+    "round",
+    "trunc",
+    "clamp",
+    "mod",
+    "rem",
+    "div",
+    "divrem",
+    "parse",
+    "tryparse",
+    "string",
+    "join",
+    "split",
+    "strip",
+    "lstrip",
+    "rstrip",
+    "replace",
+    "match",
+    "occursin",
+    "startswith",
+    "endswith",
+    "uppercase",
+    "lowercase",
+    "titlecase",
+    "open",
+    "close",
+    "read",
+    "write",
+    "readline",
+    "readlines",
+    "readchomp",
+    "eachline",
+    "isfile",
+    "isdir",
+    "ispath",
+    "mkpath",
+    "mkdir",
+    "rm",
+    "cp",
+    "mv",
+    "haskey",
+    "get",
+    "get!",
+    "keys",
+    "values",
+    "merge",
+    "merge!",
+    "delete!",
+    "isempty",
+    "isnothing",
+    "ismissing",
+    "isnan",
+    "isinf",
+    "isfinite",
+    "iseven",
+    "isodd",
+    "isa",
+    "convert",
+    "promote",
+    "promote_type",
+    "error",
+    "throw",
+    "rethrow",
+    "exit",
+    "@assert",
+    "include",
+    "eval",
+    "invokelatest",
+    "methods",
+    "iterate",
+    "first",
+    "last",
+    "step",
+    "eachindex",
+    "min",
+    "max",
+    "minmax",
+    "all",
+    "any",
+    "findfirst",
+    "findlast",
+    "findall",
+    "findnext",
+    "findprev",
+    "searchsorted",
+    "in",
+    "intersect",
+    "union",
+    "setdiff",
+    "symdiff",
+    "issubset",
+    "hcat",
+    "vcat",
+    "hvcat",
+    "cat",
+    "reshape",
+    "permutedims",
+    "transpose",
+    "adjoint",
+    "vec",
+    "eachrow",
+    "eachcol",
+    "view",
+    "selectdim",
+    "dropdims",
+    "ntuple",
+    "tuple",
+    "identity",
+    "Returns",
+    "put!",
+    "take!",
+    "fetch",
+    "wait",
+    "notify",
+    "lock",
+    "unlock",
+    "sleep",
+    "zero",
+    "one",
+    "oneunit",
+    "eps",
+    "typemax",
+    "typemin",
+    "getfield",
+    "setfield!",
+    "getproperty",
+    "setproperty!",
+    "nameof",
+    "parentmodule",
+    "applicable",
+    "invoke",
+    "Channel",
+    "Task",
+    "Threads",
+    "@async",
+    "@sync",
+  ];
+
+  const juliaConstants = [
+    "true",
+    "false",
+    "nothing",
+    "missing",
+    "Inf",
+    "Inf16",
+    "Inf32",
+    "Inf64",
+    "NaN",
+    "NaN16",
+    "NaN32",
+    "NaN64",
+    "pi",
+    "π",
+    "ℯ",
+    "im",
+    "ARGS",
+    "ENV",
+    "VERSION",
+    "PROGRAM_FILE",
+    "stdin",
+    "stdout",
+    "stderr",
+    "DEPOT_PATH",
+    "LOAD_PATH",
+  ];
+
+  const juliaMacros = [
+    { n: "show", d: "Print expression and its result." },
+    { n: "time", d: "Print time and memory for an expression." },
+    { n: "elapsed", d: "Return elapsed time in seconds." },
+    { n: "allocated", d: "Return number of bytes allocated." },
+    { n: "assert", d: "Throw an error if condition is false." },
+    { n: "info", d: "Log an informational message." },
+    { n: "warn", d: "Log a warning message." },
+    { n: "error", d: "Log an error message (logging, not throw)." },
+    { n: "debug", d: "Log a debug message." },
+    { n: "inline", d: "Suggest inlining a function." },
+    { n: "noinline", d: "Prevent inlining a function." },
+    { n: "simd", d: "Hint SIMD vectorization for a loop." },
+    { n: "threads", d: "Run a for loop across multiple threads." },
+    { n: "spawn", d: "Spawn a task on any available thread." },
+    { n: "async", d: "Create and schedule an asynchronous task." },
+    { n: "sync", d: "Wait for all enclosed @async/@spawn tasks." },
+    { n: "test", d: "Test that an expression is true." },
+    { n: "testset", d: "Group tests into a named test set." },
+    { n: "inbounds", d: "Disable bounds checking in a block." },
+    { n: "views", d: "Make all slicing operations return views." },
+    { n: "which", d: "Show which method would be called." },
+    { n: "code_warntype", d: "Show type inference results." },
+    { n: "code_llvm", d: "Show LLVM IR for a call." },
+    { n: "code_native", d: "Show native assembly for a call." },
+    { n: "printf", d: "C-style formatted printing." },
+    { n: "sprintf", d: "C-style formatted string creation." },
+    { n: "doc", d: "Retrieve documentation for a symbol." },
+    { n: "enum", d: "Define an enumerated type." },
+    { n: "kwdef", d: "Struct with keyword argument constructor." },
+    { n: "label", d: "Define a label for @goto." },
+    { n: "goto", d: "Jump to a @label." },
+    { n: "generated", d: "Define a generated (staged) function." },
+    { n: "eval", d: "Evaluate expression in global scope at parse time." },
+    { n: "macroexpand", d: "Show expanded form of a macro call." },
+    { n: "fastmath", d: "Aggressive floating-point optimizations." },
+    { n: "nospecialize", d: "Prevent specialization on arguments." },
+    { n: "boundscheck", d: "Execute block only with bounds checking enabled." },
+    { n: "propagate_inbounds", d: "Propagate inbounds context to callees." },
+    { n: "polly", d: "Enable Polly optimizer for a loop." },
+    { n: "task_local_storage", d: "Access task-local storage." },
+  ];
+
+  // ─── Documentation DB ───────────────────────────────────────────────
+
+  const juliaDocs = {
+    println: {
+      sig: "println([io::IO], xs...)",
+      desc: "Print values followed by a newline to `io` (defaults to `stdout`).",
+      ex: 'println("x = ", 42)',
+    },
+    print: {
+      sig: "print([io::IO], xs...)",
+      desc: "Print values to `io` without a trailing newline.",
+      ex: 'print("Hello ")',
+    },
+    show: {
+      sig: "show([io::IO], x)",
+      desc: "Write a text representation of `x` to the output stream.",
+      ex: "show(stdout, [1, 2, 3])",
+    },
+    display: {
+      sig: "display(x)",
+      desc: "Display `x` using the topmost applicable display backend.",
+      ex: "display([1 2; 3 4])",
+    },
+    typeof: {
+      sig: "typeof(x)",
+      desc: "Return the concrete type of `x`.",
+      ex: "typeof(1.0)  # Float64",
+    },
+    sizeof: {
+      sig: "sizeof(T) or sizeof(obj)",
+      desc: "Size in bytes of the binary representation.",
+      ex: "sizeof(Int64)  # 8",
+    },
+    isa: {
+      sig: "isa(x, T) -> Bool",
+      desc: "Check whether `x` is of type `T`. Also used infix: `x isa T`.",
+      ex: "1 isa Int  # true",
+    },
+    eltype: {
+      sig: "eltype(collection)",
+      desc: "Element type of the collection.",
+      ex: "eltype([1.0, 2.0])  # Float64",
+    },
+    fieldnames: {
+      sig: "fieldnames(T) -> Tuple{Symbol...}",
+      desc: "Field names of a composite type.",
+      ex: "fieldnames(Complex)  # (:re, :im)",
+    },
+    length: {
+      sig: "length(collection) -> Int",
+      desc: "Number of elements in the collection.",
+      ex: "length([1,2,3])  # 3",
+    },
+    size: {
+      sig: "size(A, [dim]) -> Tuple or Int",
+      desc: "Dimensions of array `A`. Optionally specify a dimension.",
+      ex: "size([1 2; 3 4])  # (2, 2)",
+    },
+    ndims: {
+      sig: "ndims(A) -> Int",
+      desc: "Number of dimensions of `A`.",
+      ex: "ndims([1 2; 3 4])  # 2",
+    },
+    "push!": {
+      sig: "push!(collection, items...)",
+      desc: "Insert items at the end. Modifies collection in place.",
+      ex: "push!([1,2], 3)  # [1,2,3]",
+    },
+    "pop!": {
+      sig: "pop!(collection) -> item",
+      desc: "Remove and return the last item.",
+      ex: "pop!([1,2,3])  # 3",
+    },
+    "append!": {
+      sig: "append!(collection, collections...)",
+      desc: "Add all elements of each collection to the end of the first.",
+      ex: "append!([1,2],[3,4])  # [1,2,3,4]",
+    },
+    "insert!": {
+      sig: "insert!(a::Vector, i::Int, item)",
+      desc: "Insert item at position `i`.",
+      ex: "insert!([1,3],2,2)  # [1,2,3]",
+    },
+    "deleteat!": {
+      sig: "deleteat!(a::Vector, i)",
+      desc: "Remove item at position `i`.",
+      ex: "deleteat!([1,2,3],2)  # [1,3]",
+    },
+    sort: {
+      sig: "sort(v; alg, lt, by, rev, order)",
+      desc: "Return a sorted copy of vector `v`.",
+      ex: "sort([3,1,2])  # [1,2,3]",
+    },
+    "sort!": {
+      sig: "sort!(v; ...)",
+      desc: "Sort vector `v` in place.",
+      ex: "sort!([3,1,2])",
+    },
+    reverse: {
+      sig: "reverse(v)",
+      desc: "Return a reversed copy.",
+      ex: "reverse([1,2,3])  # [3,2,1]",
+    },
+    unique: {
+      sig: "unique(itr)",
+      desc: "Unique elements preserving order.",
+      ex: "unique([1,2,1,3])  # [1,2,3]",
+    },
+    isempty: {
+      sig: "isempty(collection) -> Bool",
+      desc: "True if collection has no elements.",
+      ex: "isempty([])  # true",
+    },
+    first: {
+      sig: "first(coll) or first(coll, n)",
+      desc: "First element or first n elements.",
+      ex: "first([4,5,6])  # 4",
+    },
+    last: {
+      sig: "last(coll) or last(coll, n)",
+      desc: "Last element or last n elements.",
+      ex: "last([4,5,6])  # 6",
+    },
+    map: {
+      sig: "map(f, c...) -> collection",
+      desc: "Apply `f` to each element of `c`.",
+      ex: "map(x->x^2, [1,2,3])  # [1,4,9]",
+    },
+    filter: {
+      sig: "filter(f, a)",
+      desc: "Keep elements where `f` returns true.",
+      ex: "filter(iseven, 1:10)",
+    },
+    reduce: {
+      sig: "reduce(op, itr; [init])",
+      desc: "Reduce collection with binary operator.",
+      ex: "reduce(+, [1,2,3])  # 6",
+    },
+    foldl: {
+      sig: "foldl(op, itr; [init])",
+      desc: "Left-associative fold.",
+      ex: "foldl(-, [1,2,3])  # -4",
+    },
+    foldr: {
+      sig: "foldr(op, itr; [init])",
+      desc: "Right-associative fold.",
+      ex: "foldr(-, [1,2,3])  # 2",
+    },
+    foreach: {
+      sig: "foreach(f, c...)",
+      desc: "Call `f` on each element for side effects. Returns nothing.",
+      ex: "foreach(println, [1,2,3])",
+    },
+    collect: {
+      sig: "collect(collection)",
+      desc: "Materialize an iterator into an Array.",
+      ex: "collect(1:5)  # [1,2,3,4,5]",
+    },
+    enumerate: {
+      sig: "enumerate(iter)",
+      desc: "Iterator of (index, element) pairs.",
+      ex: 'for (i,v) in enumerate(["a","b"]) ...',
+    },
+    zip: {
+      sig: "zip(iters...)",
+      desc: "Iterate over multiple iterators producing tuples.",
+      ex: 'collect(zip([1,2],["a","b"]))',
+    },
+    pairs: {
+      sig: "pairs(collection)",
+      desc: "Iterator of key-value pairs.",
+      ex: 'for (k,v) in pairs(["a","b"]) ...',
+    },
+    any: {
+      sig: "any(p, itr) -> Bool",
+      desc: "True if predicate holds for any element.",
+      ex: "any(iseven, [1,3,4])  # true",
+    },
+    all: {
+      sig: "all(p, itr) -> Bool",
+      desc: "True if predicate holds for all elements.",
+      ex: "all(iseven, [2,4,6])  # true",
+    },
+    count: {
+      sig: "count(p, itr)",
+      desc: "Count elements where predicate is true.",
+      ex: "count(iseven, 1:10)  # 5",
+    },
+    sum: {
+      sig: "sum(itr) or sum(f, itr)",
+      desc: "Sum of elements.",
+      ex: "sum([1,2,3])  # 6",
+    },
+    prod: {
+      sig: "prod(itr)",
+      desc: "Product of elements.",
+      ex: "prod([1,2,3,4])  # 24",
+    },
+    maximum: {
+      sig: "maximum(itr)",
+      desc: "Maximum element.",
+      ex: "maximum([3,1,5])  # 5",
+    },
+    minimum: {
+      sig: "minimum(itr)",
+      desc: "Minimum element.",
+      ex: "minimum([3,1,5])  # 1",
+    },
+    extrema: {
+      sig: "extrema(itr)",
+      desc: "Tuple of (minimum, maximum).",
+      ex: "extrema([3,1,5])  # (1,5)",
+    },
+    abs: { sig: "abs(x)", desc: "Absolute value.", ex: "abs(-3.5)  # 3.5" },
+    sqrt: {
+      sig: "sqrt(x)",
+      desc: "Square root. Throws DomainError for negative reals.",
+      ex: "sqrt(16)  # 4.0",
+    },
+    cbrt: {
+      sig: "cbrt(x)",
+      desc: "Cube root (real-valued).",
+      ex: "cbrt(27)  # 3.0",
+    },
+    exp: {
+      sig: "exp(x)",
+      desc: "Natural exponential eˣ.",
+      ex: "exp(1)  # 2.718...",
+    },
+    log: {
+      sig: "log([b], x)",
+      desc: "Natural log, or base-b log.",
+      ex: "log(ℯ)  # 1.0",
+    },
+    sin: { sig: "sin(x)", desc: "Sine (radians).", ex: "sin(π/2)  # 1.0" },
+    cos: { sig: "cos(x)", desc: "Cosine (radians).", ex: "cos(0)  # 1.0" },
+    tan: { sig: "tan(x)", desc: "Tangent (radians).", ex: "tan(π/4)  # 1.0" },
+    round: {
+      sig: "round([T,] x; digits, sigdigits)",
+      desc: "Round to nearest integer or precision.",
+      ex: "round(3.7)  # 4.0",
+    },
+    floor: {
+      sig: "floor([T,] x)",
+      desc: "Largest integer ≤ x.",
+      ex: "floor(3.7)  # 3.0",
+    },
+    ceil: {
+      sig: "ceil([T,] x)",
+      desc: "Smallest integer ≥ x.",
+      ex: "ceil(3.2)  # 4.0",
+    },
+    clamp: {
+      sig: "clamp(x, lo, hi)",
+      desc: "Clamp x to range [lo, hi].",
+      ex: "clamp(5,1,3)  # 3",
+    },
+    mod: {
+      sig: "mod(x, y)",
+      desc: "Modulus after flooring division.",
+      ex: "mod(7,3)  # 1",
+    },
+    div: {
+      sig: "div(x, y)",
+      desc: "Truncated integer division (÷).",
+      ex: "div(7,3)  # 2",
+    },
+    rand: {
+      sig: "rand([rng],[S],[dims...])",
+      desc: "Random value from S (default Float64 in [0,1)) or array.",
+      ex: "rand(3,3)",
+    },
+    randn: {
+      sig: "randn([rng],[T],[dims...])",
+      desc: "Normally distributed random number(s).",
+      ex: "randn(5)",
+    },
+    zeros: {
+      sig: "zeros([T=Float64], dims...)",
+      desc: "Array of all zeros.",
+      ex: "zeros(3)  # [0.0,0.0,0.0]",
+    },
+    ones: {
+      sig: "ones([T=Float64], dims...)",
+      desc: "Array of all ones.",
+      ex: "ones(Int,2,3)",
+    },
+    fill: {
+      sig: "fill(x, dims...)",
+      desc: "Array filled with value x.",
+      ex: "fill(0,2,3)",
+    },
+    similar: {
+      sig: "similar(array,[T],[dims...])",
+      desc: "Uninitialized array with same type/size.",
+      ex: "similar(ones(3))",
+    },
+    copy: { sig: "copy(x)", desc: "Shallow copy.", ex: "b = copy(a)" },
+    deepcopy: {
+      sig: "deepcopy(x)",
+      desc: "Deep recursive copy.",
+      ex: "b = deepcopy(a)",
+    },
+    reshape: {
+      sig: "reshape(A, dims...)",
+      desc: "Same data, different shape.",
+      ex: "reshape(1:6, 2, 3)",
+    },
+    hcat: {
+      sig: "hcat(A...)",
+      desc: "Horizontal concatenation (dim 2).",
+      ex: "hcat([1,2],[3,4])",
+    },
+    vcat: {
+      sig: "vcat(A...)",
+      desc: "Vertical concatenation (dim 1).",
+      ex: "vcat([1,2],[3,4])  # [1,2,3,4]",
+    },
+    range: {
+      sig: "range(start; stop, length, step)",
+      desc: "Construct a range.",
+      ex: "range(0,stop=1,length=5)",
+    },
+    view: {
+      sig: "view(A, inds...)",
+      desc: "Lightweight array view (no copy).",
+      ex: "view(A, 1:3, :)",
+    },
+    string: {
+      sig: "string(xs...)",
+      desc: "Create a string by printing values.",
+      ex: 'string("x=",42)  # "x=42"',
+    },
+    repr: {
+      sig: "repr(x)",
+      desc: "String via show (often more detail).",
+      ex: 'repr("hi")  # "\\"hi\\""',
+    },
+    join: {
+      sig: "join(strings, [delim], [last])",
+      desc: "Join strings with delimiter.",
+      ex: 'join(["a","b","c"],", ")  # "a, b, c"',
+    },
+    split: {
+      sig: "split(str, [dlm]; limit, keepempty)",
+      desc: "Split string into substrings.",
+      ex: 'split("a,b,c",",")',
+    },
+    replace: {
+      sig: "replace(s, pat=>sub; count)",
+      desc: "Replace pattern occurrences.",
+      ex: 'replace("hello","l"=>"r")  # "herro"',
+    },
+    strip: {
+      sig: "strip([pred], str)",
+      desc: "Remove leading/trailing whitespace.",
+      ex: 'strip("  hi  ")  # "hi"',
+    },
+    startswith: {
+      sig: "startswith(s, prefix) -> Bool",
+      desc: "True if s starts with prefix.",
+      ex: 'startswith("Julia","Jul")  # true',
+    },
+    endswith: {
+      sig: "endswith(s, suffix) -> Bool",
+      desc: "True if s ends with suffix.",
+      ex: 'endswith("Julia","lia")  # true',
+    },
+    occursin: {
+      sig: "occursin(needle, haystack) -> Bool",
+      desc: "True if needle is found.",
+      ex: 'occursin("ul","Julia")  # true',
+    },
+    uppercase: {
+      sig: "uppercase(s)",
+      desc: "Convert to uppercase.",
+      ex: 'uppercase("hello")  # "HELLO"',
+    },
+    lowercase: {
+      sig: "lowercase(s)",
+      desc: "Convert to lowercase.",
+      ex: 'lowercase("HELLO")  # "hello"',
+    },
+    parse: {
+      sig: "parse(T, str; base)",
+      desc: "Parse string as type T.",
+      ex: 'parse(Int,"42")  # 42',
+    },
+    match: {
+      sig: "match(r::Regex, s) -> RegexMatch",
+      desc: "First regex match in string.",
+      ex: 'match(r"\\d+","abc123")',
+    },
+    Dict: {
+      sig: "Dict([pairs])",
+      desc: "Hash table with key-value pairs.",
+      ex: 'Dict("a"=>1,"b"=>2)',
+    },
+    haskey: {
+      sig: "haskey(d, key) -> Bool",
+      desc: "True if dict has key.",
+      ex: 'haskey(Dict("a"=>1),"a")',
+    },
+    get: {
+      sig: "get(d, key, default)",
+      desc: "Value for key, or default.",
+      ex: 'get(d,"x",0)',
+    },
+    keys: {
+      sig: "keys(d)",
+      desc: "Iterator over dictionary keys.",
+      ex: 'keys(Dict("a"=>1))',
+    },
+    values: {
+      sig: "values(d)",
+      desc: "Iterator over dictionary values.",
+      ex: 'values(Dict("a"=>1))',
+    },
+    merge: {
+      sig: "merge(d, others...)",
+      desc: "Merge dictionaries.",
+      ex: 'merge(Dict("a"=>1),Dict("b"=>2))',
+    },
+    convert: {
+      sig: "convert(T, x)",
+      desc: "Convert x to type T.",
+      ex: "convert(Float64,1)  # 1.0",
+    },
+    isnothing: {
+      sig: "isnothing(x) -> Bool",
+      desc: "True if x === nothing.",
+      ex: "isnothing(nothing)  # true",
+    },
+    ismissing: {
+      sig: "ismissing(x) -> Bool",
+      desc: "True if x === missing.",
+      ex: "ismissing(missing)  # true",
+    },
+    isnan: {
+      sig: "isnan(x) -> Bool",
+      desc: "True if x is NaN.",
+      ex: "isnan(NaN)  # true",
+    },
+    isinf: {
+      sig: "isinf(x) -> Bool",
+      desc: "True if x is ±Inf.",
+      ex: "isinf(Inf)  # true",
+    },
+    iseven: {
+      sig: "iseven(n) -> Bool",
+      desc: "True if n is even.",
+      ex: "iseven(4)  # true",
+    },
+    isodd: {
+      sig: "isodd(n) -> Bool",
+      desc: "True if n is odd.",
+      ex: "isodd(3)  # true",
+    },
+    error: {
+      sig: "error(msg::String)",
+      desc: "Throw an ErrorException.",
+      ex: 'error("something failed")',
+    },
+    throw: {
+      sig: "throw(e)",
+      desc: "Throw an exception.",
+      ex: "throw(DomainError(-1))",
+    },
+    findfirst: {
+      sig: "findfirst(pred, A)",
+      desc: "Index of first match, or nothing.",
+      ex: "findfirst(iseven,[1,3,4])  # 3",
+    },
+    findall: {
+      sig: "findall(pred, A)",
+      desc: "All matching indices.",
+      ex: "findall(iseven,[1,2,3,4])  # [2,4]",
+    },
+    open: {
+      sig: "open(filename, [mode]) -> IO",
+      desc: 'Open a file. Modes: "r","w","a".',
+      ex: 'open("data.txt","r")',
+    },
+    read: {
+      sig: "read(io) or read(filename, T)",
+      desc: "Read data from IO or file.",
+      ex: 'read("file.txt", String)',
+    },
+    write: {
+      sig: "write(io, x)",
+      desc: "Write binary data to stream.",
+      ex: 'write(io, "hello")',
+    },
+    readline: {
+      sig: "readline(io=stdin; keep=false)",
+      desc: "Read a single line.",
+      ex: "line = readline()",
+    },
+    readlines: {
+      sig: "readlines(io; keep=false)",
+      desc: "All lines as Vector{String}.",
+      ex: 'readlines("file.txt")',
+    },
+    eachline: {
+      sig: "eachline(io)",
+      desc: "Iterator over lines.",
+      ex: 'for line in eachline("f.txt") ...',
+    },
+    // Keywords
+    function: {
+      sig: "function name(args...) ... end",
+      desc: "Define a named function.",
+      ex: "function add(x,y)\\n    return x+y\\nend",
+    },
+    struct: {
+      sig: "struct Name ... end",
+      desc: "Immutable composite type.",
+      ex: "struct Point\\n    x::Float64\\n    y::Float64\\nend",
+    },
+    mutable: {
+      sig: "mutable struct Name ... end",
+      desc: "Mutable composite type whose fields can change.",
+      ex: "mutable struct Counter\\n    count::Int\\nend",
+    },
+    abstract: {
+      sig: "abstract type Name end",
+      desc: "Abstract supertype (cannot be instantiated).",
+      ex: "abstract type Shape end",
+    },
+    module: {
+      sig: "module Name ... end",
+      desc: "Separate namespace for organizing code.",
+      ex: "module MyMod\\n    export f\\n    f()=42\\nend",
+    },
+    macro: {
+      sig: "macro name(args...) ... end",
+      desc: "Compile-time code transformation on expressions.",
+      ex: 'macro sayhello(name)\\n    :(println("Hi ",$(esc(name))))\\nend',
+    },
+    begin: {
+      sig: "begin ... end",
+      desc: "Group expressions into a compound expression.",
+      ex: "result = begin\\n    x=1; y=2\\n    x+y\\nend",
+    },
+    let: {
+      sig: "let var=val; body end",
+      desc: "New scope with local bindings.",
+      ex: "let x=1, y=2\\n    x+y\\nend",
+    },
+    if: {
+      sig: "if cond ... [elseif ...] [else ...] end",
+      desc: "Conditional evaluation.",
+      ex: 'if x>0\\n    "pos"\\nelse\\n    "non-pos"\\nend',
+    },
+    for: {
+      sig: "for var in iter ... end",
+      desc: "Iterate over a collection.",
+      ex: "for i in 1:10\\n    println(i)\\nend",
+    },
+    while: {
+      sig: "while cond ... end",
+      desc: "Loop while condition is true.",
+      ex: "while x>0\\n    x-=1\\nend",
+    },
+    try: {
+      sig: "try ... catch e ... finally ... end",
+      desc: "Exception handling.",
+      ex: "try\\n    risky()\\ncatch e\\n    println(e)\\nend",
+    },
+    do: {
+      sig: "f(args) do x ... end",
+      desc: "Anonymous function as first argument.",
+      ex: "map(1:5) do x\\n    x^2\\nend",
+    },
+    using: {
+      sig: "using Module",
+      desc: "Load module, bring exported names into scope.",
+      ex: "using LinearAlgebra",
+    },
+    import: {
+      sig: "import Module: name",
+      desc: "Load module; optionally import specific names.",
+      ex: "import Base: show, +",
+    },
+    export: {
+      sig: "export name1, name2",
+      desc: "Mark names for export from current module.",
+      ex: "export solve, MyType",
+    },
+    return: {
+      sig: "return value",
+      desc: "Return from a function. Last expression returned implicitly.",
+      ex: "return x + 1",
+    },
+    const: {
+      sig: "const name = value",
+      desc: "Constant binding (type cannot change).",
+      ex: "const PI = 3.14159",
+    },
+    where: {
+      sig: "f(x::T) where T",
+      desc: "Introduce type parameters in signatures.",
+      ex: "norm(v::Vector{T}) where T<:Number",
+    },
+    global: {
+      sig: "global var",
+      desc: "Declare variable as global inside a local scope.",
+      ex: "global counter",
+    },
+    local: {
+      sig: "local var",
+      desc: "Declare variable as local.",
+      ex: "local temp = 0",
+    },
+  };
+
+  // ─── Signature Help DB ──────────────────────────────────────────────
+
+  const juliaSigs = {
+    println: {
+      sigs: [
+        {
+          l: "println([io::IO], xs...)",
+          p: [
+            { l: "io::IO", d: "Output stream (optional)" },
+            { l: "xs...", d: "Values to print" },
+          ],
+        },
+      ],
+    },
+    print: {
+      sigs: [
+        {
+          l: "print([io::IO], xs...)",
+          p: [
+            { l: "io::IO", d: "Output stream" },
+            { l: "xs...", d: "Values" },
+          ],
+        },
+      ],
+    },
+    map: {
+      sigs: [
+        {
+          l: "map(f, c...) -> collection",
+          p: [
+            { l: "f", d: "Function to apply" },
+            { l: "c...", d: "Collections" },
+          ],
+        },
+      ],
+    },
+    filter: {
+      sigs: [
+        {
+          l: "filter(f, a)",
+          p: [
+            { l: "f", d: "Predicate (returns Bool)" },
+            { l: "a", d: "Collection" },
+          ],
+        },
+      ],
+    },
+    reduce: {
+      sigs: [
+        {
+          l: "reduce(op, itr; [init])",
+          p: [
+            { l: "op", d: "Binary operator" },
+            { l: "itr", d: "Collection" },
+          ],
+        },
+      ],
+    },
+    "push!": {
+      sigs: [
+        {
+          l: "push!(collection, items...)",
+          p: [
+            { l: "collection", d: "Target collection" },
+            { l: "items...", d: "Items to add" },
+          ],
+        },
+      ],
+    },
+    sort: {
+      sigs: [
+        {
+          l: "sort(v; alg, lt, by, rev)",
+          p: [{ l: "v", d: "Vector to sort" }],
+        },
+      ],
+    },
+    open: {
+      sigs: [
+        {
+          l: "open(filename, [mode]) -> IO",
+          p: [
+            { l: "filename", d: "File path" },
+            { l: "mode", d: '"r","w","a"' },
+          ],
+        },
+        {
+          l: "open(f, filename, [mode])",
+          p: [
+            { l: "f", d: "Function receiving IO" },
+            { l: "filename", d: "File path" },
+            { l: "mode", d: "Mode" },
+          ],
+        },
+      ],
+    },
+    parse: {
+      sigs: [
+        {
+          l: "parse(T, str; base)",
+          p: [
+            { l: "T", d: "Target type" },
+            { l: "str", d: "String to parse" },
+          ],
+        },
+      ],
+    },
+    replace: {
+      sigs: [
+        {
+          l: "replace(s, pat=>sub; count)",
+          p: [
+            { l: "s", d: "Input string" },
+            { l: "pat=>sub", d: "Pattern => replacement" },
+          ],
+        },
+      ],
+    },
+    split: {
+      sigs: [
+        {
+          l: "split(str, dlm; limit, keepempty)",
+          p: [
+            { l: "str", d: "String" },
+            { l: "dlm", d: "Delimiter" },
+          ],
+        },
+      ],
+    },
+    join: {
+      sigs: [
+        {
+          l: "join(strings, [delim], [last])",
+          p: [
+            { l: "strings", d: "Iterable of strings" },
+            { l: "delim", d: "Delimiter" },
+            { l: "last", d: "Last delimiter" },
+          ],
+        },
+      ],
+    },
+    get: {
+      sigs: [
+        {
+          l: "get(d, key, default)",
+          p: [
+            { l: "d", d: "Dict or collection" },
+            { l: "key", d: "Key" },
+            { l: "default", d: "Default value" },
+          ],
+        },
+      ],
+    },
+    zeros: {
+      sigs: [
+        {
+          l: "zeros([T], dims...)",
+          p: [
+            { l: "T", d: "Element type (Float64)" },
+            { l: "dims...", d: "Dimensions" },
+          ],
+        },
+      ],
+    },
+    ones: {
+      sigs: [
+        {
+          l: "ones([T], dims...)",
+          p: [
+            { l: "T", d: "Element type (Float64)" },
+            { l: "dims...", d: "Dimensions" },
+          ],
+        },
+      ],
+    },
+    fill: {
+      sigs: [
+        {
+          l: "fill(x, dims...)",
+          p: [
+            { l: "x", d: "Fill value" },
+            { l: "dims...", d: "Dimensions" },
+          ],
+        },
+      ],
+    },
+    rand: {
+      sigs: [
+        {
+          l: "rand([rng],[S],[dims...])",
+          p: [
+            { l: "rng", d: "RNG (optional)" },
+            { l: "S", d: "Type/collection" },
+            { l: "dims...", d: "Dimensions" },
+          ],
+        },
+      ],
+    },
+    reshape: {
+      sigs: [
+        {
+          l: "reshape(A, dims...)",
+          p: [
+            { l: "A", d: "Array" },
+            { l: "dims...", d: "New dimensions" },
+          ],
+        },
+      ],
+    },
+    convert: {
+      sigs: [
+        {
+          l: "convert(T, x)",
+          p: [
+            { l: "T", d: "Target type" },
+            { l: "x", d: "Value" },
+          ],
+        },
+      ],
+    },
+    range: {
+      sigs: [
+        {
+          l: "range(start; stop, length, step)",
+          p: [{ l: "start", d: "Start value" }],
+        },
+      ],
+    },
+    clamp: {
+      sigs: [
+        {
+          l: "clamp(x, lo, hi)",
+          p: [
+            { l: "x", d: "Value" },
+            { l: "lo", d: "Lower bound" },
+            { l: "hi", d: "Upper bound" },
+          ],
+        },
+      ],
+    },
+    findfirst: {
+      sigs: [
+        {
+          l: "findfirst(pred, A)",
+          p: [
+            { l: "pred", d: "Predicate function" },
+            { l: "A", d: "Collection" },
+          ],
+        },
+      ],
+    },
+    findall: {
+      sigs: [
+        {
+          l: "findall(pred, A)",
+          p: [
+            { l: "pred", d: "Predicate function" },
+            { l: "A", d: "Collection" },
+          ],
+        },
+      ],
+    },
+    merge: {
+      sigs: [
+        {
+          l: "merge(d, others...)",
+          p: [
+            { l: "d", d: "Base dict" },
+            { l: "others...", d: "Dicts to merge in" },
+          ],
+        },
+      ],
+    },
+    string: {
+      sigs: [
+        {
+          l: "string(xs...)",
+          p: [{ l: "xs...", d: "Values to convert to string" }],
+        },
+      ],
+    },
+    collect: {
+      sigs: [
+        {
+          l: "collect([T], itr)",
+          p: [{ l: "itr", d: "Iterator or collection" }],
+        },
+      ],
+    },
+    enumerate: {
+      sigs: [{ l: "enumerate(iter)", p: [{ l: "iter", d: "Iterable" }] }],
+    },
+    zip: {
+      sigs: [
+        { l: "zip(iters...)", p: [{ l: "iters...", d: "Iterables to zip" }] },
+      ],
+    },
+    sum: {
+      sigs: [
+        {
+          l: "sum(itr) or sum(f, itr)",
+          p: [{ l: "f/itr", d: "Function or iterable" }],
+        },
+      ],
+    },
+    maximum: {
+      sigs: [{ l: "maximum(itr)", p: [{ l: "itr", d: "Iterable" }] }],
+    },
+    minimum: {
+      sigs: [{ l: "minimum(itr)", p: [{ l: "itr", d: "Iterable" }] }],
+    },
+    haskey: {
+      sigs: [
+        {
+          l: "haskey(d, key) -> Bool",
+          p: [
+            { l: "d", d: "Dictionary" },
+            { l: "key", d: "Key to check" },
+          ],
+        },
+      ],
+    },
+    "insert!": {
+      sigs: [
+        {
+          l: "insert!(a, i, item)",
+          p: [
+            { l: "a", d: "Vector" },
+            { l: "i", d: "Index" },
+            { l: "item", d: "Item to insert" },
+          ],
+        },
+      ],
+    },
+    "deleteat!": {
+      sigs: [
+        {
+          l: "deleteat!(a, i)",
+          p: [
+            { l: "a", d: "Vector" },
+            { l: "i", d: "Index to delete" },
+          ],
+        },
+      ],
+    },
+    match: {
+      sigs: [
+        {
+          l: "match(r::Regex, s)",
+          p: [
+            { l: "r", d: "Regex pattern" },
+            { l: "s", d: "String" },
+          ],
+        },
+      ],
+    },
+  };
+
+  // ─── Snippets ───────────────────────────────────────────────────────
+
+  const juliaSnippets = [
+    {
+      l: "function",
+      t: "function ${1:name}(${2:args})\n\t${0}\nend",
+      d: "Function definition",
+    },
+    { l: "if", t: "if ${1:condition}\n\t${0}\nend", d: "If block" },
+    {
+      l: "ifelse",
+      t: "if ${1:condition}\n\t${2}\nelse\n\t${0}\nend",
+      d: "If-else block",
+    },
+    {
+      l: "ifelseif",
+      t: "if ${1:cond1}\n\t${2}\nelseif ${3:cond2}\n\t${4}\nelse\n\t${0}\nend",
+      d: "If-elseif-else",
+    },
+    { l: "for", t: "for ${1:i} in ${2:1:n}\n\t${0}\nend", d: "For loop" },
+    { l: "while", t: "while ${1:condition}\n\t${0}\nend", d: "While loop" },
+    {
+      l: "struct",
+      t: "struct ${1:Name}\n\t${2:field}::${3:Type}\nend",
+      d: "Struct definition",
+    },
+    {
+      l: "mstruct",
+      t: "mutable struct ${1:Name}\n\t${2:field}::${3:Type}\nend",
+      d: "Mutable struct",
+    },
+    {
+      l: "pstruct",
+      t: "struct ${1:Name}{${2:T}}\n\t${3:field}::${4:T}\nend",
+      d: "Parametric struct",
+    },
+    {
+      l: "substruct",
+      t: "struct ${1:Name} <: ${2:SuperType}\n\t${3:field}::${4:Type}\nend",
+      d: "Struct with supertype",
+    },
+    {
+      l: "abstract type",
+      t: "abstract type ${1:Name} end",
+      d: "Abstract type",
+    },
+    {
+      l: "module",
+      t: "module ${1:Name}\n\n${0}\n\nend # module ${1:Name}",
+      d: "Module definition",
+    },
+    { l: "try", t: "try\n\t${1}\ncatch ${2:e}\n\t${0}\nend", d: "Try-catch" },
+    {
+      l: "trycf",
+      t: "try\n\t${1}\ncatch ${2:e}\n\t${3}\nfinally\n\t${0}\nend",
+      d: "Try-catch-finally",
+    },
+    { l: "begin", t: "begin\n\t${0}\nend", d: "Begin block" },
+    { l: "let", t: "let ${1:x} = ${2:value}\n\t${0}\nend", d: "Let block" },
+    {
+      l: "macro",
+      t: "macro ${1:name}(${2:args})\n\t${0}\nend",
+      d: "Macro definition",
+    },
+    {
+      l: "do",
+      t: "${1:func}(${2:args}) do ${3:x}\n\t${0}\nend",
+      d: "Do block",
+    },
+    {
+      l: "docstring",
+      t: '"""\n    ${1:name}(${2:args})\n\n${3:Description.}\n"""\n',
+      d: "Documentation string",
+    },
+    {
+      l: "testset",
+      t: '@testset "${1:name}" begin\n\t${0}\nend',
+      d: "Test set block",
+    },
+    {
+      l: "map do",
+      t: "map(${1:collection}) do ${2:x}\n\t${0}\nend",
+      d: "Map with do block",
+    },
+    {
+      l: "open do",
+      t: 'open(${1:"file"}, ${2:"r"}) do ${3:io}\n\t${0}\nend',
+      d: "Open file with do",
+    },
+    {
+      l: "enum for",
+      t: "for (${1:i}, ${2:v}) in enumerate(${3:collection})\n\t${0}\nend",
+      d: "Enumerate loop",
+    },
+    {
+      l: "comprehension",
+      t: "[${1:expr} for ${2:x} in ${3:iter}]",
+      d: "Array comprehension",
+    },
+    {
+      l: "dictcomp",
+      t: "Dict(${1:k} => ${2:v} for (${3:k},${4:v}) in ${5:iter})",
+      d: "Dict comprehension",
+    },
+    {
+      l: "generator",
+      t: "(${1:expr} for ${2:x} in ${3:iter})",
+      d: "Generator expression",
+    },
+    {
+      l: "channel",
+      t: "Channel{${1:Type}}(${2:32}) do ch\n\tput!(ch, ${0})\nend",
+      d: "Channel with producer",
+    },
+    {
+      l: "kwargs func",
+      t: "function ${1:name}(${2:args}; ${3:kwargs})\n\t${0}\nend",
+      d: "Function with kwargs",
+    },
+    {
+      l: "@kwdef struct",
+      t: "@kwdef struct ${1:Name}\n\t${2:field}::${3:Type} = ${4:default}\nend",
+      d: "Struct with defaults",
+    },
+  ];
+
+  // ─── Monaco Setup ───────────────────────────────────────────────────
+
+  function escapeRegex(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  // ─── Register Julia Language ────────────────────────
+
+  monaco.languages.register({
+    id: "julia",
+    extensions: [".jl"],
+    aliases: ["Julia", "julia"],
+    mimetypes: ["application/julia", "text/julia"],
+  });
+
+  // ─── Language Configuration ─────────────────────────
+
+  monaco.languages.setLanguageConfiguration("julia", {
+    comments: {
+      lineComment: "#",
+      blockComment: ["#=", "=#"],
+    },
+    brackets: [
+      ["{", "}"],
+      ["[", "]"],
+      ["(", ")"],
+    ],
+    autoClosingPairs: [
+      { open: "{", close: "}" },
+      { open: "[", close: "]" },
+      { open: "(", close: ")" },
+      { open: '"', close: '"', notIn: ["string"] },
+      { open: "'", close: "'", notIn: ["string", "comment"] },
+      { open: "`", close: "`", notIn: ["string", "comment"] },
+    ],
+    surroundingPairs: [
+      { open: "{", close: "}" },
+      { open: "[", close: "]" },
+      { open: "(", close: ")" },
+      { open: '"', close: '"' },
+      { open: "'", close: "'" },
+      { open: "`", close: "`" },
+    ],
+    wordPattern: /(-?\d*\.\d\w*)|(@?[a-zA-Z_]\w*!?)/,
+    indentationRules: {
+      increaseIndentPattern:
+        /^\s*(function|if|elseif|else|for|while|try|catch|finally|begin|let|do|module|baremodule|struct|mutable\s+struct|abstract\s+type|primitive\s+type|macro|quote)\b.*$/,
+      decreaseIndentPattern: /^\s*(end|else|elseif|catch|finally)\b.*$/,
+    },
+    folding: {
+      markers: {
+        start:
+          /^\s*(?:function|if|for|while|try|begin|let|do|module|baremodule|struct|mutable\s+struct|abstract\s+type|macro|quote)\b/,
+        end: /^\s*end\b/,
+      },
+    },
+    onEnterRules: [
+      {
+        beforeText:
+          /^\s*(function|if|elseif|else|for|while|try|catch|finally|begin|let|do|module|baremodule|struct|mutable\s+struct|abstract\s+type|primitive\s+type|macro|quote)\b.*$/,
+        action: { indentAction: monaco.languages.IndentAction.Indent },
+      },
+    ],
+  });
+
+  // ─── Monarch Tokenizer ─────────────────────────────
+
+  monaco.languages.setMonarchTokensProvider("julia", {
+    defaultToken: "",
+    tokenPostfix: ".julia",
+
+    keywords: juliaKeywords,
+    typeKeywords: juliaTypes,
+    builtinFunctions: juliaBuiltins,
+    constants: juliaConstants,
+
+    escapes:
+      /\\(?:[abfnrtv\\"'$]|x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{1,4}|U[0-9A-Fa-f]{1,8}|[0-7]{1,3})/,
+
+    tokenizer: {
+      root: [
+        [/\s+/, "white"],
+
+        // Multi-line comment (nestable)
+        [/#=/, "comment", "@comment"],
+        // Single-line comment
+        [/#.*$/, "comment"],
+
+        // Triple-quoted strings
+        [/"""/, "string", "@triplestring"],
+        // Raw string
+        [/raw"/, "string", "@rawstring"],
+        // Regex
+        [/r"/, "regexp", "@regex"],
+        // Version string
+        [/v"/, "string", "@versionstring"],
+        // Byte string
+        [/b"/, "string", "@bytestring"],
+        // Regular string
+        [/"/, "string", "@string_double"],
+
+        // Command literal
+        [/`/, "string", "@command"],
+
+        // Character literal
+        [/'(?:[^\\']|\\.)'/, "string"],
+
+        // Numbers
+        [/0x[0-9a-fA-F](_?[0-9a-fA-F])*/, "number.hex"],
+        [/0b[01](_?[01])*/, "number.binary"],
+        [/0o[0-7](_?[0-7])*/, "number.octal"],
+        [
+          /[0-9](_?[0-9])*\.[0-9](_?[0-9])*([eEf][\-+]?[0-9]+)?/,
+          "number.float",
+        ],
+        [/[0-9](_?[0-9])*[eEf][\-+]?[0-9]+/, "number.float"],
+        [/[0-9](_?[0-9])*/, "number"],
+
+        // Macros
+        [/@[a-zA-Z_]\w*/, "annotation"],
+
+        // Symbols :name
+        [/:[a-zA-Z_]\w*/, "tag"],
+
+        // Identifiers and keywords
+        [
+          /[a-zA-Z_\u00C0-\u024F\u0370-\u03FF\u2100-\u214F]\w*!?/,
+          {
+            cases: {
+              "@keywords": "keyword",
+              "@typeKeywords": "type",
+              "@builtinFunctions": "predefined",
+              "@constants": "constant",
+              "@default": "identifier",
+            },
+          },
+        ],
+
+        // Multi-char operators (order matters)
+        [/===|!==/, "operator"],
+        [/\.{2,3}/, "operator"],
+        [/\|>|<\||->|<:|>:/, "operator"],
+        [/&&|\|\|/, "operator"],
+        [/>>>=?|>>=?|<<=?/, "operator"],
+        [/[+\-*\/\\÷^%&|⊻~]?=/, "operator"],
+        [/[<>!=]=/, "operator"],
+        [/::/, "operator"],
+        [/\.(?=[+\-*\/\\^%<>=!])/, "operator"],
+        [/[+\-*\/\\÷^%&|⊻~!<>?]/, "operator"],
+
+        // Brackets and delimiters
+        [/[{}()\[\]]/, "@brackets"],
+        [/[;,]/, "delimiter"],
+      ],
+
+      comment: [
+        [/#=/, "comment", "@push"],
+        [/=#/, "comment", "@pop"],
+        [/[^#=]+/, "comment"],
+        [/[#=]/, "comment"],
+      ],
+
+      string_double: [
+        [/\$\(/, "variable", "@interpolation"],
+        [/\$[a-zA-Z_]\w*!?/, "variable"],
+        [/@escapes/, "string.escape"],
+        [/[^"\\$]+/, "string"],
+        [/\\./, "string.escape"],
+        [/"/, "string", "@pop"],
+      ],
+
+      triplestring: [
+        [/\$\(/, "variable", "@interpolation"],
+        [/\$[a-zA-Z_]\w*!?/, "variable"],
+        [/@escapes/, "string.escape"],
+        [/"""/, "string", "@pop"],
+        [/[^"\\$]+/, "string"],
+        [/\\./, "string.escape"],
+        [/"/, "string"],
+      ],
+
+      rawstring: [
+        [/[^"]+/, "string"],
+        [/"/, "string", "@pop"],
+      ],
+
+      regex: [
+        [/[^"\\]+/, "regexp"],
+        [/\\./, "regexp.escape"],
+        [/"[imsx]*/, "regexp", "@pop"],
+      ],
+
+      versionstring: [
+        [/[^"]+/, "string"],
+        [/"/, "string", "@pop"],
+      ],
+
+      bytestring: [
+        [/@escapes/, "string.escape"],
+        [/[^"\\]+/, "string"],
+        [/\\./, "string.escape"],
+        [/"/, "string", "@pop"],
+      ],
+
+      command: [
+        [/\$\(/, "variable", "@interpolation"],
+        [/\$[a-zA-Z_]\w*!?/, "variable"],
+        [/@escapes/, "string.escape"],
+        [/[^`\\$]+/, "string"],
+        [/\\./, "string.escape"],
+        [/`/, "string", "@pop"],
+      ],
+
+      interpolation: [
+        [/\(/, "variable", "@push"],
+        [/\)/, "variable", "@pop"],
+        { include: "root" },
+      ],
+    },
+  });
+
+  // ─── Completion Provider ────────────────────────────
+
+  const kwSet = new Set(juliaKeywords);
+  const tySet = new Set(juliaTypes);
+  const fnSet = new Set(juliaBuiltins);
+  const cnSet = new Set(juliaConstants);
+
+  monaco.languages.registerCompletionItemProvider("julia", {
+    triggerCharacters: [".", "@"],
+
+    provideCompletionItems: function (model, position) {
+      const word = model.getWordUntilPosition(position);
+      const range = {
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: word.startColumn,
+        endColumn: word.endColumn,
+      };
+
+      const lineContent = model.getLineContent(position.lineNumber);
+      const charBefore =
+        word.startColumn > 1 ? lineContent.charAt(word.startColumn - 2) : "";
+      const suggestions = [];
+
+      // ── Macro context ──
+      if (charBefore === "@") {
+        const macroRange = {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: word.startColumn - 1,
+          endColumn: word.endColumn,
+        };
+        juliaMacros.forEach(function (m) {
+          suggestions.push({
+            label: "@" + m.n,
+            kind: monaco.languages.CompletionItemKind.Event,
+            insertText: "@" + m.n,
+            detail: "macro",
+            documentation: { value: m.d },
+            range: macroRange,
+            sortText: "0_" + m.n,
+          });
+        });
+        return { suggestions: suggestions };
+      }
+
+      // ── Snippets ──
+      juliaSnippets.forEach(function (s) {
+        suggestions.push({
+          label: s.l,
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: s.t,
+          insertTextRules:
+            monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          detail: "snippet — " + s.d,
+          documentation: {
+            value:
+              "```julia\n" +
+              s.t.replace(/\$\{\d+:?([^}]*)}/g, "$1").replace(/\$\d+/g, "") +
+              "\n```",
+          },
+          range: range,
+          sortText: "1_" + s.l,
+        });
+      });
+
+      // ── Keywords ──
+      juliaKeywords.forEach(function (k) {
+        var doc = juliaDocs[k];
+        suggestions.push({
+          label: k,
+          kind: monaco.languages.CompletionItemKind.Keyword,
+          insertText: k,
+          detail: "keyword",
+          documentation: doc
+            ? { value: "```julia\n" + doc.sig + "\n```\n" + doc.desc }
+            : undefined,
+          range: range,
+          sortText: "2_" + k,
+        });
+      });
+
+      // ── Constants ──
+      juliaConstants.forEach(function (c) {
+        suggestions.push({
+          label: c,
+          kind: monaco.languages.CompletionItemKind.Constant,
+          insertText: c,
+          detail: "constant",
+          range: range,
+          sortText: "3_" + c,
+        });
+      });
+
+      // ── Types ──
+      juliaTypes.forEach(function (t) {
+        suggestions.push({
+          label: t,
+          kind: monaco.languages.CompletionItemKind.Class,
+          insertText: t,
+          detail: "type",
+          range: range,
+          sortText: "4_" + t,
+        });
+      });
+
+      // ── Built-in functions ──
+      juliaBuiltins.forEach(function (fn) {
+        var doc = juliaDocs[fn];
+        var md = "";
+        if (doc) {
+          md = "```julia\n" + doc.sig + "\n```\n" + doc.desc;
+          if (doc.ex) md += "\n\n**Example:**\n```julia\n" + doc.ex + "\n```";
+        }
+        suggestions.push({
+          label: fn,
+          kind: monaco.languages.CompletionItemKind.Function,
+          insertText: fn,
+          detail: "Base function",
+          documentation: md ? { value: md } : undefined,
+          range: range,
+          sortText: "5_" + fn,
+        });
+      });
+
+      // ── Macros (without @) for general context ──
+      juliaMacros.forEach(function (m) {
+        suggestions.push({
+          label: "@" + m.n,
+          kind: monaco.languages.CompletionItemKind.Event,
+          insertText: "@" + m.n,
+          detail: "macro",
+          documentation: { value: m.d },
+          range: range,
+          sortText: "6_" + m.n,
+        });
+      });
+
+      // ── Document symbols ──
+      var text = model.getValue();
+      var seen = new Set();
+      var idRegex = /\b([a-zA-Z_]\w*!?)\b/g;
+      var m;
+      while ((m = idRegex.exec(text)) !== null) {
+        var id = m[1];
+        if (
+          !seen.has(id) &&
+          !kwSet.has(id) &&
+          !tySet.has(id) &&
+          !fnSet.has(id) &&
+          !cnSet.has(id) &&
+          id.length > 1
+        ) {
+          seen.add(id);
+          suggestions.push({
+            label: id,
+            kind: monaco.languages.CompletionItemKind.Variable,
+            insertText: id,
+            detail: "document symbol",
+            range: range,
+            sortText: "7_" + id,
+          });
+        }
+      }
+
+      return { suggestions: suggestions };
+    },
+  });
+
+  // ─── Hover Provider ─────────────────────────────────
+
+  monaco.languages.registerHoverProvider("julia", {
+    provideHover: function (model, position) {
+      var wordInfo = model.getWordAtPosition(position);
+      if (!wordInfo) return null;
+      var word = wordInfo.word;
+
+      // Check for macro: look for @ before word
+      var lineContent = model.getLineContent(position.lineNumber);
+      var charBefore =
+        wordInfo.startColumn > 1
+          ? lineContent.charAt(wordInfo.startColumn - 2)
+          : "";
+      if (charBefore === "@") {
+        for (var i = 0; i < juliaMacros.length; i++) {
+          if (juliaMacros[i].n === word) {
+            return {
+              range: new monaco.Range(
+                position.lineNumber,
+                wordInfo.startColumn - 1,
+                position.lineNumber,
+                wordInfo.endColumn,
+              ),
+              contents: [
+                { value: "**@" + word + "** — *macro*" },
+                { value: juliaMacros[i].d },
+              ],
+            };
+          }
+        }
+      }
+
+      // Look up in docs
+      var doc = juliaDocs[word];
+      if (doc) {
+        var contents = [
+          { value: "```julia\n" + doc.sig + "\n```" },
+          { value: doc.desc },
+        ];
+        if (doc.ex) {
+          contents.push({
+            value: "**Example:**\n```julia\n" + doc.ex + "\n```",
+          });
+        }
+        // Category tag
+        var cat = "";
+        if (kwSet.has(word)) cat = "keyword";
+        else if (tySet.has(word)) cat = "type";
+        else if (fnSet.has(word)) cat = "Base function";
+        else if (cnSet.has(word)) cat = "constant";
+        if (cat)
+          contents[0] = {
+            value:
+              "**" +
+              word +
+              "** — *" +
+              cat +
+              "*\n```julia\n" +
+              doc.sig +
+              "\n```",
+          };
+
+        return {
+          range: new monaco.Range(
+            position.lineNumber,
+            wordInfo.startColumn,
+            position.lineNumber,
+            wordInfo.endColumn,
+          ),
+          contents: contents,
+        };
+      }
+
+      // Types without full docs
+      if (tySet.has(word)) {
+        return {
+          range: new monaco.Range(
+            position.lineNumber,
+            wordInfo.startColumn,
+            position.lineNumber,
+            wordInfo.endColumn,
+          ),
+          contents: [{ value: "**" + word + "** — *type*" }],
+        };
+      }
+
+      // Constants
+      if (cnSet.has(word)) {
+        return {
+          range: new monaco.Range(
+            position.lineNumber,
+            wordInfo.startColumn,
+            position.lineNumber,
+            wordInfo.endColumn,
+          ),
+          contents: [{ value: "**" + word + "** — *constant*" }],
+        };
+      }
+
+      // Try to find definition in document
+      var lines = model.getLinesContent();
+      var defPatterns = [
+        new RegExp("\\bfunction\\s+(?:\\w+\\.)?(" + escapeRegex(word) + ")\\b"),
+        new RegExp("\\bstruct\\s+(" + escapeRegex(word) + ")\\b"),
+        new RegExp("\\bmutable\\s+struct\\s+(" + escapeRegex(word) + ")\\b"),
+        new RegExp("\\babstract\\s+type\\s+(" + escapeRegex(word) + ")\\b"),
+        new RegExp("\\bconst\\s+(" + escapeRegex(word) + ")\\b"),
+        new RegExp("\\bmodule\\s+(" + escapeRegex(word) + ")\\b"),
+      ];
+      for (var li = 0; li < lines.length; li++) {
+        for (var pi = 0; pi < defPatterns.length; pi++) {
+          if (defPatterns[pi].test(lines[li])) {
+            // Check for docstring above
+            var docStr = "";
+            if (li > 0 && lines[li - 1].trim() === '"""') {
+              var dEnd = li - 1;
+              for (var di = dEnd - 1; di >= 0; di--) {
+                if (lines[di].indexOf('"""') !== -1) {
+                  docStr = lines
+                    .slice(di + 1, dEnd)
+                    .join("\n")
+                    .trim();
+                  break;
+                }
+              }
+            } else if (
+              li > 0 &&
+              lines[li - 1].trim().startsWith('"""') &&
+              lines[li - 1].trim().endsWith('"""') &&
+              lines[li - 1].trim().length > 6
+            ) {
+              docStr = lines[li - 1].trim().slice(3, -3).trim();
+            }
+            var hoverContent = [
+              { value: "```julia\n" + lines[li].trim() + "\n```" },
+            ];
+            if (docStr) hoverContent.push({ value: docStr });
+            hoverContent.push({ value: "*Defined on line " + (li + 1) + "*" });
+            return {
+              range: new monaco.Range(
+                position.lineNumber,
+                wordInfo.startColumn,
+                position.lineNumber,
+                wordInfo.endColumn,
+              ),
+              contents: hoverContent,
+            };
+          }
+        }
+      }
+
+      return null;
+    },
+  });
+
+  // ─── Definition Provider ────────────────────────────
+
+  monaco.languages.registerDefinitionProvider("julia", {
+    provideDefinition: function (model, position) {
+      var wordInfo = model.getWordAtPosition(position);
+      if (!wordInfo) return null;
+      var word = wordInfo.word;
+
+      var lines = model.getLinesContent();
+      var results = [];
+      var patterns = [
+        new RegExp("\\bfunction\\s+(?:\\w+\\.)?(" + escapeRegex(word) + ")\\b"),
+        new RegExp("\\bstruct\\s+(" + escapeRegex(word) + ")\\b"),
+        new RegExp("\\bmutable\\s+struct\\s+(" + escapeRegex(word) + ")\\b"),
+        new RegExp("\\babstract\\s+type\\s+(" + escapeRegex(word) + ")\\b"),
+        new RegExp("\\bprimitive\\s+type\\s+(" + escapeRegex(word) + ")\\b"),
+        new RegExp("\\bconst\\s+(" + escapeRegex(word) + ")\\b"),
+        new RegExp("\\bmacro\\s+(" + escapeRegex(word) + ")\\b"),
+        new RegExp("\\bmodule\\s+(" + escapeRegex(word) + ")\\b"),
+        new RegExp("^\\s*(" + escapeRegex(word) + ")\\s*\\([^)]*\\)\\s*="),
+        new RegExp("^\\s*(" + escapeRegex(word) + ")\\s*=[^=]"),
+      ];
+
+      for (var i = 0; i < lines.length; i++) {
+        for (var j = 0; j < patterns.length; j++) {
+          var match = patterns[j].exec(lines[i]);
+          if (match) {
+            var idx = lines[i].indexOf(match[1], match.index);
+            if (idx >= 0) {
+              results.push({
+                uri: model.uri,
+                range: new monaco.Range(
+                  i + 1,
+                  idx + 1,
+                  i + 1,
+                  idx + 1 + word.length,
+                ),
+              });
+            }
+            break;
+          }
+        }
+      }
+
+      return results.length > 0 ? results : null;
+    },
+  });
+
+  // ─── Signature Help Provider ────────────────────────
+
+  monaco.languages.registerSignatureHelpProvider("julia", {
+    signatureHelpTriggerCharacters: ["(", ","],
+    signatureHelpRetriggerCharacters: [","],
+    provideSignatureHelp: function (model, position) {
+      var lineContent = model.getLineContent(position.lineNumber);
+      var textBefore = lineContent.substring(0, position.column - 1);
+
+      // Walk backward to find the innermost unclosed ( and count commas
+      var depth = 0;
+      var commas = 0;
+      var parenPos = -1;
+
+      for (var i = textBefore.length - 1; i >= 0; i--) {
+        var ch = textBefore[i];
+        if (ch === ")") depth++;
+        else if (ch === "(") {
+          if (depth === 0) {
+            parenPos = i;
+            break;
+          }
+          depth--;
+        } else if (ch === "," && depth === 0) {
+          commas++;
+        }
+      }
+
+      if (parenPos < 0) {
+        // Try previous lines (up to 10)
+        var allText = textBefore;
+        for (
+          var ln = position.lineNumber - 1;
+          ln >= Math.max(1, position.lineNumber - 10);
+          ln--
+        ) {
+          allText = model.getLineContent(ln) + "\n" + allText;
+        }
+        depth = 0;
+        commas = 0;
+        parenPos = -1;
+        for (var ii = allText.length - 1; ii >= 0; ii--) {
+          var c = allText[ii];
+          if (c === ")") depth++;
+          else if (c === "(") {
+            if (depth === 0) {
+              parenPos = ii;
+              textBefore = allText;
+              break;
+            }
+            depth--;
+          } else if (c === "," && depth === 0) commas++;
+        }
+        if (parenPos < 0) return null;
+      }
+
+      var beforeParen = textBefore.substring(0, parenPos).replace(/\s+$/, "");
+      var funcMatch = beforeParen.match(/([a-zA-Z_]\w*!?)\s*$/);
+      if (!funcMatch) return null;
+
+      var funcName = funcMatch[1];
+      var sigInfo = juliaSigs[funcName];
+      if (!sigInfo) return null;
+
+      return {
+        value: {
+          signatures: sigInfo.sigs.map(function (s) {
+            return {
+              label: s.l,
+              parameters: s.p.map(function (p) {
+                return { label: p.l, documentation: p.d };
+              }),
+            };
+          }),
+          activeSignature: 0,
+          activeParameter: Math.min(commas, sigInfo.sigs[0].p.length - 1),
+        },
+        dispose: function () {},
+      };
+    },
+  });
+
+  // ─── Document Symbol Provider (Outline) ─────────────
+
+  monaco.languages.registerDocumentSymbolProvider("julia", {
+    provideDocumentSymbols: function (model) {
+      var lines = model.getLinesContent();
+      var symbols = [];
+      var symbolPatterns = [
+        {
+          regex: /\bfunction\s+(?:\w+\.)?(\w+!?)/,
+          kind: monaco.languages.SymbolKind.Function,
+        },
+        { regex: /\bstruct\s+(\w+)/, kind: monaco.languages.SymbolKind.Struct },
+        {
+          regex: /\bmutable\s+struct\s+(\w+)/,
+          kind: monaco.languages.SymbolKind.Struct,
+        },
+        {
+          regex: /\babstract\s+type\s+(\w+)/,
+          kind: monaco.languages.SymbolKind.Class,
+        },
+        { regex: /\bmodule\s+(\w+)/, kind: monaco.languages.SymbolKind.Module },
+        {
+          regex: /\bmacro\s+(\w+)/,
+          kind: monaco.languages.SymbolKind.Function,
+        },
+        {
+          regex: /\bconst\s+(\w+)/,
+          kind: monaco.languages.SymbolKind.Constant,
+        },
+        {
+          regex: /^(\w+!?)\s*\([^)]*\)\s*=/,
+          kind: monaco.languages.SymbolKind.Function,
+        },
+      ];
+
+      for (var i = 0; i < lines.length; i++) {
+        for (var j = 0; j < symbolPatterns.length; j++) {
+          var m = symbolPatterns[j].regex.exec(lines[i]);
+          if (m) {
+            var name = m[1];
+            var col = lines[i].indexOf(name) + 1;
+            symbols.push({
+              name: name,
+              kind: symbolPatterns[j].kind,
+              range: new monaco.Range(i + 1, 1, i + 1, lines[i].length + 1),
+              selectionRange: new monaco.Range(
+                i + 1,
+                col,
+                i + 1,
+                col + name.length,
+              ),
+              detail: "",
+            });
+            break;
+          }
+        }
+      }
+
+      return symbols;
+    },
+  });
+};
