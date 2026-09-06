@@ -1,6 +1,6 @@
 {
   "name": "@live-codes/monaco-languages",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Language support for Monaco Editor",
   "repository": {
     "url": "https://github.com/live-codes/monaco-languages"
@@ -34,7 +34,6 @@
     "sql": "./dist/sql.js",
     "svelte": "./dist/svelte.js",
     "swift": "./dist/swift.js",
-    "sql": "./dist/sql.js",
     "vue": "./dist/vue.js",
     "wat": "./dist/wat.js",
     "zig": "./dist/zig.js"

@@ -206,7 +206,7 @@ export default (monaco: typeof Monaco) => {
         // Attributes
         [/\[\</, { token: "annotation", bracket: "@open", next: "@attribute" }],
         // Type annotations after colon
-        [/(:)\s*([A-Z][\w']*)/, ["delimiter", "type.identifier"]],
+        [/(:)(\s*)([A-Z][\w']*)/, ["delimiter", "white", "type.identifier"]],
         // Module/namespace qualified
         [/[A-Z][\w']*(?=\.)/, "type.identifier"],
         // Type identifiers (PascalCase)
