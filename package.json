@@ -1,6 +1,6 @@
 {
   "name": "@live-codes/monaco-languages",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Language support for Monaco Editor",
   "repository": {
     "url": "https://github.com/live-codes/monaco-languages"
@@ -12,6 +12,7 @@
     "commonlisp": "./dist/commonlisp.js",
     "cpp": "./dist/cpp.js",
     "csharp": "./dist/csharp.js",
+    "elm": "./dist/elm.js",
     "fsharp": "./dist/fsharp.js",
     "go": "./dist/go.js",
     "haskell": "./dist/haskell.js",
