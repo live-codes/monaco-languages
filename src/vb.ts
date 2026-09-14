@@ -1,0 +1,2236 @@
+import type * as Monaco from "monaco-editor";
+
+export default (monaco: typeof Monaco) => {
+  // ── Register VB.NET Language ──────────────────────────────────────
+  monaco.languages.register({
+    id: "vbnet",
+    extensions: [".vb"],
+    aliases: ["VB.NET", "vbnet", "Visual Basic .NET"],
+  });
+
+  // ── Language Configuration ────────────────────────────────────────
+  monaco.languages.setLanguageConfiguration("vbnet", {
+    comments: { lineComment: "'" },
+    brackets: [
+      ["(", ")"],
+      ["[", "]"],
+      ["{", "}"],
+    ],
+    autoClosingPairs: [
+      { open: "(", close: ")" },
+      { open: "[", close: "]" },
+      { open: "{", close: "}" },
+      { open: '"', close: '"', notIn: ["string"] },
+    ],
+    surroundingPairs: [
+      { open: "(", close: ")" },
+      { open: '"', close: '"' },
+    ],
+    folding: {
+      markers: {
+        start: /^\s*#Region/i,
+        end: /^\s*#End\s+Region/i,
+      },
+    },
+    indentationRules: {
+      increaseIndentPattern:
+        /^\s*(Sub|Function|If|Else|ElseIf|For|While|Do|Select|Try|Catch|Finally|Class|Module|Namespace|Structure|Enum|Interface|Property|Get|Set|With|Using|SyncLock)\b/i,
+      decreaseIndentPattern:
+        /^\s*(End\s+(Sub|Function|If|For|While|Select|Try|Class|Module|Namespace|Structure|Enum|Interface|Property|Get|Set|With|Using|SyncLock)|Next|Loop|Else|ElseIf|Catch|Finally|Case)\b/i,
+    },
+    wordPattern:
+      /(-?\d*\.\d\w*)|([^\`\~\!\@\#\$\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
+  });
+
+  // ── Monarch Tokenizer ─────────────────────────────────────────────
+  monaco.languages.setMonarchTokensProvider("vbnet", {
+    ignoreCase: true,
+    defaultToken: "",
+    tokenPostfix: ".vb",
+
+    keywords: [
+      "AddHandler",
+      "AddressOf",
+      "Alias",
+      "And",
+      "AndAlso",
+      "As",
+      "Boolean",
+      "ByRef",
+      "Byte",
+      "ByVal",
+      "Call",
+      "Case",
+      "Catch",
+      "CBool",
+      "CByte",
+      "CChar",
+      "CDate",
+      "CDbl",
+      "CDec",
+      "Char",
+      "CInt",
+      "Class",
+      "CLng",
+      "CObj",
+      "Const",
+      "Continue",
+      "CSByte",
+      "CShort",
+      "CSng",
+      "CStr",
+      "CType",
+      "CUInt",
+      "CULng",
+      "CUShort",
+      "Date",
+      "Decimal",
+      "Declare",
+      "Default",
+      "Delegate",
+      "Dim",
+      "DirectCast",
+      "Do",
+      "Double",
+      "Each",
+      "Else",
+      "ElseIf",
+      "End",
+      "EndIf",
+      "Enum",
+      "Erase",
+      "Error",
+      "Event",
+      "Exit",
+      "False",
+      "Finally",
+      "For",
+      "Friend",
+      "Function",
+      "Get",
+      "GetType",
+      "GetXMLNamespace",
+      "Global",
+      "GoSub",
+      "GoTo",
+      "Handles",
+      "If",
+      "Implements",
+      "Imports",
+      "In",
+      "Inherits",
+      "Integer",
+      "Interface",
+      "Is",
+      "IsNot",
+      "Let",
+      "Lib",
+      "Like",
+      "Long",
+      "Loop",
+      "Me",
+      "Mod",
+      "Module",
+      "MustInherit",
+      "MustOverride",
+      "MyBase",
+      "MyClass",
+      "Namespace",
+      "Narrowing",
+      "New",
+      "Next",
+      "Not",
+      "Nothing",
+      "NotInheritable",
+      "NotOverridable",
+      "Object",
+      "Of",
+      "On",
+      "Operator",
+      "Option",
+      "Optional",
+      "Or",
+      "OrElse",
+      "Out",
+      "Overloads",
+      "Overridable",
+      "Overrides",
+      "ParamArray",
+      "Partial",
+      "Private",
+      "Property",
+      "Protected",
+      "Public",
+      "RaiseEvent",
+      "ReadOnly",
+      "ReDim",
+      "REM",
+      "RemoveHandler",
+      "Resume",
+      "Return",
+      "SByte",
+      "Select",
+      "Set",
+      "Shadows",
+      "Shared",
+      "Short",
+      "Single",
+      "Static",
+      "Step",
+      "Stop",
+      "String",
+      "Structure",
+      "Sub",
+      "SyncLock",
+      "Then",
+      "Throw",
+      "To",
+      "True",
+      "Try",
+      "TryCast",
+      "TypeOf",
+      "UInteger",
+      "ULong",
+      "UShort",
+      "Using",
+      "Variant",
+      "Wend",
+      "When",
+      "While",
+      "Widening",
+      "With",
+      "WithEvents",
+      "WriteOnly",
+      "Xor",
+      "Async",
+      "Await",
+      "Iterator",
+      "Yield",
+    ],
+
+    typeKeywords: [
+      "Boolean",
+      "Byte",
+      "Char",
+      "Date",
+      "DateTime",
+      "Decimal",
+      "Double",
+      "Int16",
+      "Int32",
+      "Int64",
+      "Integer",
+      "Long",
+      "Object",
+      "SByte",
+      "Short",
+      "Single",
+      "String",
+      "UInt16",
+      "UInt32",
+      "UInt64",
+      "UInteger",
+      "ULong",
+      "UShort",
+      "Void",
+      "Array",
+      "List",
+      "Dictionary",
+      "Task",
+      "IEnumerable",
+      "IDisposable",
+      "Exception",
+      "EventArgs",
+      "StringBuilder",
+      "Console",
+      "Math",
+      "Convert",
+      "Environment",
+    ],
+
+    builtinFunctions: [
+      "MsgBox",
+      "InputBox",
+      "Len",
+      "Mid",
+      "Left",
+      "Right",
+      "Trim",
+      "LTrim",
+      "RTrim",
+      "UCase",
+      "LCase",
+      "InStr",
+      "InStrRev",
+      "Replace",
+      "Split",
+      "Join",
+      "Format",
+      "Val",
+      "CStr",
+      "CInt",
+      "CLng",
+      "CDbl",
+      "CBool",
+      "IsNothing",
+      "IsNumeric",
+      "IsArray",
+      "IsDate",
+      "TypeName",
+      "GetType",
+      "ToString",
+      "Equals",
+      "GetHashCode",
+      "ReferenceEquals",
+      "WriteLine",
+      "ReadLine",
+      "Write",
+      "Read",
+      "Parse",
+      "TryParse",
+      "Add",
+      "Remove",
+      "Contains",
+      "Count",
+      "Clear",
+      "ToArray",
+      "ToList",
+      "Select",
+      "Where",
+      "OrderBy",
+      "FirstOrDefault",
+      "Any",
+      "All",
+      "Sum",
+      "Max",
+      "Min",
+      "Average",
+    ],
+
+    preprocessor: [
+      "#If",
+      "#ElseIf",
+      "#Else",
+      "#End",
+      "#Const",
+      "#Region",
+      "#End Region",
+      "#ExternalSource",
+      "#End ExternalSource",
+      "#Disable",
+      "#Enable",
+    ],
+
+    operators: [
+      "=",
+      "<>",
+      "<",
+      ">",
+      "<=",
+      ">=",
+      "+",
+      "-",
+      "*",
+      "/",
+      "\\",
+      "^",
+      "&",
+      "&=",
+      "+=",
+      "-=",
+      "*=",
+      "/=",
+      "\\=",
+      "^=",
+      "<<=",
+      ">>=",
+      "<<",
+      ">>",
+    ],
+
+    symbols: /[=<>!~?:&|+\-*\/\^%\\]+/,
+    escapes: /\\./,
+
+    tokenizer: {
+      root: [
+        // Preprocessor
+        [
+          /^\s*#(If|ElseIf|Else|End\s+If|End\s+Region|Region|Const|ExternalSource|End\s+ExternalSource|Disable|Enable)\b/i,
+          "keyword.preprocessor",
+        ],
+
+        // XML doc comment
+        [/'''.*$/, "comment.doc"],
+        // Comments
+        [/(').*$/, "comment"],
+        [/\bREM\b.*$/i, "comment"],
+
+        // Strings
+        [/"([^"\\]|\\.)*$/, "string.invalid"],
+        [/"/, { token: "string.quote", bracket: "@open", next: "@string" }],
+
+        // Char literal
+        [/"c\b/i, "string"],
+
+        // Numbers
+        [/\b\d+\.\d*([eE][\-+]?\d+)?(F|R|D|#|!|@)?\b/i, "number.float"],
+        [/\.\d+([eE][\-+]?\d+)?(F|R|D|#|!|@)?\b/i, "number.float"],
+        [/\b\d+([eE][\-+]?\d+)(F|R|D|#|!|@)?\b/i, "number.float"],
+        [/&H[0-9A-F]+([SILUF%&@!#]*)\b/i, "number.hex"],
+        [/&O[0-7]+([SILUF%&@!#]*)\b/i, "number.octal"],
+        [/&B[01]+([SILUF%&@!#]*)\b/i, "number.binary"],
+        [/\b\d+([SILUF%&@!#]*)\b/i, "number"],
+
+        // Date literal
+        [/#.*?#/, "number.date"],
+
+        // Identifiers and keywords
+        [
+          /[a-zA-Z_]\w*[%&@!#$]?/,
+          {
+            cases: {
+              "@keywords": "keyword",
+              "@typeKeywords": "type",
+              "@builtinFunctions": "support.function",
+              "@default": "identifier",
+            },
+          },
+        ],
+
+        // Delimiters and operators
+        [/[{}()\[\]]/, "@brackets"],
+        [
+          /@symbols/,
+          {
+            cases: {
+              "@operators": "operator",
+              "@default": "",
+            },
+          },
+        ],
+        [/[,;.]/, "delimiter"],
+      ],
+
+      string: [
+        [/""/, "string.escape"],
+        [/[^\\"]+/, "string"],
+        [/@escapes/, "string.escape"],
+        [/"/, { token: "string.quote", bracket: "@close", next: "@pop" }],
+      ],
+    },
+  });
+
+  // ── Hover Info Database ───────────────────────────────────────────
+  const hoverData = {
+    dim: {
+      label: "Dim",
+      detail: "Statement",
+      doc: "Declares and allocates storage space for one or more variables.\n\n**Syntax:** `Dim variableName As Type`",
+    },
+    sub: {
+      label: "Sub",
+      detail: "Statement",
+      doc: "Declares a procedure that does not return a value.\n\n**Syntax:** `Sub name(parameters)\n    ...\nEnd Sub`",
+    },
+    function: {
+      label: "Function",
+      detail: "Statement",
+      doc: "Declares a procedure that returns a value.\n\n**Syntax:** `Function name(params) As ReturnType\n    ...\nEnd Function`",
+    },
+    class: {
+      label: "Class",
+      detail: "Statement",
+      doc: "Defines a reference type that encapsulates data (fields), behavior (methods), and events.\n\n**Syntax:** `Class name\n    ...\nEnd Class`",
+    },
+    module: {
+      label: "Module",
+      detail: "Statement",
+      doc: "Declares a module. Modules are similar to classes but all members are implicitly `Shared`.\n\n**Syntax:** `Module name\n    ...\nEnd Module`",
+    },
+    if: {
+      label: "If...Then...Else",
+      detail: "Control Flow",
+      doc: "Conditionally executes a group of statements based on a Boolean expression.\n\n**Syntax:** `If condition Then\n    ...\nElseIf condition2 Then\n    ...\nElse\n    ...\nEnd If`",
+    },
+    for: {
+      label: "For...Next / For Each",
+      detail: "Loop",
+      doc: "Repeats a block of statements a specified number of times.\n\n**Syntax:** `For i = start To end [Step n]\n    ...\nNext`",
+    },
+    while: {
+      label: "While...End While",
+      detail: "Loop",
+      doc: "Executes a series of statements as long as a given condition is True.\n\n**Syntax:** `While condition\n    ...\nEnd While`",
+    },
+    do: {
+      label: "Do...Loop",
+      detail: "Loop",
+      doc: "Repeats a block of statements while a condition is True or until a condition becomes True.\n\n**Syntax:** `Do While condition\n    ...\nLoop`",
+    },
+    select: {
+      label: "Select Case",
+      detail: "Control Flow",
+      doc: "Runs one of several groups of statements depending on the value of an expression.\n\n**Syntax:** `Select Case expression\n    Case value1\n        ...\n    Case Else\n        ...\nEnd Select`",
+    },
+    try: {
+      label: "Try...Catch...Finally",
+      detail: "Error Handling",
+      doc: "Provides structured exception handling.\n\n**Syntax:** `Try\n    ...\nCatch ex As Exception\n    ...\nFinally\n    ...\nEnd Try`",
+    },
+    imports: {
+      label: "Imports",
+      detail: "Statement",
+      doc: "Imports namespaces or type aliases so types can be used without full qualification.\n\n**Example:** `Imports System.Collections.Generic`",
+    },
+    namespace: {
+      label: "Namespace",
+      detail: "Statement",
+      doc: "Declares a namespace to organize classes, modules, and other types.\n\n**Syntax:** `Namespace name\n    ...\nEnd Namespace`",
+    },
+    property: {
+      label: "Property",
+      detail: "Member",
+      doc: "Declares a class property with Get and/or Set accessors.\n\n**Syntax:** `Property Name As Type`\nor\n`Property Name As Type\n    Get ... End Get\n    Set ... End Set\nEnd Property`",
+    },
+    public: {
+      label: "Public",
+      detail: "Access Modifier",
+      doc: "Specifies that a declared element has no access restrictions. Accessible from any code.",
+    },
+    private: {
+      label: "Private",
+      detail: "Access Modifier",
+      doc: "Specifies that a declared element is accessible only from within the class or structure that declares it.",
+    },
+    protected: {
+      label: "Protected",
+      detail: "Access Modifier",
+      doc: "Specifies that a declared element is accessible only from within its own class or a derived class.",
+    },
+    friend: {
+      label: "Friend",
+      detail: "Access Modifier",
+      doc: "Specifies that a declared element is accessible from within the same assembly.",
+    },
+    shared: {
+      label: "Shared",
+      detail: "Modifier",
+      doc: "Indicates that the member belongs to the type itself rather than to a specific instance (equivalent to C# `static`).",
+    },
+    overrides: {
+      label: "Overrides",
+      detail: "Modifier",
+      doc: "Specifies that a property or method overrides an identically named member inherited from a base class.",
+    },
+    mustoverride: {
+      label: "MustOverride",
+      detail: "Modifier",
+      doc: "Specifies that a property or procedure is not implemented in this class and must be overridden in a derived class (abstract).",
+    },
+    mustinherit: {
+      label: "MustInherit",
+      detail: "Modifier",
+      doc: "Specifies that a class can be used only as a base class and cannot be instantiated directly (abstract class).",
+    },
+    notinheritable: {
+      label: "NotInheritable",
+      detail: "Modifier",
+      doc: "Specifies that a class cannot be used as a base class (sealed class).",
+    },
+    interface: {
+      label: "Interface",
+      detail: "Statement",
+      doc: "Defines an interface — a contract that classes or structures can implement.\n\n**Syntax:** `Interface IName\n    ...\nEnd Interface`",
+    },
+    enum: {
+      label: "Enum",
+      detail: "Statement",
+      doc: "Declares an enumeration — a set of named constants.\n\n**Syntax:** `Enum name\n    Value1\n    Value2\nEnd Enum`",
+    },
+    structure: {
+      label: "Structure",
+      detail: "Statement",
+      doc: "Declares a value type that encapsulates related data.\n\n**Syntax:** `Structure name\n    ...\nEnd Structure`",
+    },
+    integer: {
+      label: "Integer",
+      detail: "Type (System.Int32)",
+      doc: "A 32-bit signed integer. Range: −2,147,483,648 to 2,147,483,647.",
+    },
+    string: {
+      label: "String",
+      detail: "Type (System.String)",
+      doc: "Represents a sequence of Unicode characters. Strings are immutable in .NET.",
+    },
+    boolean: {
+      label: "Boolean",
+      detail: "Type (System.Boolean)",
+      doc: "Represents a Boolean (True or False) value.",
+    },
+    double: {
+      label: "Double",
+      detail: "Type (System.Double)",
+      doc: "A 64-bit double-precision floating-point number.",
+    },
+    single: {
+      label: "Single",
+      detail: "Type (System.Single)",
+      doc: "A 32-bit single-precision floating-point number.",
+    },
+    long: {
+      label: "Long",
+      detail: "Type (System.Int64)",
+      doc: "A 64-bit signed integer. Range: −9,223,372,036,854,775,808 to 9,223,372,036,854,775,807.",
+    },
+    decimal: {
+      label: "Decimal",
+      detail: "Type (System.Decimal)",
+      doc: "A 128-bit precise decimal value suitable for financial and monetary calculations.",
+    },
+    date: {
+      label: "Date",
+      detail: "Type (System.DateTime)",
+      doc: "Represents date and time values. Range: January 1, 0001 through December 31, 9999.",
+    },
+    object: {
+      label: "Object",
+      detail: "Type (System.Object)",
+      doc: "The base type from which all types in .NET inherit.",
+    },
+    byte: {
+      label: "Byte",
+      detail: "Type (System.Byte)",
+      doc: "An 8-bit unsigned integer. Range: 0 to 255.",
+    },
+    char: {
+      label: "Char",
+      detail: "Type (System.Char)",
+      doc: "A single 16-bit Unicode character.",
+    },
+    short: {
+      label: "Short",
+      detail: "Type (System.Int16)",
+      doc: "A 16-bit signed integer. Range: −32,768 to 32,767.",
+    },
+    nothing: {
+      label: "Nothing",
+      detail: "Literal",
+      doc: "Represents the default value of any data type. Equivalent to `null` in C#.",
+    },
+    me: {
+      label: "Me",
+      detail: "Keyword",
+      doc: "Refers to the current instance of the class or structure in which the code is running.",
+    },
+    mybase: {
+      label: "MyBase",
+      detail: "Keyword",
+      doc: "Refers to the base class of the current class instance. Used to access overridden members.",
+    },
+    new: {
+      label: "New",
+      detail: "Keyword",
+      doc: "Creates a new instance of an object.\n\n**Example:** `Dim obj As New MyClass()`",
+    },
+    throw: {
+      label: "Throw",
+      detail: "Statement",
+      doc: 'Throws an exception.\n\n**Example:** `Throw New ArgumentException("Invalid")`',
+    },
+    return: {
+      label: "Return",
+      detail: "Statement",
+      doc: "Returns control from a procedure to the calling code, optionally returning a value.\n\n**Example:** `Return result`",
+    },
+    async: {
+      label: "Async",
+      detail: "Modifier",
+      doc: "Indicates that a method or lambda is asynchronous and can use the Await operator.",
+    },
+    await: {
+      label: "Await",
+      detail: "Operator",
+      doc: "Suspends execution of an Async method until the awaited task completes.",
+    },
+    using: {
+      label: "Using",
+      detail: "Statement",
+      doc: "Acquires a resource, executes a block, then disposes of the resource.\n\n**Syntax:** `Using resource As New Disposable()\n    ...\nEnd Using`",
+    },
+    with: {
+      label: "With",
+      detail: "Statement",
+      doc: "Executes a series of statements that repeatedly refer to a single object.\n\n**Syntax:** `With object\n    .Property = value\nEnd With`",
+    },
+    typeof: {
+      label: "TypeOf...Is",
+      detail: "Operator",
+      doc: "Checks whether an object is of a specific type.\n\n**Example:** `If TypeOf obj Is String Then ...`",
+    },
+    gettype: {
+      label: "GetType",
+      detail: "Operator",
+      doc: "Returns the System.Type object for the specified type.\n\n**Example:** `GetType(String)`",
+    },
+    ctype: {
+      label: "CType",
+      detail: "Conversion",
+      doc: "Converts an expression to a specified data type.\n\n**Example:** `CType(obj, Integer)`",
+    },
+    directcast: {
+      label: "DirectCast",
+      detail: "Conversion",
+      doc: "Introduces a type conversion based on inheritance or implementation. Faster than CType but stricter.\n\n**Example:** `DirectCast(obj, String)`",
+    },
+    trycast: {
+      label: "TryCast",
+      detail: "Conversion",
+      doc: "Attempts a type conversion; returns Nothing if the conversion fails.\n\n**Example:** `TryCast(obj, String)`",
+    },
+    event: {
+      label: "Event",
+      detail: "Statement",
+      doc: "Declares a user-defined event.\n\n**Syntax:** `Public Event EventName As EventHandler`",
+    },
+    handles: {
+      label: "Handles",
+      detail: "Keyword",
+      doc: "Declares that a procedure handles a specified event.\n\n**Example:** `Sub Button1_Click(...) Handles Button1.Click`",
+    },
+    raiseevent: {
+      label: "RaiseEvent",
+      detail: "Statement",
+      doc: "Triggers an event declared at module level within a class.\n\n**Example:** `RaiseEvent MyEvent(sender, e)`",
+    },
+    addhandler: {
+      label: "AddHandler",
+      detail: "Statement",
+      doc: "Associates an event with an event handler at run time.\n\n**Example:** `AddHandler obj.Event, AddressOf Handler`",
+    },
+    delegate: {
+      label: "Delegate",
+      detail: "Statement",
+      doc: "Declares a delegate — a type-safe function pointer.\n\n**Syntax:** `Delegate Sub/Function name(params)`",
+    },
+    implements: {
+      label: "Implements",
+      detail: "Keyword",
+      doc: "Specifies that a class or structure implements one or more interfaces, or that a member implements an interface member.",
+    },
+    inherits: {
+      label: "Inherits",
+      detail: "Keyword",
+      doc: "Specifies the base (parent) class.\n\n**Example:** `Inherits BaseClass`",
+    },
+    readonly: {
+      label: "ReadOnly",
+      detail: "Modifier",
+      doc: "Specifies that a variable or property can be read but not written (after initialization).",
+    },
+    writeonly: {
+      label: "WriteOnly",
+      detail: "Modifier",
+      doc: "Specifies that a property can be written but not read.",
+    },
+    optional: {
+      label: "Optional",
+      detail: "Modifier",
+      doc: "Specifies that a procedure argument can be omitted when the procedure is called. A default value must be provided.",
+    },
+    paramarray: {
+      label: "ParamArray",
+      detail: "Modifier",
+      doc: "Specifies that a procedure parameter takes an optional array of elements of the specified type.",
+    },
+    console: {
+      label: "Console",
+      detail: "Class (System.Console)",
+      doc: "Represents the standard input, output, and error streams for console applications.\n\n**Common Methods:** `WriteLine()`, `ReadLine()`, `Write()`, `Read()`, `Clear()`",
+    },
+    math: {
+      label: "Math",
+      detail: "Class (System.Math)",
+      doc: "Provides constants and static methods for trigonometric, logarithmic, and other common mathematical functions.\n\n**Common:** `Abs()`, `Round()`, `Max()`, `Min()`, `Sqrt()`, `Pow()`, `PI`, `E`",
+    },
+    convert: {
+      label: "Convert",
+      detail: "Class (System.Convert)",
+      doc: "Converts a base data type to another base data type.\n\n**Common:** `ToInt32()`, `ToString()`, `ToDouble()`, `ToBoolean()`, `ToDateTime()`",
+    },
+    stringbuilder: {
+      label: "StringBuilder",
+      detail: "Class (System.Text.StringBuilder)",
+      doc: "Represents a mutable string of characters. More efficient than String for repeated modifications.\n\n**Common:** `Append()`, `Insert()`, `Remove()`, `Replace()`, `ToString()`",
+    },
+    list: {
+      label: "List(Of T)",
+      detail: "Class (System.Collections.Generic)",
+      doc: "Represents a strongly typed list of objects that can be accessed by index.\n\n**Common:** `Add()`, `Remove()`, `Count`, `Contains()`, `Sort()`, `Clear()`",
+    },
+    dictionary: {
+      label: "Dictionary(Of TKey, TValue)",
+      detail: "Class (System.Collections.Generic)",
+      doc: "Represents a collection of key/value pairs.\n\n**Common:** `Add()`, `Remove()`, `ContainsKey()`, `TryGetValue()`, `Keys`, `Values`, `Count`",
+    },
+    exception: {
+      label: "Exception",
+      detail: "Class (System.Exception)",
+      doc: "The base class for all exceptions in .NET.\n\n**Properties:** `Message`, `StackTrace`, `InnerException`, `Source`",
+    },
+    task: {
+      label: "Task",
+      detail: "Class (System.Threading.Tasks)",
+      doc: "Represents an asynchronous operation.\n\n**Common:** `Run()`, `WhenAll()`, `WhenAny()`, `Delay()`, `FromResult()`",
+    },
+    writeline: {
+      label: "Console.WriteLine",
+      detail: "Method",
+      doc: "Writes the specified data, followed by a newline, to the standard output stream.\n\n**Overloads:**\n- `WriteLine()`\n- `WriteLine(String)`\n- `WriteLine(String, Object())`",
+    },
+    readline: {
+      label: "Console.ReadLine",
+      detail: "Method",
+      doc: "Reads the next line of characters from the standard input stream. Returns a String.",
+    },
+    tostring: {
+      label: ".ToString()",
+      detail: "Method (System.Object)",
+      doc: "Returns a string that represents the current object. Overridable in derived classes.",
+    },
+    equals: {
+      label: ".Equals()",
+      detail: "Method (System.Object)",
+      doc: "Determines whether the specified object is equal to the current object.",
+    },
+  };
+
+  // ── Definition Finder Helper ──────────────────────────────────────
+  function findDefinitions(model, word) {
+    const results = [];
+    const regex = new RegExp(
+      "\\b(Sub|Function|Class|Module|Interface|Structure|Enum|Property|Event|Delegate|Namespace)\\s+" +
+        word +
+        "\\b",
+      "gi",
+    );
+    const text = model.getValue();
+    const lines = text.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      const match = regex.exec(lines[i]);
+      if (match) {
+        results.push({
+          uri: model.uri,
+          range: new monaco.Range(
+            i + 1,
+            match.index + 1,
+            i + 1,
+            match.index + match[0].length + 1,
+          ),
+        });
+      }
+      regex.lastIndex = 0;
+    }
+    // Also search for Dim/Const variable declarations
+    const varRegex = new RegExp(
+      "\\b(Dim|Const|Private|Public|Protected|Friend|Shared|Static|ReadOnly)\\s+(\\w+\\s+)*" +
+        word +
+        "\\b",
+      "gi",
+    );
+    for (let i = 0; i < lines.length; i++) {
+      const match = varRegex.exec(lines[i]);
+      if (match) {
+        const col = lines[i]
+          .toLowerCase()
+          .indexOf(word.toLowerCase(), match.index);
+        if (col >= 0) {
+          results.push({
+            uri: model.uri,
+            range: new monaco.Range(
+              i + 1,
+              col + 1,
+              i + 1,
+              col + word.length + 1,
+            ),
+          });
+        }
+      }
+      varRegex.lastIndex = 0;
+    }
+    return results;
+  }
+
+  // ── Hover Provider ────────────────────────────────────────────────
+  monaco.languages.registerHoverProvider("vbnet", {
+    provideHover: function (model, position) {
+      const word = model.getWordAtPosition(position);
+      if (!word) return null;
+      const key = word.word.toLowerCase();
+
+      // Check hover database first
+      if (hoverData[key]) {
+        const d = hoverData[key];
+        return {
+          range: new monaco.Range(
+            position.lineNumber,
+            word.startColumn,
+            position.lineNumber,
+            word.endColumn,
+          ),
+          contents: [
+            { value: "**" + d.label + "** — *" + d.detail + "*" },
+            { value: d.doc },
+          ],
+        };
+      }
+
+      // Search for user-defined symbols
+      const defs = findDefinitions(model, word.word);
+      if (defs.length > 0) {
+        const defLine = model
+          .getLineContent(defs[0].range.startLineNumber)
+          .trim();
+        return {
+          range: new monaco.Range(
+            position.lineNumber,
+            word.startColumn,
+            position.lineNumber,
+            word.endColumn,
+          ),
+          contents: [
+            { value: "**" + word.word + "** — *User-defined symbol*" },
+            { value: "```vbnet\n" + defLine + "\n```" },
+          ],
+        };
+      }
+      return null;
+    },
+  });
+
+  // ── Definition Provider ───────────────────────────────────────────
+  monaco.languages.registerDefinitionProvider("vbnet", {
+    provideDefinition: function (model, position) {
+      const word = model.getWordAtPosition(position);
+      if (!word) return null;
+      return findDefinitions(model, word.word);
+    },
+  });
+
+  // ── Completion Provider (Autocomplete + Snippets) ─────────────────
+  monaco.languages.registerCompletionItemProvider("vbnet", {
+    triggerCharacters: [".", " "],
+    provideCompletionItems: function (model, position) {
+      const textUntilPosition = model.getValueInRange({
+        startLineNumber: position.lineNumber,
+        startColumn: 1,
+        endLineNumber: position.lineNumber,
+        endColumn: position.column,
+      });
+
+      const word = model.getWordUntilPosition(position);
+      const range = {
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: word.startColumn,
+        endColumn: word.endColumn,
+      };
+
+      const suggestions = [];
+      const CK = monaco.languages.CompletionItemKind;
+
+      // ── Check if after a dot (member access) ──
+      const dotMatch = textUntilPosition.match(/(\w+)\.\s*(\w*)$/i);
+      if (dotMatch) {
+        const obj = dotMatch[1].toLowerCase();
+        const memberSuggestions = {
+          console: [
+            {
+              l: "WriteLine",
+              k: CK.Method,
+              d: "Writes a line to standard output",
+              i: "WriteLine(${1})",
+            },
+            {
+              l: "ReadLine",
+              k: CK.Method,
+              d: "Reads a line from standard input",
+              i: "ReadLine()",
+            },
+            {
+              l: "Write",
+              k: CK.Method,
+              d: "Writes to standard output without newline",
+              i: "Write(${1})",
+            },
+            {
+              l: "Read",
+              k: CK.Method,
+              d: "Reads the next character from input",
+              i: "Read()",
+            },
+            {
+              l: "Clear",
+              k: CK.Method,
+              d: "Clears the console buffer",
+              i: "Clear()",
+            },
+            {
+              l: "ForegroundColor",
+              k: CK.Property,
+              d: "Gets or sets the foreground color",
+              i: "ForegroundColor",
+            },
+            {
+              l: "BackgroundColor",
+              k: CK.Property,
+              d: "Gets or sets the background color",
+              i: "BackgroundColor",
+            },
+            {
+              l: "Title",
+              k: CK.Property,
+              d: "Gets or sets the console window title",
+              i: "Title",
+            },
+            { l: "Beep", k: CK.Method, d: "Plays a beep sound", i: "Beep()" },
+            {
+              l: "ReadKey",
+              k: CK.Method,
+              d: "Obtains the next key pressed by user",
+              i: "ReadKey()",
+            },
+            {
+              l: "SetCursorPosition",
+              k: CK.Method,
+              d: "Sets the cursor position",
+              i: "SetCursorPosition(${1:left}, ${2:top})",
+            },
+          ],
+          math: [
+            {
+              l: "Abs",
+              k: CK.Method,
+              d: "Returns absolute value",
+              i: "Abs(${1:value})",
+            },
+            {
+              l: "Round",
+              k: CK.Method,
+              d: "Rounds a value to nearest integer",
+              i: "Round(${1:value})",
+            },
+            {
+              l: "Max",
+              k: CK.Method,
+              d: "Returns the larger of two values",
+              i: "Max(${1:a}, ${2:b})",
+            },
+            {
+              l: "Min",
+              k: CK.Method,
+              d: "Returns the smaller of two values",
+              i: "Min(${1:a}, ${2:b})",
+            },
+            {
+              l: "Sqrt",
+              k: CK.Method,
+              d: "Returns the square root",
+              i: "Sqrt(${1:value})",
+            },
+            {
+              l: "Pow",
+              k: CK.Method,
+              d: "Returns a specified number raised to a power",
+              i: "Pow(${1:base}, ${2:exp})",
+            },
+            {
+              l: "Floor",
+              k: CK.Method,
+              d: "Returns largest integer ≤ value",
+              i: "Floor(${1:value})",
+            },
+            {
+              l: "Ceiling",
+              k: CK.Method,
+              d: "Returns smallest integer ≥ value",
+              i: "Ceiling(${1:value})",
+            },
+            {
+              l: "Log",
+              k: CK.Method,
+              d: "Returns the natural logarithm",
+              i: "Log(${1:value})",
+            },
+            {
+              l: "Log10",
+              k: CK.Method,
+              d: "Returns the base-10 logarithm",
+              i: "Log10(${1:value})",
+            },
+            {
+              l: "Sin",
+              k: CK.Method,
+              d: "Returns the sine of an angle (radians)",
+              i: "Sin(${1:angle})",
+            },
+            {
+              l: "Cos",
+              k: CK.Method,
+              d: "Returns the cosine of an angle (radians)",
+              i: "Cos(${1:angle})",
+            },
+            {
+              l: "Tan",
+              k: CK.Method,
+              d: "Returns the tangent of an angle (radians)",
+              i: "Tan(${1:angle})",
+            },
+            { l: "PI", k: CK.Constant, d: "Represents π (3.14159…)", i: "PI" },
+            { l: "E", k: CK.Constant, d: "Represents e (2.71828…)", i: "E" },
+            {
+              l: "Truncate",
+              k: CK.Method,
+              d: "Calculates the integral part of a number",
+              i: "Truncate(${1:value})",
+            },
+            {
+              l: "Sign",
+              k: CK.Method,
+              d: "Returns −1, 0, or 1 indicating sign",
+              i: "Sign(${1:value})",
+            },
+          ],
+          convert: [
+            {
+              l: "ToInt32",
+              k: CK.Method,
+              d: "Converts value to Int32",
+              i: "ToInt32(${1:value})",
+            },
+            {
+              l: "ToString",
+              k: CK.Method,
+              d: "Converts value to String",
+              i: "ToString(${1:value})",
+            },
+            {
+              l: "ToDouble",
+              k: CK.Method,
+              d: "Converts value to Double",
+              i: "ToDouble(${1:value})",
+            },
+            {
+              l: "ToBoolean",
+              k: CK.Method,
+              d: "Converts value to Boolean",
+              i: "ToBoolean(${1:value})",
+            },
+            {
+              l: "ToChar",
+              k: CK.Method,
+              d: "Converts value to Char",
+              i: "ToChar(${1:value})",
+            },
+            {
+              l: "ToDecimal",
+              k: CK.Method,
+              d: "Converts value to Decimal",
+              i: "ToDecimal(${1:value})",
+            },
+            {
+              l: "ToDateTime",
+              k: CK.Method,
+              d: "Converts value to DateTime",
+              i: "ToDateTime(${1:value})",
+            },
+            {
+              l: "ToByte",
+              k: CK.Method,
+              d: "Converts value to Byte",
+              i: "ToByte(${1:value})",
+            },
+            {
+              l: "ToInt64",
+              k: CK.Method,
+              d: "Converts value to Int64 (Long)",
+              i: "ToInt64(${1:value})",
+            },
+          ],
+          string: [
+            {
+              l: "Empty",
+              k: CK.Property,
+              d: "Represents the empty string",
+              i: "Empty",
+            },
+            {
+              l: "IsNullOrEmpty",
+              k: CK.Method,
+              d: "Indicates whether string is null or empty",
+              i: "IsNullOrEmpty(${1:value})",
+            },
+            {
+              l: "IsNullOrWhiteSpace",
+              k: CK.Method,
+              d: "Indicates whether string is null, empty, or whitespace",
+              i: "IsNullOrWhiteSpace(${1:value})",
+            },
+            {
+              l: "Format",
+              k: CK.Method,
+              d: "Replaces format items with string representations",
+              i: 'Format("${1:format}", ${2:args})',
+            },
+            {
+              l: "Join",
+              k: CK.Method,
+              d: "Concatenates elements with a separator",
+              i: 'Join("${1:separator}", ${2:values})',
+            },
+            {
+              l: "Concat",
+              k: CK.Method,
+              d: "Concatenates strings",
+              i: "Concat(${1:str1}, ${2:str2})",
+            },
+            {
+              l: "Compare",
+              k: CK.Method,
+              d: "Compares two strings",
+              i: "Compare(${1:strA}, ${2:strB})",
+            },
+            {
+              l: "Equals",
+              k: CK.Method,
+              d: "Determines whether two strings have the same value",
+              i: "Equals(${1:strA}, ${2:strB})",
+            },
+          ],
+          environment: [
+            {
+              l: "NewLine",
+              k: CK.Property,
+              d: "Gets the newline string for the environment",
+              i: "NewLine",
+            },
+            {
+              l: "MachineName",
+              k: CK.Property,
+              d: "Gets the NetBIOS name of this local computer",
+              i: "MachineName",
+            },
+            {
+              l: "UserName",
+              k: CK.Property,
+              d: "Gets the user name of the current thread",
+              i: "UserName",
+            },
+            {
+              l: "CurrentDirectory",
+              k: CK.Property,
+              d: "Gets or sets the current working directory",
+              i: "CurrentDirectory",
+            },
+            {
+              l: "OSVersion",
+              k: CK.Property,
+              d: "Gets the current platform identifier and version number",
+              i: "OSVersion",
+            },
+            {
+              l: "ProcessorCount",
+              k: CK.Property,
+              d: "Gets the number of processors",
+              i: "ProcessorCount",
+            },
+            {
+              l: "TickCount",
+              k: CK.Property,
+              d: "Gets the number of milliseconds since system started",
+              i: "TickCount",
+            },
+            {
+              l: "Exit",
+              k: CK.Method,
+              d: "Terminates the process with an exit code",
+              i: "Exit(${1:exitCode})",
+            },
+            {
+              l: "GetEnvironmentVariable",
+              k: CK.Method,
+              d: "Retrieves the value of an environment variable",
+              i: 'GetEnvironmentVariable("${1:variable}")',
+            },
+          ],
+        };
+
+        // String instance methods (after a string variable)
+        const instanceStringMethods = [
+          {
+            l: "Length",
+            k: CK.Property,
+            d: "Gets the number of characters",
+            i: "Length",
+          },
+          {
+            l: "ToUpper",
+            k: CK.Method,
+            d: "Returns uppercase copy",
+            i: "ToUpper()",
+          },
+          {
+            l: "ToLower",
+            k: CK.Method,
+            d: "Returns lowercase copy",
+            i: "ToLower()",
+          },
+          {
+            l: "Trim",
+            k: CK.Method,
+            d: "Removes leading and trailing whitespace",
+            i: "Trim()",
+          },
+          {
+            l: "TrimStart",
+            k: CK.Method,
+            d: "Removes leading whitespace",
+            i: "TrimStart()",
+          },
+          {
+            l: "TrimEnd",
+            k: CK.Method,
+            d: "Removes trailing whitespace",
+            i: "TrimEnd()",
+          },
+          {
+            l: "Substring",
+            k: CK.Method,
+            d: "Retrieves a substring",
+            i: "Substring(${1:startIndex})",
+          },
+          {
+            l: "Contains",
+            k: CK.Method,
+            d: "Returns whether the string contains a substring",
+            i: 'Contains("${1:value}")',
+          },
+          {
+            l: "StartsWith",
+            k: CK.Method,
+            d: "Determines whether beginning matches",
+            i: 'StartsWith("${1:value}")',
+          },
+          {
+            l: "EndsWith",
+            k: CK.Method,
+            d: "Determines whether end matches",
+            i: 'EndsWith("${1:value}")',
+          },
+          {
+            l: "IndexOf",
+            k: CK.Method,
+            d: "Reports the index of the first occurrence",
+            i: 'IndexOf("${1:value}")',
+          },
+          {
+            l: "LastIndexOf",
+            k: CK.Method,
+            d: "Reports the index of the last occurrence",
+            i: 'LastIndexOf("${1:value}")',
+          },
+          {
+            l: "Replace",
+            k: CK.Method,
+            d: "Returns a new string with replacements",
+            i: 'Replace("${1:old}", "${2:new}")',
+          },
+          {
+            l: "Split",
+            k: CK.Method,
+            d: "Splits string into substrings",
+            i: 'Split("${1:separator}"c)',
+          },
+          {
+            l: "Insert",
+            k: CK.Method,
+            d: "Inserts a string at specified index",
+            i: 'Insert(${1:index}, "${2:value}")',
+          },
+          {
+            l: "Remove",
+            k: CK.Method,
+            d: "Removes characters from specified position",
+            i: "Remove(${1:startIndex})",
+          },
+          {
+            l: "PadLeft",
+            k: CK.Method,
+            d: "Pads string on the left",
+            i: "PadLeft(${1:totalWidth})",
+          },
+          {
+            l: "PadRight",
+            k: CK.Method,
+            d: "Pads string on the right",
+            i: "PadRight(${1:totalWidth})",
+          },
+          {
+            l: "Chars",
+            k: CK.Property,
+            d: "Gets the character at a specified position",
+            i: "Chars(${1:index})",
+          },
+          {
+            l: "ToString",
+            k: CK.Method,
+            d: "Returns the string",
+            i: "ToString()",
+          },
+          {
+            l: "GetHashCode",
+            k: CK.Method,
+            d: "Returns the hash code",
+            i: "GetHashCode()",
+          },
+          {
+            l: "Equals",
+            k: CK.Method,
+            d: "Determines equality",
+            i: "Equals(${1:obj})",
+          },
+          {
+            l: "GetType",
+            k: CK.Method,
+            d: "Gets the Type of the current instance",
+            i: "GetType()",
+          },
+        ];
+
+        if (memberSuggestions[obj]) {
+          memberSuggestions[obj].forEach((m) => {
+            suggestions.push({
+              label: m.l,
+              kind: m.k,
+              documentation: m.d,
+              insertText: m.i,
+              insertTextRules:
+                monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              range: range,
+            });
+          });
+        } else {
+          // Provide common Object instance methods + string methods for any unknown variable
+          instanceStringMethods.forEach((m) => {
+            suggestions.push({
+              label: m.l,
+              kind: m.k,
+              documentation: m.d,
+              insertText: m.i,
+              insertTextRules:
+                monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              range: range,
+            });
+          });
+        }
+        return { suggestions };
+      }
+
+      // ── Code Snippets ──
+      const snippets = [
+        {
+          l: "Sub...End Sub",
+          d: "Sub procedure snippet",
+          s: "${1|Public,Private,Protected,Friend|} Sub ${2:MethodName}(${3})\n\t${0}\nEnd Sub",
+        },
+        {
+          l: "Function...End Function",
+          d: "Function snippet",
+          s: "${1|Public,Private,Protected,Friend|} Function ${2:FunctionName}(${3}) As ${4:String}\n\t${0}\n\tReturn ${5:result}\nEnd Function",
+        },
+        {
+          l: "If...Then...End If",
+          d: "If block snippet",
+          s: "If ${1:condition} Then\n\t${0}\nEnd If",
+        },
+        {
+          l: "If...Then...Else...End If",
+          d: "If/Else block snippet",
+          s: "If ${1:condition} Then\n\t${2}\nElse\n\t${0}\nEnd If",
+        },
+        {
+          l: "If...ElseIf...Else...End If",
+          d: "If/ElseIf/Else block snippet",
+          s: "If ${1:condition1} Then\n\t${2}\nElseIf ${3:condition2} Then\n\t${4}\nElse\n\t${0}\nEnd If",
+        },
+        {
+          l: "For...Next",
+          d: "For loop snippet",
+          s: "For ${1:i} As Integer = ${2:0} To ${3:count} - 1\n\t${0}\nNext",
+        },
+        {
+          l: "For Each...Next",
+          d: "For Each loop snippet",
+          s: "For Each ${1:item} As ${2:Object} In ${3:collection}\n\t${0}\nNext",
+        },
+        {
+          l: "While...End While",
+          d: "While loop snippet",
+          s: "While ${1:condition}\n\t${0}\nEnd While",
+        },
+        {
+          l: "Do While...Loop",
+          d: "Do While loop snippet",
+          s: "Do While ${1:condition}\n\t${0}\nLoop",
+        },
+        {
+          l: "Do...Loop Until",
+          d: "Do Loop Until snippet",
+          s: "Do\n\t${0}\nLoop Until ${1:condition}",
+        },
+        {
+          l: "Select Case...End Select",
+          d: "Select Case snippet",
+          s: "Select Case ${1:expression}\n\tCase ${2:value1}\n\t\t${3}\n\tCase ${4:value2}\n\t\t${5}\n\tCase Else\n\t\t${0}\nEnd Select",
+        },
+        {
+          l: "Try...Catch...End Try",
+          d: "Try/Catch snippet",
+          s: "Try\n\t${1}\nCatch ${2:ex} As ${3:Exception}\n\t${0}\nEnd Try",
+        },
+        {
+          l: "Try...Catch...Finally...End Try",
+          d: "Try/Catch/Finally snippet",
+          s: "Try\n\t${1}\nCatch ${2:ex} As ${3:Exception}\n\t${4}\nFinally\n\t${0}\nEnd Try",
+        },
+        {
+          l: "Class...End Class",
+          d: "Class snippet",
+          s: "${1|Public,Friend,Private|} Class ${2:ClassName}\n\n\tPublic Sub New(${3})\n\t\t${0}\n\tEnd Sub\n\nEnd Class",
+        },
+        {
+          l: "Module...End Module",
+          d: "Module snippet",
+          s: "Module ${1:ModuleName}\n\n\tSub Main()\n\t\t${0}\n\tEnd Sub\n\nEnd Module",
+        },
+        {
+          l: "Interface...End Interface",
+          d: "Interface snippet",
+          s: "Public Interface ${1:IInterfaceName}\n\n\t${0}\n\nEnd Interface",
+        },
+        {
+          l: "Structure...End Structure",
+          d: "Structure snippet",
+          s: "Public Structure ${1:StructureName}\n\n\t${0}\n\nEnd Structure",
+        },
+        {
+          l: "Enum...End Enum",
+          d: "Enum snippet",
+          s: "Public Enum ${1:EnumName}\n\t${2:Value1}\n\t${3:Value2}\n\t${0}\nEnd Enum",
+        },
+        {
+          l: "Property (Auto)",
+          d: "Auto property snippet",
+          s: "Public Property ${1:Name} As ${2:String}",
+        },
+        {
+          l: "Property (Full)",
+          d: "Full property snippet",
+          s: "Private _${1:name} As ${2:String}\nPublic Property ${3:Name} As ${2:String}\n\tGet\n\t\tReturn _${1:name}\n\tEnd Get\n\tSet(value As ${2:String})\n\t\t_${1:name} = value\n\tEnd Set\nEnd Property",
+        },
+        {
+          l: "Using...End Using",
+          d: "Using block snippet",
+          s: "Using ${1:resource} As New ${2:Disposable}(${3})\n\t${0}\nEnd Using",
+        },
+        {
+          l: "With...End With",
+          d: "With block snippet",
+          s: "With ${1:object}\n\t.${2:Property} = ${3:value}\n\t${0}\nEnd With",
+        },
+        {
+          l: "#Region...#End Region",
+          d: "Region snippet",
+          s: '#Region "${1:Region Name}"\n\n\t${0}\n\n#End Region',
+        },
+        {
+          l: "Console.WriteLine",
+          d: "Write to console snippet",
+          s: 'Console.WriteLine(${1:"${2:text}"})',
+        },
+        {
+          l: "Console.ReadLine",
+          d: "Read from console snippet",
+          s: "Dim ${1:input} As String = Console.ReadLine()",
+        },
+        {
+          l: "Async Function",
+          d: "Async function snippet",
+          s: "Public Async Function ${1:FunctionName}(${2}) As Task(Of ${3:String})\n\t${0}\nEnd Function",
+        },
+        {
+          l: "Async Sub",
+          d: "Async sub snippet",
+          s: "Public Async Sub ${1:MethodName}(${2})\n\tAwait ${0}\nEnd Sub",
+        },
+        {
+          l: "Event Declaration",
+          d: "Event declaration snippet",
+          s: "Public Event ${1:EventName} As EventHandler(Of ${2:EventArgs})",
+        },
+        {
+          l: "Lambda (Function)",
+          d: "Lambda function snippet",
+          s: "Function(${1:x}) ${2:x + 1}",
+        },
+        {
+          l: "Lambda (Sub)",
+          d: "Lambda sub snippet",
+          s: "Sub(${1:x}) ${2:Console.WriteLine(x)}",
+        },
+        {
+          l: "LINQ Query",
+          d: "LINQ query snippet",
+          s: "Dim ${1:result} = From ${2:item} In ${3:collection}\n\t\t\t\tWhere ${4:condition}\n\t\t\t\tSelect ${5:item}",
+        },
+        {
+          l: "Main Sub",
+          d: "Main entry point",
+          s: "Sub Main(args As String())\n\t${0}\nEnd Sub",
+        },
+        {
+          l: "Implements Interface Member",
+          d: "Implements clause",
+          s: "Public ${1|Sub,Function|} ${2:MethodName}(${3}) ${4:As ReturnType} Implements ${5:IInterface}.${2:MethodName}\n\t${0}\nEnd ${1|Sub,Function|}",
+        },
+      ];
+
+      snippets.forEach((s) => {
+        suggestions.push({
+          label: { label: s.l, description: "Snippet" },
+          kind: CK.Snippet,
+          documentation: s.d,
+          insertText: s.s,
+          insertTextRules:
+            monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          range: range,
+          sortText: "0_" + s.l,
+        });
+      });
+
+      // ── Keywords ──
+      const keywords = [
+        "AddHandler",
+        "AddressOf",
+        "Alias",
+        "And",
+        "AndAlso",
+        "As",
+        "Boolean",
+        "ByRef",
+        "Byte",
+        "ByVal",
+        "Call",
+        "Case",
+        "Catch",
+        "CBool",
+        "CByte",
+        "CChar",
+        "CDate",
+        "CDbl",
+        "CDec",
+        "Char",
+        "CInt",
+        "Class",
+        "CLng",
+        "CObj",
+        "Const",
+        "Continue",
+        "CSByte",
+        "CShort",
+        "CSng",
+        "CStr",
+        "CType",
+        "CUInt",
+        "CULng",
+        "CUShort",
+        "Date",
+        "Decimal",
+        "Declare",
+        "Default",
+        "Delegate",
+        "Dim",
+        "DirectCast",
+        "Do",
+        "Double",
+        "Each",
+        "Else",
+        "ElseIf",
+        "End",
+        "Enum",
+        "Erase",
+        "Error",
+        "Event",
+        "Exit",
+        "False",
+        "Finally",
+        "For",
+        "Friend",
+        "Function",
+        "Get",
+        "GetType",
+        "Global",
+        "GoTo",
+        "Handles",
+        "If",
+        "Implements",
+        "Imports",
+        "In",
+        "Inherits",
+        "Integer",
+        "Interface",
+        "Is",
+        "IsNot",
+        "Let",
+        "Lib",
+        "Like",
+        "Long",
+        "Loop",
+        "Me",
+        "Mod",
+        "Module",
+        "MustInherit",
+        "MustOverride",
+        "MyBase",
+        "MyClass",
+        "Namespace",
+        "Narrowing",
+        "New",
+        "Next",
+        "Not",
+        "Nothing",
+        "NotInheritable",
+        "NotOverridable",
+        "Object",
+        "Of",
+        "On",
+        "Operator",
+        "Option",
+        "Optional",
+        "Or",
+        "OrElse",
+        "Out",
+        "Overloads",
+        "Overridable",
+        "Overrides",
+        "ParamArray",
+        "Partial",
+        "Private",
+        "Property",
+        "Protected",
+        "Public",
+        "RaiseEvent",
+        "ReadOnly",
+        "ReDim",
+        "RemoveHandler",
+        "Resume",
+        "Return",
+        "SByte",
+        "Select",
+        "Set",
+        "Shadows",
+        "Shared",
+        "Short",
+        "Single",
+        "Static",
+        "Step",
+        "Stop",
+        "String",
+        "Structure",
+        "Sub",
+        "SyncLock",
+        "Then",
+        "Throw",
+        "To",
+        "True",
+        "Try",
+        "TryCast",
+        "TypeOf",
+        "UInteger",
+        "ULong",
+        "UShort",
+        "Using",
+        "When",
+        "While",
+        "Widening",
+        "With",
+        "WithEvents",
+        "WriteOnly",
+        "Xor",
+        "Async",
+        "Await",
+        "Iterator",
+        "Yield",
+        "Aggregate",
+        "Distinct",
+        "From",
+        "Group",
+        "Into",
+        "Join",
+        "Let",
+        "Order",
+        "By",
+        "Skip",
+        "Take",
+        "Where",
+      ];
+      keywords.forEach((kw) => {
+        suggestions.push({
+          label: kw,
+          kind: CK.Keyword,
+          insertText: kw,
+          range: range,
+          sortText: "2_" + kw,
+        });
+      });
+
+      // ── Common Types & Classes ──
+      const types = [
+        { l: "Integer", d: "System.Int32 — 32-bit signed integer" },
+        { l: "String", d: "System.String — Sequence of Unicode characters" },
+        { l: "Boolean", d: "System.Boolean — True or False" },
+        { l: "Double", d: "System.Double — 64-bit floating-point" },
+        { l: "Single", d: "System.Single — 32-bit floating-point" },
+        { l: "Long", d: "System.Int64 — 64-bit signed integer" },
+        { l: "Short", d: "System.Int16 — 16-bit signed integer" },
+        { l: "Byte", d: "System.Byte — 8-bit unsigned integer" },
+        { l: "Char", d: "System.Char — 16-bit Unicode character" },
+        { l: "Decimal", d: "System.Decimal — 128-bit decimal" },
+        { l: "Date", d: "System.DateTime — Date and time" },
+        { l: "Object", d: "System.Object — Base type of all types" },
+        { l: "SByte", d: "System.SByte — 8-bit signed integer" },
+        { l: "UInteger", d: "System.UInt32 — 32-bit unsigned integer" },
+        { l: "ULong", d: "System.UInt64 — 64-bit unsigned integer" },
+        { l: "UShort", d: "System.UInt16 — 16-bit unsigned integer" },
+        { l: "Console", d: "System.Console — Standard I/O" },
+        { l: "Math", d: "System.Math — Mathematical functions" },
+        { l: "Convert", d: "System.Convert — Type conversions" },
+        { l: "StringBuilder", d: "System.Text.StringBuilder — Mutable string" },
+        { l: "Environment", d: "System.Environment — System environment info" },
+        { l: "Exception", d: "System.Exception — Base exception class" },
+        { l: "ArgumentException", d: "System.ArgumentException" },
+        { l: "ArgumentNullException", d: "System.ArgumentNullException" },
+        {
+          l: "InvalidOperationException",
+          d: "System.InvalidOperationException",
+        },
+        { l: "NullReferenceException", d: "System.NullReferenceException" },
+        { l: "IndexOutOfRangeException", d: "System.IndexOutOfRangeException" },
+        { l: "NotImplementedException", d: "System.NotImplementedException" },
+        { l: "NotSupportedException", d: "System.NotSupportedException" },
+        { l: "OverflowException", d: "System.OverflowException" },
+        { l: "FormatException", d: "System.FormatException" },
+        { l: "IOException", d: "System.IO.IOException" },
+        { l: "Task", d: "System.Threading.Tasks.Task" },
+        { l: "List", d: "System.Collections.Generic.List(Of T)" },
+        {
+          l: "Dictionary",
+          d: "System.Collections.Generic.Dictionary(Of TKey, TValue)",
+        },
+        { l: "HashSet", d: "System.Collections.Generic.HashSet(Of T)" },
+        { l: "Queue", d: "System.Collections.Generic.Queue(Of T)" },
+        { l: "Stack", d: "System.Collections.Generic.Stack(Of T)" },
+        {
+          l: "KeyValuePair",
+          d: "System.Collections.Generic.KeyValuePair(Of TKey, TValue)",
+        },
+        { l: "IEnumerable", d: "System.Collections.Generic.IEnumerable(Of T)" },
+        { l: "IList", d: "System.Collections.Generic.IList(Of T)" },
+        {
+          l: "IDictionary",
+          d: "System.Collections.Generic.IDictionary(Of TKey, TValue)",
+        },
+        { l: "IDisposable", d: "System.IDisposable" },
+        { l: "IComparable", d: "System.IComparable" },
+        { l: "EventArgs", d: "System.EventArgs — Base class for event data" },
+        {
+          l: "EventHandler",
+          d: "System.EventHandler — Event handler delegate",
+        },
+        { l: "Guid", d: "System.Guid — Globally unique identifier" },
+        { l: "TimeSpan", d: "System.TimeSpan — Represents a time interval" },
+        { l: "DateTime", d: "System.DateTime — Date and time" },
+        { l: "Random", d: "System.Random — Pseudo-random number generator" },
+        { l: "Regex", d: "System.Text.RegularExpressions.Regex" },
+        { l: "StreamReader", d: "System.IO.StreamReader" },
+        { l: "StreamWriter", d: "System.IO.StreamWriter" },
+        { l: "File", d: "System.IO.File — File operations" },
+        { l: "Path", d: "System.IO.Path — Path operations" },
+        { l: "Directory", d: "System.IO.Directory — Directory operations" },
+      ];
+      types.forEach((t) => {
+        suggestions.push({
+          label: t.l,
+          kind: CK.Class,
+          documentation: t.d,
+          insertText: t.l,
+          range: range,
+          sortText: "1_" + t.l,
+        });
+      });
+
+      // ── Common Namespaces ──
+      const namespaces = [
+        "System",
+        "System.Collections",
+        "System.Collections.Generic",
+        "System.Text",
+        "System.IO",
+        "System.Linq",
+        "System.Threading",
+        "System.Threading.Tasks",
+        "System.Text.RegularExpressions",
+        "System.Net",
+        "System.Net.Http",
+        "System.Diagnostics",
+        "System.ComponentModel",
+        "System.Data",
+        "System.Xml",
+        "System.Reflection",
+        "System.Runtime",
+        "Microsoft.VisualBasic",
+        "Microsoft.VisualBasic.FileIO",
+      ];
+      namespaces.forEach((ns) => {
+        suggestions.push({
+          label: ns,
+          kind: CK.Module,
+          documentation: "Namespace: " + ns,
+          insertText: ns,
+          range: range,
+          sortText: "3_" + ns,
+        });
+      });
+
+      // ── Scan document for user-defined identifiers ──
+      const text = model.getValue();
+      const defRegex =
+        /\b(?:Sub|Function|Class|Module|Interface|Structure|Enum|Property|Event|Delegate)\s+(\w+)/gi;
+      const found = new Set();
+      let dm;
+      while ((dm = defRegex.exec(text)) !== null) {
+        found.add(dm[1]);
+      }
+      const varRegex =
+        /\b(?:Dim|Const|Private|Public|Protected|Friend)\s+(\w+)\s+As\s+/gi;
+      while ((dm = varRegex.exec(text)) !== null) {
+        found.add(dm[1]);
+      }
+      found.forEach((sym) => {
+        suggestions.push({
+          label: sym,
+          kind: CK.Variable,
+          documentation: "User-defined symbol",
+          insertText: sym,
+          range: range,
+          sortText: "1a_" + sym,
+        });
+      });
+
+      return { suggestions };
+    },
+  });
+
+  // ── Signature Help Provider ───────────────────────────────────────
+  monaco.languages.registerSignatureHelpProvider("vbnet", {
+    signatureHelpTriggerCharacters: ["(", ","],
+    provideSignatureHelp: function (model, position) {
+      const textUntilPosition = model.getValueInRange({
+        startLineNumber: position.lineNumber,
+        startColumn: 1,
+        endLineNumber: position.lineNumber,
+        endColumn: position.column,
+      });
+
+      const sigs = {
+        "Console.WriteLine": {
+          label: "Console.WriteLine(value As Object)",
+          doc: "Writes the text representation followed by a line terminator to the standard output stream.",
+          params: [{ label: "value As Object", doc: "The value to write." }],
+        },
+        "Console.ReadLine": {
+          label: "Console.ReadLine() As String",
+          doc: "Reads the next line of characters from the standard input stream.",
+          params: [],
+        },
+        "Console.Write": {
+          label: "Console.Write(value As Object)",
+          doc: "Writes the text representation to the standard output stream.",
+          params: [{ label: "value As Object", doc: "The value to write." }],
+        },
+        "Math.Max": {
+          label: "Math.Max(val1 As Double, val2 As Double) As Double",
+          doc: "Returns the larger of two specified numbers.",
+          params: [
+            {
+              label: "val1 As Double",
+              doc: "The first of two values to compare.",
+            },
+            {
+              label: "val2 As Double",
+              doc: "The second of two values to compare.",
+            },
+          ],
+        },
+        "Math.Min": {
+          label: "Math.Min(val1 As Double, val2 As Double) As Double",
+          doc: "Returns the smaller of two specified numbers.",
+          params: [
+            {
+              label: "val1 As Double",
+              doc: "The first of two values to compare.",
+            },
+            {
+              label: "val2 As Double",
+              doc: "The second of two values to compare.",
+            },
+          ],
+        },
+        "Math.Pow": {
+          label: "Math.Pow(x As Double, y As Double) As Double",
+          doc: "Returns a specified number raised to the specified power.",
+          params: [
+            { label: "x As Double", doc: "The base number." },
+            { label: "y As Double", doc: "The exponent." },
+          ],
+        },
+        "Math.Sqrt": {
+          label: "Math.Sqrt(d As Double) As Double",
+          doc: "Returns the square root of a specified number.",
+          params: [
+            {
+              label: "d As Double",
+              doc: "The number whose square root is to be found.",
+            },
+          ],
+        },
+        "Math.Abs": {
+          label: "Math.Abs(value As Double) As Double",
+          doc: "Returns the absolute value of a number.",
+          params: [{ label: "value As Double", doc: "A number." }],
+        },
+        "Math.Round": {
+          label: "Math.Round(value As Double, digits As Integer) As Double",
+          doc: "Rounds a value to the nearest integer or specified number of decimal places.",
+          params: [
+            { label: "value As Double", doc: "The value to round." },
+            {
+              label: "digits As Integer",
+              doc: "The number of decimal digits. (Optional)",
+            },
+          ],
+        },
+        "Convert.ToInt32": {
+          label: "Convert.ToInt32(value As Object) As Integer",
+          doc: "Converts the value to a 32-bit signed integer.",
+          params: [{ label: "value As Object", doc: "The value to convert." }],
+        },
+        "Convert.ToString": {
+          label: "Convert.ToString(value As Object) As String",
+          doc: "Converts the value to its String representation.",
+          params: [{ label: "value As Object", doc: "The value to convert." }],
+        },
+        "Convert.ToDouble": {
+          label: "Convert.ToDouble(value As Object) As Double",
+          doc: "Converts the value to a double-precision floating-point number.",
+          params: [{ label: "value As Object", doc: "The value to convert." }],
+        },
+        "String.Format": {
+          label:
+            "String.Format(format As String, ParamArray args() As Object) As String",
+          doc: "Replaces each format item with the corresponding object's string representation.",
+          params: [
+            { label: "format As String", doc: "A composite format string." },
+            {
+              label: "ParamArray args() As Object",
+              doc: "An object array with zero or more objects to format.",
+            },
+          ],
+        },
+        CType: {
+          label: "CType(expression As Object, typeName As Type) As Object",
+          doc: "Converts an expression to the specified data type.",
+          params: [
+            {
+              label: "expression As Object",
+              doc: "The expression to convert.",
+            },
+            { label: "typeName As Type", doc: "The target type." },
+          ],
+        },
+        DirectCast: {
+          label: "DirectCast(expression As Object, typeName As Type) As Object",
+          doc: "Type conversion based on inheritance.",
+          params: [
+            {
+              label: "expression As Object",
+              doc: "The expression to convert.",
+            },
+            { label: "typeName As Type", doc: "The target type." },
+          ],
+        },
+        TryCast: {
+          label: "TryCast(expression As Object, typeName As Type) As Object",
+          doc: "Attempts a cast; returns Nothing if it fails.",
+          params: [
+            {
+              label: "expression As Object",
+              doc: "The expression to convert.",
+            },
+            { label: "typeName As Type", doc: "The target type." },
+          ],
+        },
+        MsgBox: {
+          label:
+            "MsgBox(prompt As String, buttons As MsgBoxStyle, title As String) As MsgBoxResult",
+          doc: "Displays a message in a dialog box.",
+          params: [
+            { label: "prompt As String", doc: "The message text." },
+            {
+              label: "buttons As MsgBoxStyle",
+              doc: "Button style (Optional).",
+            },
+            { label: "title As String", doc: "The dialog title (Optional)." },
+          ],
+        },
+      };
+
+      // Find the function call context
+      let matchedSig = null;
+      let activeParam = 0;
+
+      for (const key of Object.keys(sigs)) {
+        const idx = textUntilPosition.lastIndexOf(key);
+        if (idx >= 0) {
+          const afterFunc = textUntilPosition.substring(idx + key.length);
+          const openParen = afterFunc.indexOf("(");
+          if (openParen >= 0) {
+            matchedSig = sigs[key];
+            const paramText = afterFunc.substring(openParen + 1);
+            activeParam = (paramText.match(/,/g) || []).length;
+            break;
+          }
+        }
+      }
+
+      if (!matchedSig) return null;
+
+      return {
+        value: {
+          signatures: [
+            {
+              label: matchedSig.label,
+              documentation: matchedSig.doc,
+              parameters: matchedSig.params.map((p) => ({
+                label: p.label,
+                documentation: p.doc,
+              })),
+            },
+          ],
+          activeSignature: 0,
+          activeParameter: Math.min(activeParam, matchedSig.params.length - 1),
+        },
+        dispose: function () {},
+      };
+    },
+  });
+
+  // ── Document Symbol Provider (Outline) ────────────────────────────
+  monaco.languages.registerDocumentSymbolProvider("vbnet", {
+    provideDocumentSymbols: function (model) {
+      const symbols = [];
+      const lines = model.getLinesContent();
+      const SK = monaco.languages.SymbolKind;
+      const patterns = [
+        {
+          regex:
+            /^\s*(Public|Private|Protected|Friend)?\s*(Shared\s+)?(Sub|Function)\s+(\w+)/i,
+          kindIdx: 3,
+          nameIdx: 4,
+          kindMap: { sub: SK.Method, function: SK.Function },
+        },
+        {
+          regex:
+            /^\s*(Public|Private|Protected|Friend)?\s*(MustInherit\s+|NotInheritable\s+|Partial\s+)?(Class)\s+(\w+)/i,
+          kindIdx: 3,
+          nameIdx: 4,
+          kindMap: { class: SK.Class },
+        },
+        {
+          regex: /^\s*(Public|Friend)?\s*(Module)\s+(\w+)/i,
+          kindIdx: 2,
+          nameIdx: 3,
+          kindMap: { module: SK.Module },
+        },
+        {
+          regex:
+            /^\s*(Public|Private|Protected|Friend)?\s*(Interface)\s+(\w+)/i,
+          kindIdx: 2,
+          nameIdx: 3,
+          kindMap: { interface: SK.Interface },
+        },
+        {
+          regex: /^\s*(Public|Private|Protected|Friend)?\s*(Enum)\s+(\w+)/i,
+          kindIdx: 2,
+          nameIdx: 3,
+          kindMap: { enum: SK.Enum },
+        },
+        {
+          regex:
+            /^\s*(Public|Private|Protected|Friend)?\s*(Structure)\s+(\w+)/i,
+          kindIdx: 2,
+          nameIdx: 3,
+          kindMap: { structure: SK.Struct },
+        },
+        {
+          regex: /^\s*(Public|Private|Protected|Friend)?\s*(Property)\s+(\w+)/i,
+          kindIdx: 2,
+          nameIdx: 3,
+          kindMap: { property: SK.Property },
+        },
+        {
+          regex: /^\s*Namespace\s+(\S+)/i,
+          kindFixed: SK.Namespace,
+          nameIdx: 1,
+        },
+      ];
+
+      for (let i = 0; i < lines.length; i++) {
+        for (const p of patterns) {
+          const m = p.regex.exec(lines[i]);
+          if (m) {
+            const name = m[p.nameIdx];
+            let kind;
+            if (p.kindFixed) {
+              kind = p.kindFixed;
+            } else {
+              const kw = m[p.kindIdx].toLowerCase();
+              kind = p.kindMap[kw] || SK.Variable;
+            }
+            symbols.push({
+              name: name,
+              kind: kind,
+              range: new monaco.Range(i + 1, 1, i + 1, lines[i].length + 1),
+              selectionRange: new monaco.Range(
+                i + 1,
+                m.index + 1,
+                i + 1,
+                m.index + m[0].length + 1,
+              ),
+            });
+          }
+        }
+      }
+      return symbols;
+    },
+  });
+};
