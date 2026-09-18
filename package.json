@@ -1,6 +1,6 @@
 {
   "name": "@live-codes/monaco-languages",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "Language support for Monaco Editor",
   "repository": {
     "url": "https://github.com/live-codes/monaco-languages"
@@ -29,6 +29,7 @@
     "kotlin": "./dist/kotlin.js",
     "lua": "./dist/lua.js",
     "minizinc": "./dist/minizinc.js",
+    "nim": "./dist/nim.js",
     "objc": "./dist/objc.js",
     "objcpp": "./dist/objcpp.js",
     "pascal": "./dist/pascal.js",
