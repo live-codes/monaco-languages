@@ -9,3 +9,5 @@
 - Prefers self-contained, inline implementations over extracting a shared helper — each file/module should stand alone rather than depend on a new common abstraction; he'll accept duplicating non-trivial logic (e.g. a scope parser) in every file rather than introduce a shared engine. Confidence: 0.65
 - Prefers leaving existing, working code untouched instead of refactoring it into a new style, even at the cost of some duplication. Confidence: 0.6
 - Expects symbol-level editor operations (rename, references) to respect lexical scope/semantics rather than naive whole-document text matching — flags renaming same-named variables across scopes as a bug. Confidence: 0.55
+- Wants an established pattern applied uniformly across the whole codebase: once a new approach is proven, he'll follow up to convert the stragglers still on the old implementation rather than tolerate inconsistency. Confidence: 0.6
+- Communicates in terse, direct imperatives (e.g. "fix python, kotlin, lean, nim, ocaml") without restating context, expecting the agent to infer the goal and carry it through to verifiable completion. Confidence: 0.45
