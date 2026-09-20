@@ -41,6 +41,7 @@ export const languages = [
   { id: "nim", name: "Nim" },
   { id: "objc", name: "Objective-C" },
   { id: "objcpp", name: "Objective-C++" },
+  { id: "ocaml", name: "OCaml" },
   { id: "pascal", name: "Pascal" },
   { id: "php", name: "PHP" },
   { id: "prolog", name: "Prolog" },
@@ -530,6 +531,26 @@ int main() {
     }
     return 0;
 }
+`,
+
+  ocaml: `type shape =
+  | Circle of float
+  | Rectangle of float * float
+
+let area = function
+  | Circle r -> Float.pi *. r *. r
+  | Rectangle (w, h) -> w *. h
+
+let describe shape =
+  match shape with
+  | Circle _ -> "a circle"
+  | Rectangle _ -> "a rectangle"
+
+let () =
+  let shapes = [ Circle 1.0; Rectangle 2.0 3.0 ] in
+  shapes
+  |> List.map (fun s -> Printf.sprintf "%s: %.2f" (describe s) (area s))
+  |> List.iter print_endline
 `,
 
   pascal: `program Demo;

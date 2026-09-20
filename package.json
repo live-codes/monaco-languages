@@ -33,6 +33,7 @@
     "nim": "./dist/nim.js",
     "objc": "./dist/objc.js",
     "objcpp": "./dist/objcpp.js",
+    "ocaml": "./dist/ocaml.js",
     "pascal": "./dist/pascal.js",
     "php": "./dist/php.js",
     "prolog": "./dist/prolog.js",
