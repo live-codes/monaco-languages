@@ -2330,8 +2330,13 @@ export default (monaco: typeof Monaco) => {
           const before = lines[i].slice(0, m.index).replace(/\s+$/, "");
           const after = lines[i].slice(m.index + name.length);
           const assigned = /^\s*(?:[-+*\/%]|\|\||&&)?=(?!=|>)/.test(after);
+          // A parameter list belongs to a `def` or a block; a call such as
+          // `f(x)` is not a declaration.
           const parameter =
-            /[,(|]\s*$/.test(before) && /^\s*[,|)]/.test(after);
+            (/\b(def|lambda|proc)\b/.test(before) &&
+              /[,(]\s*$/.test(before) &&
+              /^\s*[,)]/.test(after)) ||
+            (/\|\s*$/.test(before) && /^\s*[,|)]/.test(after));
           if (!assigned && !parameter) continue;
           const scope = enclosing(at(i, m.index));
           if (scope) scope.names.add(name);

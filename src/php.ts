@@ -2299,13 +2299,17 @@ export default (monaco: typeof Monaco) => {
         }
         return found;
       };
-      // First scope opening at or after `offset` (a signature's body).
+      // First scope opening at or after `offset` (a signature's body). A call
+      // like `f($x)` is not a signature: anything past a statement boundary is
+      // rejected so it cannot be mistaken for a parameter list.
       const nextScope = (offset: number) => {
         let found: Scope | undefined;
         for (const scope of scopes) {
           if (scope.start >= offset && (!found || scope.start < found.start))
             found = scope;
         }
+        if (found && /[;}]/.test(lines.join("\n").slice(offset, found.start)))
+          return undefined;
         return found;
       };
 
@@ -2335,6 +2339,9 @@ export default (monaco: typeof Monaco) => {
           const owner = isParam
             ? nextScope(at(i, m.index))
             : enclosing(at(i, m.index));
+          // A parameter list must bind to a body; otherwise this is a call, not
+          // a declaration, and must not shadow the real binding.
+          if (isParam && !owner) continue;
           const scope = owner && !owner.type ? owner : undefined;
           if (scope) scope.names.add(name);
           declarations.push({
