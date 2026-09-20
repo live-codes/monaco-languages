@@ -10,6 +10,7 @@
     "c-family": "./dist/c-family.js",
     "c": "./dist/c.js",
     "clio": "./dist/clio.js",
+    "clojurescript": "./dist/clojurescript.js",
     "cobol": "./dist/cobol.js",
     "commonlisp": "./dist/commonlisp.js",
     "cpp": "./dist/cpp.js",

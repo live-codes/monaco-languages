@@ -4,7 +4,7 @@
 - Cares about keyboard accessibility in UI: controls should keep focus after interaction so they can be operated with the keyboard (e.g. arrow keys to change a selection) without re-clicking. Confidence: 0.6
 - Dislikes redundant/duplicated UI text — prefers a single obvious display of the current value rather than repeating it in a second element. Confidence: 0.55
 - For Monaco language support, do not define custom themes: emit only standard token scopes so highlighting renders correctly under the existing/default themes. Confidence: 0.85
-- Expects new language support to be complete and first-class: syntax highlighting plus the full IntelliSense surface (autocomplete, snippets, hover info, go-to-definition, rename, etc.), not tokenization alone. Confidence: 0.65
+- Expects new language support to be complete and first-class: syntax highlighting plus the full IntelliSense surface (autocomplete, snippets, hover info, go-to-definition, rename, code folding, etc.), not tokenization alone. Confidence: 0.8
 - Prefers incremental, batched rollouts over big-bang changes: implement on a small representative starter batch first to validate the pattern, then extend to the rest; when fixing a bug prefers scoping the fix narrowly (e.g. only the newly-changed modules) rather than broadening it. Confidence: 0.6
 - Prefers self-contained, inline implementations over extracting a shared helper — each file/module should stand alone rather than depend on a new common abstraction; he'll accept duplicating non-trivial logic (e.g. a scope parser) in every file rather than introduce a shared engine. Confidence: 0.65
 - Prefers leaving existing, working code untouched instead of refactoring it into a new style, even at the cost of some duplication. Confidence: 0.6

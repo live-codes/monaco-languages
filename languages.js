@@ -18,6 +18,7 @@ export const languages = [
   { id: "astro", name: "Astro" },
   { id: "c", name: "C" },
   { id: "clio", name: "Clio" },
+  { id: "clojurescript", name: "ClojureScript" },
   { id: "cobol", name: "COBOL" },
   { id: "commonlisp", name: "Common Lisp" },
   { id: "cpp", name: "C++" },
@@ -109,6 +110,46 @@ fn factorial(n: Number) ->
 
 export fn main() ->
   log(add(factorial(5), 1))
+`,
+
+  clojurescript: `(ns demo.core
+  (:require [clojure.string :as str]))
+
+;; A simple record with a protocol implementation.
+(defprotocol Shape
+  (area [this]))
+
+(defrecord Circle [radius]
+  Shape
+  (area [_] (* Math/PI radius radius)))
+
+(defrecord Rectangle [width height]
+  Shape
+  (area [_] (* width height)))
+
+(defn describe
+  "Returns a human-readable description of a shape."
+  [shape]
+  (str "area = " (.toFixed (area shape) 2)))
+
+(defn running-total
+  "Sums the numbers lazily with reduce."
+  [numbers]
+  (reduce + 0 numbers))
+
+(defn -main [& _args]
+  (let [shapes [(->Circle 1.0)
+                (->Rectangle 2.0 3.0)]
+        names  (->> ["clojure" "script"]
+                    (map str/upper-case)
+                    (str/join " "))]
+    (doseq [shape shapes]
+      (println (describe shape)))
+    (println names "total:" (running-total [1 2 3 4 5]))
+    (println "last:" (last shapes))))
+
+(defn ^:export main []
+  (-main))
 `,
 
   cobol: `       IDENTIFICATION DIVISION.
