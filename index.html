@@ -3,68 +3,122 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Monaco Languages Demo</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        font: 14px/1.4 system-ui, sans-serif;
+        background: #1e1e1e;
+        color: #e0e0e0;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid #333;
+      }
+      header select {
+        padding: 0.25rem 0.5rem;
+        background: #2d2d2d;
+        color: inherit;
+        border: 1px solid #444;
+        border-radius: 4px;
+        font: inherit;
+      }
+      #status {
+        color: #888;
+        font-size: 12px;
+      }
+      #container {
+        flex: 1;
+        min-height: 0;
+      }
+    </style>
   </head>
   <body>
-    <div id="container" style="height: 90vh"></div>
+    <header>
+      <label for="language">Language</label>
+      <select id="language"></select>
+      <span id="status"></span>
+    </header>
+    <div id="container"></div>
 
     <script type="module">
       import { monaco } from "https://cdn.jsdelivr.net/npm/@live-codes/monaco-editor/monaco.js";
-      import rippleSupport from "./dist/ripple.js";
+      import { languages, samples } from "./languages.js";
 
-      rippleSupport(monaco);
+      // `module` defaults to the language id; see languages.js.
+      const entries = languages.map((entry) => ({
+        ...entry,
+        module: entry.module ?? entry.id,
+      }));
 
-      const code = `
-import { track } from "ripple";
+      const select = document.getElementById("language");
+      const status = document.getElementById("status");
 
-export component Counter() {
-  let count = track(0);
-  let double = track(() => @count * 2);
+      const editor = monaco.editor.create(document.getElementById("container"), {
+        value: "",
+        automaticLayout: true,
+        theme: "vs-dark",
+      });
 
-  <div class="container">
-    <h2>{"Counter"}</h2>
-    <p>{\`Count: \${@count}\`}</p>
-    <p>{\`Double: \${@double}\`}</p>
+      const loaded = new Set();
+      let latest = 0;
 
-    <button onClick={() => @count--}>{"-"}</button>
-    <button onClick={() => @count++}>{"+"}</button>
-    if (@count !== 0) {
-      <div>
-        <button onClick={() => (@count = 0)}>{"Reset"}</button>
-      </div>
-    }
-  </div>
+      async function selectLanguage(entry) {
+        const token = ++latest;
+        try {
+          if (!loaded.has(entry.module)) {
+            status.textContent = "Loading…";
+            const module = await import(`./dist/${entry.module}.js`);
+            module.default(monaco, () => editor);
+            loaded.add(entry.module);
+          }
 
-  <style>
-    .container {
-      text-align: center;
-    }
+          // A newer selection arrived while loading; let it win.
+          if (token !== latest) return;
 
-    button {
-      font-family: "Courier New", monospace;
-      font-size: 1em;
-      margin: 6px;
-      padding: 6px 12px;
-      border: none;
-      cursor: pointer;
-    }
+          const model = editor.getModel();
+          monaco.editor.setModelLanguage(model, entry.id);
+          model.setValue(samples[entry.id]);
+          editor.setPosition({ lineNumber: 1, column: 1 });
+          editor.revealLine(1);
 
-    button/* Unknown: PseudoClassSelector */ {
-      background-color: #e0e0e0;
-    }
-  </style>
-}
-`.trimStart();
+          status.textContent = "";
+        } catch (error) {
+          status.textContent = `Failed to load ${entry.name}: ${error.message}`;
+          console.error(error);
+        }
+      }
 
-      const editor = monaco.editor.create(
-        document.getElementById("container"),
-        {
-          value: code,
-          language: "ripple",
-          automaticLayout: true,
-          theme: "vs-dark",
-        },
-      );
+      for (const entry of entries) {
+        const option = document.createElement("option");
+        option.value = entry.id;
+        option.textContent = entry.name;
+        select.append(option);
+      }
+
+      select.addEventListener("change", () => {
+        const entry = entries.find((item) => item.id === select.value);
+        if (entry) selectLanguage(entry);
+      });
+
+      const initial = entries.find((item) => item.id === "python");
+      select.value = initial.id;
+      selectLanguage(initial);
     </script>
   </body>
 </html>
