@@ -1829,8 +1829,165 @@ export default (monaco: typeof Monaco) => {
   /* ===================================================================
    DEFINITION PROVIDER
    =================================================================== */
+  // ─── Binding resolution (shared by the definition and rename providers) ───
+  // Resolves the name under the cursor to its block-local binding: every
+  // occurrence bound to it, plus the occurrence that declares it. Names with no
+  // block-local binding (atoms, functions) report `local: false` so callers can
+  // keep their document-wide behaviour.
+  const resolveBinding = (
+    model: Monaco.editor.ITextModel,
+    position: Monaco.Position,
+  ) => {
+    const word = model.getWordAtPosition(position);
+    if (!word) return null;
+    const name = word.word;
+
+    const lines = model.getLinesContent();
+    const lineStart: number[] = [];
+    let size = 0;
+    for (let i = 0; i < lines.length; i++) {
+      lineStart.push(size);
+      size += lines[i].length + 1;
+    }
+    const at = (line: number, col: number) => lineStart[line] + col;
+    const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    // An Erlang form ends with a period at bracket depth 0; variables are
+    // scoped to the form (each clause introduces fresh variables).
+    type Scope = { start: number; end: number; names: Set<string> };
+    const scopes: Scope[] = [];
+    let depth = 0;
+    let start = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      for (let c = 0; c < line.length; c++) {
+        const ch = line[c];
+        if (ch === "%") break;
+        if (ch === "(" || ch === "[" || ch === "{") depth++;
+        else if (ch === ")" || ch === "]" || ch === "}") depth--;
+        else if (
+          depth === 0 &&
+          ch === "." &&
+          (c + 1 >= line.length || /\s/.test(line[c + 1]))
+        ) {
+          scopes.push({ start, end: at(i, c), names: new Set<string>() });
+          start = at(i, c + 1);
+        }
+      }
+    }
+    scopes.push({
+      start,
+      end: at(lines.length - 1, lines[lines.length - 1].length),
+      names: new Set<string>(),
+    });
+
+    // Innermost scope containing `offset` (geometry only).
+    const enclosing = (offset: number) => {
+      let found: Scope | undefined;
+      for (const scope of scopes) {
+        if (scope.start <= offset && offset <= scope.end) {
+          if (!found || scope.start > found.start) found = scope;
+        }
+      }
+      return found;
+    };
+    // Innermost enclosing scope that declares `name` — the name's binding.
+    const declaring = (offset: number) => {
+      let found: Scope | undefined;
+      for (const scope of scopes) {
+        if (
+          scope.start <= offset &&
+          offset <= scope.end &&
+          scope.names.has(name)
+        ) {
+          if (!found || scope.start > found.start) found = scope;
+        }
+      }
+      return found;
+    };
+
+    // A variable (uppercase or `_`) is bound at its first occurrence in the
+    // form; atoms and function names are global, so they are left alone.
+    const declarations: { start: number; end: number; scope?: Scope }[] = [];
+    const occurrence = new RegExp("\\b" + esc(name) + "\\b", "g");
+    if (/^[A-Z_]/.test(name)) {
+      const seen = new Set<Scope>();
+      for (let i = 0; i < lines.length; i++) {
+        occurrence.lastIndex = 0;
+        let m;
+        while ((m = occurrence.exec(lines[i])) !== null) {
+          const pos = at(i, m.index);
+          const scope = enclosing(pos);
+          if (!scope || seen.has(scope)) continue;
+          seen.add(scope);
+          scope.names.add(name);
+          declarations.push({ start: pos, end: pos + name.length, scope });
+        }
+      }
+    }
+
+    // Resolve a name span to its binding: declarations use their own scope,
+    // plain references the innermost enclosing declaration of the name.
+    const resolve = (start: number, end: number) => {
+      for (const decl of declarations) {
+        if (decl.start <= start && end <= decl.end) return decl.scope;
+      }
+      return declaring(start);
+    };
+
+    const cursorLine = position.lineNumber - 1;
+    const cursor = resolve(
+      at(cursorLine, word.startColumn - 1),
+      at(cursorLine, word.endColumn - 1),
+    );
+    const targetStart = cursor ? cursor.start : -1;
+    const decl =
+      targetStart === -1
+        ? undefined
+        : declarations.find((d) => d.scope && d.scope.start === targetStart);
+
+    // Every occurrence bound to the same binding, and the one declaring it.
+    type Occurrence = { line: number; startColumn: number; endColumn: number };
+    const occurrences: Occurrence[] = [];
+    let declarationRange: Occurrence | null = null;
+    for (let i = 0; i < lines.length; i++) {
+      occurrence.lastIndex = 0;
+      let m;
+      while ((m = occurrence.exec(lines[i])) !== null) {
+        const pos = at(i, m.index);
+        const scope = resolve(pos, pos + name.length);
+        if ((scope ? scope.start : -1) !== targetStart) continue;
+        const range: Occurrence = {
+          line: i + 1,
+          startColumn: m.index + 1,
+          endColumn: m.index + 1 + name.length,
+        };
+        occurrences.push(range);
+        if (decl && decl.start <= pos && pos + name.length <= decl.end)
+          declarationRange = range;
+      }
+    }
+
+    return {
+      name,
+      local: targetStart !== -1,
+      declaration: declarationRange,
+      occurrences,
+    };
+  };
+
   monaco.languages.registerDefinitionProvider("erlang", {
     provideDefinition: function (model, position) {
+      // A form-local variable resolves to its own binding, not the first match.
+      const binding = resolveBinding(model, position);
+      if (binding && binding.local) {
+        if (!binding.declaration) return null;
+        const d = binding.declaration;
+        return {
+          uri: model.uri,
+          range: new monaco.Range(d.line, d.startColumn, d.line, d.endColumn),
+        };
+      }
       var wi = model.getWordAtPosition(position);
       if (!wi) return null;
       var word = wi.word;
@@ -2074,134 +2231,18 @@ export default (monaco: typeof Monaco) => {
   // ─── Rename Provider (scope-aware) ──────────────────────────────────
   monaco.languages.registerRenameProvider("erlang", {
     provideRenameEdits: function (model, position, newName) {
-      const word = model.getWordAtPosition(position);
-      if (!word) return null;
-      const name = word.word;
-
-      const lines = model.getLinesContent();
-      const lineStart: number[] = [];
-      let size = 0;
-      for (let i = 0; i < lines.length; i++) {
-        lineStart.push(size);
-        size += lines[i].length + 1;
-      }
-      const at = (line: number, col: number) => lineStart[line] + col;
-      const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-      // An Erlang form ends with a period at bracket depth 0; variables are
-      // scoped to the form (each clause introduces fresh variables).
-      type Scope = { start: number; end: number; names: Set<string> };
-      const scopes: Scope[] = [];
-      let depth = 0;
-      let start = 0;
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        for (let c = 0; c < line.length; c++) {
-          const ch = line[c];
-          if (ch === "%") break;
-          if (ch === "(" || ch === "[" || ch === "{") depth++;
-          else if (ch === ")" || ch === "]" || ch === "}") depth--;
-          else if (
-            depth === 0 &&
-            ch === "." &&
-            (c + 1 >= line.length || /\s/.test(line[c + 1]))
-          ) {
-            scopes.push({ start, end: at(i, c), names: new Set<string>() });
-            start = at(i, c + 1);
-          }
-        }
-      }
-      scopes.push({
-        start,
-        end: at(lines.length - 1, lines[lines.length - 1].length),
-        names: new Set<string>(),
-      });
-
-      // Innermost scope containing `offset` (geometry only).
-      const enclosing = (offset: number) => {
-        let found: Scope | undefined;
-        for (const scope of scopes) {
-          if (scope.start <= offset && offset <= scope.end) {
-            if (!found || scope.start > found.start) found = scope;
-          }
-        }
-        return found;
+      const binding = resolveBinding(model, position);
+      if (!binding) return null;
+      return {
+        edits: binding.occurrences.map((r) => ({
+          resource: model.uri,
+          versionId: model.getVersionId(),
+          textEdit: {
+            range: new monaco.Range(r.line, r.startColumn, r.line, r.endColumn),
+            text: newName,
+          },
+        })),
       };
-      // Innermost enclosing scope that declares `name` — the name's binding.
-      const declaring = (offset: number) => {
-        let found: Scope | undefined;
-        for (const scope of scopes) {
-          if (
-            scope.start <= offset &&
-            offset <= scope.end &&
-            scope.names.has(name)
-          ) {
-            if (!found || scope.start > found.start) found = scope;
-          }
-        }
-        return found;
-      };
-
-      // A variable (uppercase or `_`) is bound at its first occurrence in the
-      // form; atoms and function names are global, so they are left alone.
-      const declarations: { start: number; end: number; scope?: Scope }[] = [];
-      const occurrence = new RegExp("\\b" + esc(name) + "\\b", "g");
-      if (/^[A-Z_]/.test(name)) {
-        const seen = new Set<Scope>();
-        for (let i = 0; i < lines.length; i++) {
-          occurrence.lastIndex = 0;
-          let m;
-          while ((m = occurrence.exec(lines[i])) !== null) {
-            const pos = at(i, m.index);
-            const scope = enclosing(pos);
-            if (!scope || seen.has(scope)) continue;
-            seen.add(scope);
-            scope.names.add(name);
-            declarations.push({ start: pos, end: pos + name.length, scope });
-          }
-        }
-      }
-
-      // Resolve a name span to its binding: declarations use their own scope,
-      // plain references the innermost enclosing declaration of the name.
-      const resolve = (start: number, end: number) => {
-        for (const decl of declarations) {
-          if (decl.start <= start && end <= decl.end) return decl.scope;
-        }
-        return declaring(start);
-      };
-
-      // Only rename occurrences resolving to the same binding as the cursor.
-      const cursorLine = position.lineNumber - 1;
-      const cursorScope = resolve(
-        at(cursorLine, word.startColumn - 1),
-        at(cursorLine, word.endColumn - 1),
-      );
-      const targetStart = cursorScope ? cursorScope.start : -1;
-      const edits: Monaco.editor.IWorkspaceTextEdit[] = [];
-      for (let i = 0; i < lines.length; i++) {
-        occurrence.lastIndex = 0;
-        let m;
-        while ((m = occurrence.exec(lines[i])) !== null) {
-          const pos = at(i, m.index);
-          const scope = resolve(pos, pos + name.length);
-          if ((scope ? scope.start : -1) !== targetStart) continue;
-          edits.push({
-            resource: model.uri,
-            versionId: model.getVersionId(),
-            textEdit: {
-              range: new monaco.Range(
-                i + 1,
-                m.index + 1,
-                i + 1,
-                m.index + 1 + name.length,
-              ),
-              text: newName,
-            },
-          });
-        }
-      }
-      return { edits };
     },
     resolveRenameLocation: function (model, position) {
       const word = model.getWordAtPosition(position);
