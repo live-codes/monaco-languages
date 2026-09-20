@@ -1,5 +1,7 @@
 // 'WebAssembly Text Format' Monarch language
 // from https://github.com/AssemblyScript/website/blob/main/src/.vuepress/public/scripts/wat.js
+import type * as Monaco from "monaco-editor";
+
 const config = {
   brackets: [
     ["(", ")"],
@@ -715,4 +717,148 @@ export default (monaco = (window as any).monaco) => {
   monaco.languages.register({ id: lang });
   monaco.languages.setLanguageConfiguration(lang, config);
   monaco.languages.setMonarchTokensProvider(lang, tokens);
+
+  // ─── Rename Provider (scope-aware) ──────────────────────────────────
+  monaco.languages.registerRenameProvider(lang, {
+    provideRenameEdits: function (model, position, newName) {
+      const word = model.getWordAtPosition(position);
+      if (!word) return null;
+      const name = word.word;
+
+      const lines = model.getLinesContent();
+      const lineStart: number[] = [];
+      let size = 0;
+      for (let i = 0; i < lines.length; i++) {
+        lineStart.push(size);
+        size += lines[i].length + 1;
+      }
+      const at = (line: number, col: number) => lineStart[line] + col;
+      const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+      // WAT scopes are parenthesised forms. `$` is a word character here, so a
+      // name can carry its own leading `$`.
+      type Scope = { start: number; end: number; names: Set<string> };
+      const scopes: Scope[] = [];
+      const open: Scope[] = [];
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        for (let c = 0; c < line.length; c++) {
+          const ch = line[c];
+          if (ch === ";") break;
+          if (ch === "(") {
+            const scope: Scope = {
+              start: at(i, c),
+              end: Infinity,
+              names: new Set<string>(),
+            };
+            scopes.push(scope);
+            open.push(scope);
+          } else if (ch === ")") {
+            const scope = open.pop();
+            if (scope) scope.end = at(i, c);
+          }
+        }
+      }
+      const eof = at(lines.length - 1, lines[lines.length - 1].length);
+      for (const scope of open) scope.end = eof;
+
+      // Innermost enclosing scopes, outermost first.
+      const containing = (offset: number) => {
+        const found: Scope[] = [];
+        for (const scope of scopes) {
+          if (scope.start <= offset && offset <= scope.end) found.push(scope);
+        }
+        return found.sort((a, b) => a.start - b.start);
+      };
+      // Innermost enclosing scope that declares `name` — the name's binding.
+      const declaring = (offset: number) => {
+        const found = containing(offset);
+        for (let i = found.length - 1; i >= 0; i--) {
+          if (found[i].names.has(name)) return found[i];
+        }
+        return undefined;
+      };
+
+      // A `$name` introduced by (param …) or (local …) belongs to the enclosing
+      // function, not to the (param …) form itself.
+      const declaration = new RegExp(
+        "\\((?:param|local)\\s+" + esc(name) + "\\b",
+        "g",
+      );
+      const declarations: { start: number; end: number; scope?: Scope }[] = [];
+      for (let i = 0; i < lines.length; i++) {
+        declaration.lastIndex = 0;
+        let m;
+        while ((m = declaration.exec(lines[i])) !== null) {
+          const stack = containing(at(i, m.index));
+          const owner = stack[stack.length - 2];
+          if (owner) owner.names.add(name);
+          const start = at(i, m.index) + m[0].length - name.length;
+          declarations.push({ start, end: start + name.length, scope: owner });
+        }
+      }
+
+      // Resolve a name span to its binding: declarations use their own scope,
+      // plain references the innermost enclosing declaration of the name.
+      const resolve = (start: number, end: number) => {
+        for (const decl of declarations) {
+          if (decl.start <= start && end <= decl.end) return decl.scope;
+        }
+        return declaring(start);
+      };
+
+      // Only rename occurrences resolving to the same binding as the cursor.
+      const cursorLine = position.lineNumber - 1;
+      const cursorScope = resolve(
+        at(cursorLine, word.startColumn - 1),
+        at(cursorLine, word.endColumn - 1),
+      );
+      const targetStart = cursorScope ? cursorScope.start : -1;
+      const edits: Monaco.editor.IWorkspaceTextEdit[] = [];
+      const occurrence = new RegExp(
+        (name.startsWith("$") ? "" : "\\b") + esc(name) + "\\b",
+        "g",
+      );
+      for (let i = 0; i < lines.length; i++) {
+        occurrence.lastIndex = 0;
+        let m;
+        while ((m = occurrence.exec(lines[i])) !== null) {
+          const start = at(i, m.index);
+          const scope = resolve(start, start + name.length);
+          if ((scope ? scope.start : -1) !== targetStart) continue;
+          if (targetStart !== -1) {
+            const before = lines[i].slice(0, m.index).replace(/\s+$/, "");
+            if (before.endsWith(".")) continue;
+          }
+          edits.push({
+            resource: model.uri,
+            versionId: model.getVersionId(),
+            textEdit: {
+              range: new monaco.Range(
+                i + 1,
+                m.index + 1,
+                i + 1,
+                m.index + 1 + name.length,
+              ),
+              text: newName,
+            },
+          });
+        }
+      }
+      return { edits };
+    },
+    resolveRenameLocation: function (model, position) {
+      const word = model.getWordAtPosition(position);
+      if (!word) return { rejectReason: "Cannot rename this element." };
+      return {
+        range: new monaco.Range(
+          position.lineNumber,
+          word.startColumn,
+          position.lineNumber,
+          word.endColumn,
+        ),
+        text: word.word,
+      };
+    },
+  });
 };
