@@ -1,792 +1,1210 @@
 import type * as Monaco from "monaco-editor";
 
 export default (monaco: typeof Monaco) => {
-  // ===== 1. REGISTER LANGUAGE =====
+  // ═══════════════════════════════════════════════
+  // 1. REGISTER LANGUAGE
+  // ═══════════════════════════════════════════════
   monaco.languages.register({
-    id: "dart",
-    extensions: [".dart"],
-    aliases: ["Dart", "dart"],
-    mimetypes: ["application/dart"],
+    id: "purescript",
+    extensions: [".purs"],
+    aliases: ["PureScript", "purescript", "purs"],
+    mimetypes: ["text/x-purescript"],
   });
 
-  // ===== 2. LANGUAGE CONFIGURATION =====
-  monaco.languages.setLanguageConfiguration("dart", {
-    comments: { lineComment: "//", blockComment: ["/*", "*/"] },
+  // ═══════════════════════════════════════════════
+  // 2. LANGUAGE CONFIGURATION
+  // ═══════════════════════════════════════════════
+  monaco.languages.setLanguageConfiguration("purescript", {
+    comments: { lineComment: "--", blockComment: ["{-", "-}"] },
     brackets: [
       ["{", "}"],
       ["[", "]"],
       ["(", ")"],
-      ["<", ">"],
     ],
     autoClosingPairs: [
       { open: "{", close: "}" },
       { open: "[", close: "]" },
       { open: "(", close: ")" },
-      { open: "<", close: ">" },
-      { open: "'", close: "'", notIn: ["string", "comment"] },
       { open: '"', close: '"', notIn: ["string"] },
-      { open: "/**", close: " */", notIn: ["string"] },
+      { open: "'", close: "'", notIn: ["string", "comment"] },
+      { open: "{-", close: "-}" },
     ],
     surroundingPairs: [
       { open: "{", close: "}" },
       { open: "[", close: "]" },
       { open: "(", close: ")" },
-      { open: "<", close: ">" },
-      { open: "'", close: "'" },
       { open: '"', close: '"' },
+      { open: "'", close: "'" },
     ],
     folding: {
-      markers: {
-        start: /^\s*\/\/\s*#?region\b/,
-        end: /^\s*\/\/\s*#?endregion\b/,
-      },
+      offSide: true,
+      markers: { start: /^\s*--\s*#?region\b/, end: /^\s*--\s*#?endregion\b/ },
     },
     indentationRules: {
-      increaseIndentPattern: /^((?!\/\/).)*(\{[^}"']*|\([^)"']*|\[[^\]"']*)$/,
-      decreaseIndentPattern: /^((?!.*?\/\*).*\*\/)?\s*[}\])]/,
+      increaseIndentPattern: /^\s*(where|do|ado|let|of|then|else|\{)\s*$/,
+      decreaseIndentPattern: /^\s*(in|else)\b/,
     },
     onEnterRules: [
       {
-        beforeText: /^\s*\/\/\/.*$/,
-        action: {
-          indentAction: monaco.languages.IndentAction.None,
-          appendText: "/// ",
-        },
+        beforeText: /^\s*(where|do|ado|let|of|then|else)\s*$/,
+        action: { indentAction: monaco.languages.IndentAction.Indent },
       },
       {
-        beforeText: /^\s*\/\*\*(?!\/)([^*]|\*(?!\/))*$/,
-        afterText: /^\s*\*\/$/,
-        action: {
-          indentAction: monaco.languages.IndentAction.IndentOutdent,
-          appendText: " * ",
-        },
-      },
-      {
-        beforeText: /^\s*\/\*\*(?!\/)([^*]|\*(?!\/))*$/,
-        action: {
-          indentAction: monaco.languages.IndentAction.None,
-          appendText: " * ",
-        },
+        beforeText: /=\s*$/,
+        action: { indentAction: monaco.languages.IndentAction.Indent },
       },
     ],
     wordPattern:
       /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
   });
 
-  // ===== 3. MONARCH TOKENIZER (Syntax Highlighting) =====
-  monaco.languages.setMonarchTokensProvider("dart", {
+  // ═══════════════════════════════════════════════
+  // 3. MONARCH TOKENIZER
+  // ═══════════════════════════════════════════════
+  monaco.languages.setMonarchTokensProvider("purescript", {
     defaultToken: "",
-    tokenPostfix: ".dart",
     keywords: [
-      "abstract",
-      "as",
-      "assert",
-      "async",
-      "await",
-      "base",
-      "break",
-      "case",
-      "catch",
-      "class",
-      "const",
-      "continue",
-      "covariant",
-      "default",
-      "deferred",
-      "do",
-      "dynamic",
-      "else",
-      "enum",
-      "export",
-      "extends",
-      "extension",
-      "external",
-      "factory",
-      "false",
-      "final",
-      "finally",
-      "for",
-      "Function",
-      "get",
-      "hide",
-      "if",
-      "implements",
+      "module",
+      "where",
       "import",
+      "data",
+      "type",
+      "newtype",
+      "class",
+      "instance",
+      "derive",
+      "foreign",
+      "infixl",
+      "infixr",
+      "infix",
+      "do",
+      "ado",
+      "let",
       "in",
-      "interface",
-      "is",
-      "late",
-      "library",
-      "mixin",
-      "new",
-      "null",
+      "if",
+      "then",
+      "else",
+      "case",
       "of",
-      "on",
-      "operator",
-      "part",
-      "required",
-      "rethrow",
-      "return",
-      "sealed",
-      "set",
-      "show",
-      "static",
-      "super",
-      "switch",
-      "sync",
-      "this",
-      "throw",
+      "forall",
+      "as",
+      "hiding",
+      "qualified",
       "true",
-      "try",
-      "typedef",
-      "var",
-      "void",
-      "when",
-      "while",
-      "with",
-      "yield",
+      "false",
+      "otherwise",
     ],
-    typeKeywords: [
-      "int",
-      "double",
-      "num",
+    builtinTypes: [
+      "Int",
+      "Number",
       "String",
-      "bool",
+      "Char",
+      "Boolean",
+      "Array",
+      "Record",
+      "Effect",
+      "Aff",
+      "Maybe",
+      "Either",
+      "Tuple",
+      "Unit",
+      "Void",
+      "Ordering",
       "List",
       "Map",
       "Set",
-      "Future",
-      "Stream",
-      "Iterable",
-      "Object",
-      "Null",
-      "Never",
-      "Type",
-      "Symbol",
-      "BigInt",
-      "DateTime",
-      "Duration",
-      "RegExp",
-      "Uri",
-      "Comparable",
-      "Pattern",
-      "Match",
-      "Record",
-      "dynamic",
-      "FutureOr",
-      "Completer",
-      "StreamController",
-      "StreamSubscription",
-      "Timer",
+      "NonEmpty",
+      "Identity",
+      "Nothing",
+      "Just",
+      "Left",
+      "Right",
+      "LT",
+      "GT",
+      "EQ",
+      "Semiring",
+      "Ring",
+      "EuclideanRing",
+      "CommutativeRing",
+      "Functor",
+      "Apply",
+      "Applicative",
+      "Bind",
+      "Monad",
+      "Semigroup",
+      "Monoid",
+      "Eq",
+      "Ord",
+      "Show",
+      "BooleanAlgebra",
+      "HeytingAlgebra",
+      "Bounded",
+      "Foldable",
+      "Traversable",
     ],
+    escapes: /\\(?:[abfnrtv\\"'0]|x[0-9A-Fa-f]{1,6}|u\{?[0-9A-Fa-f]{1,6}\}?)/,
     operators: [
+      "->",
+      "<-",
+      "=>",
+      "::",
+      "..",
+      "|",
+      "\\",
+      "@",
       "=",
-      ">",
-      "<",
-      "!",
       "~",
-      "?",
-      ":",
-      "==",
-      "<=",
-      ">=",
-      "!=",
+      "<>",
+      "<$>",
+      "<*>",
+      "<#>",
+      ">>=",
+      "=<<",
+      "<<<",
+      ">>>",
       "&&",
       "||",
       "++",
-      "--",
+      "==",
+      "/=",
+      "<=",
+      ">=",
+      "<",
+      ">",
       "+",
       "-",
       "*",
       "/",
-      "&",
-      "|",
+      "$",
+      "#",
       "^",
-      "%",
-      "<<",
-      ">>",
-      ">>>",
-      "+=",
-      "-=",
-      "*=",
-      "/=",
-      "&=",
-      "|=",
-      "^=",
-      "%=",
-      "<<=",
-      ">>=",
-      ">>>=",
-      "??",
-      "?.",
-      "..",
-      "...",
-      "=>",
-      "~/",
+      "?",
     ],
-    symbols: /[=><!~?:&|+\-*\/\^%\.]+/,
-    escapes:
-      /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
-    digits: /\d+(_+\d+)*/,
+    symbols: /[=><!~?:&|+\-*\/\^%\$#@\\\.]+/,
 
     tokenizer: {
       root: [
-        [/\/\/\/.*$/, "comment.doc"],
-        [/@[a-zA-Z_$][\w$]*/, "annotation"],
+        [/\{-/, "comment", "@blockComment"],
+        [/--\|.*$/, "comment.doc"],
+        [/--.*$/, "comment"],
+
+        [/"""/, "string", "@tripleString"],
+        [/"/, "string", "@string"],
+        [/'[^\\']'/, "string"],
+        [/'(\\.)'/, "string"],
+
+        [/0[xX][0-9a-fA-F_]+/, "number.hex"],
+        [/0[oO][0-7_]+/, "number.octal"],
+        [/0[bB][01_]+/, "number.binary"],
+        [/\d+\.\d+([eE][+-]?\d+)?/, "number.float"],
+        [/\d+[eE][+-]?\d+/, "number.float"],
+        [/\d+/, "number"],
+
+        [/\?[a-zA-Z_]\w*/, "variable"],
+
         [
-          /[a-z_$][\w$]*/,
+          /[A-Z][\w']*(\.[A-Z][\w']*)*/,
           {
             cases: {
-              "@keywords": "keyword",
-              "@typeKeywords": "type.identifier",
-              "@default": "identifier",
-            },
-          },
-        ],
-        [
-          /[A-Z][\w$]*/,
-          {
-            cases: {
-              "@typeKeywords": "type.identifier",
-              "@keywords": "keyword",
+              "@builtinTypes": "type.identifier",
               "@default": "type.identifier",
             },
           },
         ],
+
+        [
+          /[a-z_][\w']*/,
+          {
+            cases: {
+              "@keywords": "keyword",
+              "@default": "identifier",
+            },
+          },
+        ],
+
+        [/`[a-zA-Z][\w']*`/, "operator"],
+
+        [
+          /@symbols/,
+          {
+            cases: {
+              "@operators": "keyword.operator",
+              "@default": "operator",
+            },
+          },
+        ],
+
+        [/[{}()\[\]]/, "delimiter.bracket"],
+        [/[,;]/, "delimiter"],
         { include: "@whitespace" },
-        [/[{}()\[\]]/, "@brackets"],
-        [/[<>](?!@symbols)/, "@brackets"],
-        [/@symbols/, { cases: { "@operators": "operator", "@default": "" } }],
-        [/(@digits)[eE]([\-+]?(@digits))?/, "number.float"],
-        [/(@digits)\.(@digits)([eE][\-+]?(@digits))?/, "number.float"],
-        [/0[xX][0-9a-fA-F_]+/, "number.hex"],
-        [/0[bB][01_]+/, "number.binary"],
-        [/(@digits)/, "number"],
-        [/[;,.]/, "delimiter"],
-        [/r"""/, "string", "@rawTripleDQ"],
-        [/r'''/, "string", "@rawTripleSQ"],
-        [/r"/, "string", "@rawDQ"],
-        [/r'/, "string", "@rawSQ"],
-        [/"""/, "string", "@tripleDQ"],
-        [/'''/, "string", "@tripleSQ"],
-        [/"/, "string", "@dq"],
-        [/'/, "string", "@sq"],
       ],
-      whitespace: [
-        [/[ \t\r\n]+/, ""],
-        [/\/\*\*(?!\/)/, "comment.doc", "@commentDoc"],
-        [/\/\*/, "comment", "@comment"],
-        [/\/\/.*$/, "comment"],
+
+      blockComment: [
+        [/[^{-]+/, "comment"],
+        [/\{-/, "comment", "@push"],
+        [/-\}/, "comment", "@pop"],
+        [/[{-]/, "comment"],
       ],
-      comment: [
-        [/[^\/*]+/, "comment"],
-        [/\/\*/, "comment", "@push"],
-        [/\*\//, "comment", "@pop"],
-        [/[\/*]/, "comment"],
-      ],
-      commentDoc: [
-        [/[^\/*]+/, "comment.doc"],
-        [/\/\*/, "comment.doc", "@push"],
-        [/\*\//, "comment.doc", "@pop"],
-        [/[\/*]/, "comment.doc"],
-      ],
-      dq: [
-        [/[^\\"$]+/, "string"],
-        [/\$\{/, "string.interpolation", "@interp"],
-        [/\$[a-zA-Z_]\w*/, "string.interpolation"],
+
+      string: [
+        [/[^\\"]+/, "string"],
         [/@escapes/, "string.escape"],
         [/\\./, "string.escape.invalid"],
         [/"/, "string", "@pop"],
       ],
-      sq: [
-        [/[^\\'$]+/, "string"],
-        [/\$\{/, "string.interpolation", "@interp"],
-        [/\$[a-zA-Z_]\w*/, "string.interpolation"],
-        [/@escapes/, "string.escape"],
-        [/\\./, "string.escape.invalid"],
-        [/'/, "string", "@pop"],
-      ],
-      tripleDQ: [
+
+      tripleString: [
         [/"""/, "string", "@pop"],
-        [/[^\\"$]+/, "string"],
-        [/\$\{/, "string.interpolation", "@interp"],
-        [/\$[a-zA-Z_]\w*/, "string.interpolation"],
-        [/@escapes/, "string.escape"],
-        [/\\./, "string.escape.invalid"],
-        [/./, "string"],
-      ],
-      tripleSQ: [
-        [/'''/, "string", "@pop"],
-        [/[^\\'$]+/, "string"],
-        [/\$\{/, "string.interpolation", "@interp"],
-        [/\$[a-zA-Z_]\w*/, "string.interpolation"],
-        [/@escapes/, "string.escape"],
-        [/\\./, "string.escape.invalid"],
-        [/./, "string"],
-      ],
-      rawDQ: [
         [/[^"]+/, "string"],
-        [/"/, "string", "@pop"],
+        [/"/, "string"],
       ],
-      rawSQ: [
-        [/[^']+/, "string"],
-        [/'/, "string", "@pop"],
-      ],
-      rawTripleDQ: [
-        [/"""/, "string", "@pop"],
-        [/./, "string"],
-      ],
-      rawTripleSQ: [
-        [/'''/, "string", "@pop"],
-        [/./, "string"],
-      ],
-      interp: [
-        [/\{/, "string.interpolation", "@push"],
-        [/\}/, "string.interpolation", "@pop"],
-        { include: "root" },
-      ],
+
+      whitespace: [[/\s+/, "white"]],
     },
   });
 
-  // ===== 4. DOCS DATABASE =====
-  const D = {
-    int: {
-      sig: "abstract class int extends num",
-      doc: "An integer number. The default implementation is 64-bit two's complement integers.",
-    },
-    double: {
-      sig: "abstract class double extends num",
-      doc: "An IEEE 754 double-precision floating-point number.",
-    },
-    num: {
-      sig: "abstract class num implements Comparable<num>",
-      doc: "An integer or floating-point number.",
+  // ═══════════════════════════════════════════════
+  // 4. KNOWLEDGE BASE
+  // ═══════════════════════════════════════════════
+  const KB = {
+    // --- Core Types ---
+    Int: { k: "Type", t: "Int", m: "Prim", d: "A 32-bit signed integer type." },
+    Number: {
+      k: "Type",
+      t: "Number",
+      m: "Prim",
+      d: "A double-precision floating point number (IEEE 754).",
     },
     String: {
-      sig: "abstract class String implements Comparable<String>, Pattern",
-      doc: "A sequence of UTF-16 code units. Strings are immutable.",
+      k: "Type",
+      t: "String",
+      m: "Prim",
+      d: "A sequence of characters (UTF-16).",
     },
-    bool: {
-      sig: "class bool",
-      doc: "The reserved words `true` and `false` denote the two objects that are the only instances of this class.",
+    Char: { k: "Type", t: "Char", m: "Prim", d: "A single Unicode character." },
+    Boolean: {
+      k: "Type",
+      t: "Boolean",
+      m: "Prim",
+      d: "A boolean value (`true` or `false`).",
     },
-    List: {
-      sig: "abstract class List<E> implements Iterable<E>",
-      doc: "An indexable collection of objects with a length. Also known as an array.",
+    Unit: {
+      k: "Type",
+      t: "Unit",
+      m: "Data.Unit",
+      d: "The unit type with a single inhabitant `unit`. Used where no meaningful value is returned.",
     },
-    Map: {
-      sig: "abstract class Map<K, V>",
-      doc: "A collection of key/value pairs, from which you retrieve a value using its associated key.",
+    Void: {
+      k: "Type",
+      t: "Void",
+      m: "Data.Void",
+      d: "An uninhabited type — has no values. Useful for proving something is impossible.",
     },
-    Set: {
-      sig: "abstract class Set<E> implements Iterable<E>",
-      doc: "A collection of objects in which each object can occur only once.",
+    Array: {
+      k: "Type",
+      t: "Array a",
+      m: "Prim",
+      d: "An immutable array. PureScript arrays are backed by JavaScript arrays.",
     },
-    Future: {
-      sig: "abstract class Future<T>",
-      doc: "The result of an asynchronous computation. Used to represent a potential value or error available in the future.",
-    },
-    Stream: {
-      sig: "abstract class Stream<T>",
-      doc: "A source of asynchronous data events. Provides a way to receive a sequence of events.",
-    },
-    Iterable: {
-      sig: "abstract class Iterable<E>",
-      doc: 'A collection of values, or "elements", that can be accessed sequentially.',
-    },
-    Object: {
-      sig: "class Object",
-      doc: "The base class for all Dart objects except `null`.",
-    },
-    DateTime: {
-      sig: "class DateTime implements Comparable<DateTime>",
-      doc: "An instant in time, such as July 20, 1969, 8:18pm GMT.",
-    },
-    Duration: {
-      sig: "class Duration implements Comparable<Duration>",
-      doc: "A span of time, such as 27 days, 4 hours, 12 minutes, and 3 seconds.",
-    },
-    RegExp: {
-      sig: "abstract class RegExp implements Pattern",
-      doc: "A regular expression pattern used to match strings or parts of strings.",
-    },
-    Uri: { sig: "abstract class Uri", doc: "A parsed URI, such as a URL." },
-    dynamic: {
-      sig: "dynamic",
-      doc: "A special type that disables static type checking. Every expression is assignable to `dynamic`.",
-    },
-    void: {
-      sig: "void",
-      doc: "Indicates that a function does not return a useful value.",
-    },
-    Never: {
-      sig: "class Never",
-      doc: "The bottom type — a subtype of all types. No value can have type `Never`.",
-    },
-    Null: { sig: "class Null", doc: "The class of the `null` object." },
     Record: {
-      sig: "abstract class Record",
-      doc: "Records are anonymous immutable aggregate types.",
+      k: "Type",
+      t: "Record row",
+      m: "Prim",
+      d: "A record type built from a row of types.",
     },
-    FutureOr: {
-      sig: "typedef FutureOr<T> = T | Future<T>",
-      doc: "A type representing values that are either `Future<T>` or `T`.",
-    },
-    Completer: {
-      sig: "abstract class Completer<T>",
-      doc: "A way to produce Future objects and to complete them later with a value or error.",
-    },
-    StreamController: {
-      sig: "abstract class StreamController<T> implements StreamSink<T>",
-      doc: "A controller with the stream it controls.",
-    },
-    Timer: {
-      sig: "abstract class Timer",
-      doc: "A count-down timer that can be configured to fire once or repeatedly.",
-    },
-    print: {
-      sig: "void print(Object? object)",
-      doc: "Prints a string representation of the object to the console.",
-    },
-    identical: {
-      sig: "bool identical(Object? a, Object? b)",
-      doc: "Check whether two references are to the same object.",
-    },
-    abstract: {
-      sig: "keyword",
-      doc: "Declares an abstract class that cannot be instantiated directly.",
-    },
-    async: {
-      sig: "keyword",
-      doc: "Marks a function body as asynchronous. The function returns a `Future`.",
-    },
-    await: {
-      sig: "keyword",
-      doc: "Suspends execution until the `Future` completes and unwraps the result.",
-    },
-    class: { sig: "keyword", doc: "Declares a class definition." },
-    const: { sig: "keyword", doc: "Declares a compile-time constant." },
-    enum: { sig: "keyword", doc: "Declares an enumerated type." },
-    extends: { sig: "keyword", doc: "Creates a subclass (inheritance)." },
-    factory: {
-      sig: "keyword",
-      doc: "A constructor that does not always create a new instance of its class.",
-    },
-    final: {
-      sig: "keyword",
-      doc: "Declares a variable that can be set only once.",
-    },
-    implements: {
-      sig: "keyword",
-      doc: "Declares that a class implements an interface.",
-    },
-    import: { sig: "keyword", doc: "Imports a library." },
-    late: {
-      sig: "keyword",
-      doc: "Declares a non-nullable variable initialized after its declaration, or lazily.",
-    },
-    mixin: {
-      sig: "keyword",
-      doc: "Declares a mixin for adding functionality to classes.",
-    },
-    required: { sig: "keyword", doc: "Marks a named parameter as required." },
-    sealed: {
-      sig: "keyword",
-      doc: "A sealed class can't be extended or implemented outside its own library.",
-    },
-    static: {
-      sig: "keyword",
-      doc: "Declares a class-level variable or method.",
-    },
-    typedef: { sig: "keyword", doc: "Creates a type alias." },
-    var: {
-      sig: "keyword",
-      doc: "Declares a variable without specifying its type (type is inferred).",
-    },
-    with: { sig: "keyword", doc: "Applies one or more mixins to a class." },
-    yield: {
-      sig: "keyword",
-      doc: "Produces a value from a generator function (`sync*` or `async*`).",
-    },
-    switch: {
-      sig: "keyword",
-      doc: "Evaluates an expression and matches against case clauses. Supports patterns in Dart 3.",
-    },
-    is: {
-      sig: "keyword",
-      doc: "Type test operator. Checks if an object is of a given type.",
-    },
-    as: {
-      sig: "keyword",
-      doc: "Type cast operator. Casts an expression to a given type.",
+    Ordering: {
+      k: "Type",
+      t: "Ordering",
+      m: "Data.Ordering",
+      d: "Represents the result of a comparison: `LT`, `EQ`, or `GT`.",
     },
 
-    toString: {
-      sig: "String toString()",
-      doc: "Returns a string representation of this object.",
+    // --- Data Structures ---
+    Maybe: {
+      k: "Type",
+      t: "Maybe a = Nothing | Just a",
+      m: "Data.Maybe",
+      d: "Represents an optional value. `Nothing` for absence, `Just a` for presence.",
     },
-    hashCode: {
-      sig: "int get hashCode",
-      doc: "The hash code for this object.",
+    Either: {
+      k: "Type",
+      t: "Either a b = Left a | Right b",
+      m: "Data.Either",
+      d: "Represents a value of one of two types. Conventionally `Left` is error, `Right` is success.",
     },
-    runtimeType: {
-      sig: "Type get runtimeType",
-      doc: "A representation of the runtime type of the object.",
+    Tuple: {
+      k: "Type",
+      t: "Tuple a b",
+      m: "Data.Tuple",
+      d: "A pair of values of (potentially) different types.",
     },
-    length: {
-      sig: "int get length",
-      doc: "The number of elements / code units.",
+    List: {
+      k: "Type",
+      t: "List a = Nil | Cons a (List a)",
+      m: "Data.List",
+      d: "A strict singly-linked list.",
     },
-    isEmpty: {
-      sig: "bool get isEmpty",
-      doc: "Whether this collection has no elements.",
+    Map: {
+      k: "Type",
+      t: "Map k v",
+      m: "Data.Map",
+      d: "An immutable ordered map from keys `k` to values `v`.",
     },
-    isNotEmpty: {
-      sig: "bool get isNotEmpty",
-      doc: "Whether this collection has at least one element.",
+    Set: {
+      k: "Type",
+      t: "Set a",
+      m: "Data.Set",
+      d: "An immutable ordered set of unique values.",
+    },
+    NonEmpty: {
+      k: "Type",
+      t: "NonEmpty f a",
+      m: "Data.NonEmpty",
+      d: "A non-empty container. Guarantees at least one element.",
+    },
+    Effect: {
+      k: "Type",
+      t: "Effect a",
+      m: "Effect",
+      d: "A synchronous side-effectful computation that produces a value of type `a`.",
+    },
+    Aff: {
+      k: "Type",
+      t: "Aff a",
+      m: "Effect.Aff",
+      d: "An asynchronous, error-handling effect monad. The primary monad for async PureScript code.",
+    },
+    Identity: {
+      k: "Type",
+      t: "Identity a",
+      m: "Data.Identity",
+      d: "The identity functor and monad. Wraps a pure value.",
+    },
+
+    // --- Constructors ---
+    Nothing: {
+      k: "Constructor",
+      t: "forall a. Maybe a",
+      m: "Data.Maybe",
+      d: "The empty case of `Maybe`. Represents the absence of a value.",
+    },
+    Just: {
+      k: "Constructor",
+      t: "forall a. a -> Maybe a",
+      m: "Data.Maybe",
+      d: "Wraps a value in `Maybe`. Represents a present value.",
+    },
+    Left: {
+      k: "Constructor",
+      t: "forall a b. a -> Either a b",
+      m: "Data.Either",
+      d: "The left case of `Either`. Conventionally used for errors.",
+    },
+    Right: {
+      k: "Constructor",
+      t: "forall a b. b -> Either a b",
+      m: "Data.Either",
+      d: "The right case of `Either`. Conventionally used for success values.",
+    },
+
+    // --- Type Classes ---
+    Functor: {
+      k: "Class",
+      t: "class Functor f where\n  map :: forall a b. (a -> b) -> f a -> f b",
+      m: "Data.Functor",
+      d: "Types that can be mapped over. The `map` function applies a function to every element in a structure.",
+    },
+    Apply: {
+      k: "Class",
+      t: "class (Functor f) <= Apply f where\n  apply :: forall a b. f (a -> b) -> f a -> f b",
+      m: "Control.Apply",
+      d: "Extends `Functor` with the ability to apply a wrapped function to a wrapped value.",
+    },
+    Applicative: {
+      k: "Class",
+      t: "class (Apply f) <= Applicative f where\n  pure :: forall a. a -> f a",
+      m: "Control.Applicative",
+      d: "Extends `Apply` with the ability to lift a value into the functor.",
+    },
+    Bind: {
+      k: "Class",
+      t: "class (Apply m) <= Bind m where\n  bind :: forall a b. m a -> (a -> m b) -> m b",
+      m: "Control.Bind",
+      d: "Extends `Apply` with the ability to sequence computations that depend on previous results.",
+    },
+    Monad: {
+      k: "Class",
+      t: "class (Applicative m, Bind m) <= Monad m",
+      m: "Control.Monad",
+      d: "A type class combining `Applicative` and `Bind`. Enables `do` notation.",
+    },
+    Semigroup: {
+      k: "Class",
+      t: "class Semigroup a where\n  append :: a -> a -> a",
+      m: "Data.Semigroup",
+      d: "Types with an associative binary operation `append` (also available as `<>`).",
+    },
+    Monoid: {
+      k: "Class",
+      t: "class (Semigroup m) <= Monoid m where\n  mempty :: m",
+      m: "Data.Monoid",
+      d: "Extends `Semigroup` with an identity element `mempty`.",
+    },
+    Eq: {
+      k: "Class",
+      t: "class Eq a where\n  eq :: a -> a -> Boolean",
+      m: "Data.Eq",
+      d: "Types with equality. `eq` is also available as `==`. Negation is `/=`.",
+    },
+    Ord: {
+      k: "Class",
+      t: "class (Eq a) <= Ord a where\n  compare :: a -> a -> Ordering",
+      m: "Data.Ord",
+      d: "Types with a total ordering. Enables `<`, `>`, `<=`, `>=`, `compare`, `min`, `max`.",
+    },
+    Show: {
+      k: "Class",
+      t: "class Show a where\n  show :: a -> String",
+      m: "Data.Show",
+      d: "Types that can be converted to a human-readable `String` representation.",
+    },
+    Semiring: {
+      k: "Class",
+      t: "class Semiring a where\n  add :: a -> a -> a\n  zero :: a\n  mul :: a -> a -> a\n  one :: a",
+      m: "Data.Semiring",
+      d: "Types that support addition and multiplication with identities.",
+    },
+    Ring: {
+      k: "Class",
+      t: "class (Semiring a) <= Ring a where\n  sub :: a -> a -> a",
+      m: "Data.Ring",
+      d: "Extends `Semiring` with subtraction and `negate`.",
+    },
+    Foldable: {
+      k: "Class",
+      t: "class Foldable f where\n  foldl :: forall a b. (b -> a -> b) -> b -> f a -> b\n  foldr :: forall a b. (a -> b -> b) -> b -> f a -> b\n  foldMap :: forall a m. Monoid m => (a -> m) -> f a -> m",
+      m: "Data.Foldable",
+      d: "Data structures that can be folded (reduced) to a summary value.",
+    },
+    Traversable: {
+      k: "Class",
+      t: "class (Functor t, Foldable t) <= Traversable t where\n  traverse :: forall a b m. Applicative m => (a -> m b) -> t a -> m (t b)\n  sequence :: forall a m. Applicative m => t (m a) -> m (t a)",
+      m: "Data.Traversable",
+      d: "Functors that can be traversed, performing an action for each element and collecting results.",
+    },
+
+    // --- Prelude Functions ---
+    show: {
+      k: "Function",
+      t: "forall a. Show a => a -> String",
+      m: "Data.Show",
+      d: "Convert a value to its `String` representation.",
     },
     map: {
-      sig: "Iterable<T> map<T>(T Function(E) toElement)",
-      doc: "Returns a new lazy `Iterable` with elements created by calling `toElement` on each element.",
+      k: "Function",
+      t: "forall f a b. Functor f => (a -> b) -> f a -> f b",
+      m: "Data.Functor",
+      d: "Apply a function to every element of a functor. Also available as `<$>`.",
     },
-    where: {
-      sig: "Iterable<E> where(bool Function(E) test)",
-      doc: "Returns a lazy `Iterable` with all elements that satisfy the predicate.",
+    bind: {
+      k: "Function",
+      t: "forall m a b. Bind m => m a -> (a -> m b) -> m b",
+      m: "Control.Bind",
+      d: "Sequentially compose two computations. Also available as `>>=`. Powers `do` notation.",
     },
-    forEach: {
-      sig: "void forEach(void Function(E) action)",
-      doc: "Applies `action` to each element in iteration order.",
+    pure: {
+      k: "Function",
+      t: "forall f a. Applicative f => a -> f a",
+      m: "Control.Applicative",
+      d: "Lift a value into an applicative functor.",
     },
-    reduce: {
-      sig: "E reduce(E Function(E, E) combine)",
-      doc: "Reduces a collection to a single value by iteratively combining elements.",
+    apply: {
+      k: "Function",
+      t: "forall f a b. Apply f => f (a -> b) -> f a -> f b",
+      m: "Control.Apply",
+      d: "Apply a wrapped function to a wrapped argument. Also available as `<*>`.",
     },
-    fold: {
-      sig: "T fold<T>(T init, T Function(T, E) combine)",
-      doc: "Reduces a collection starting with `init`.",
+    append: {
+      k: "Function",
+      t: "forall a. Semigroup a => a -> a -> a",
+      m: "Data.Semigroup",
+      d: "An associative binary operation. Also available as `<>`.",
     },
-    any: {
-      sig: "bool any(bool Function(E) test)",
-      doc: "Checks whether any element satisfies `test`.",
+    mempty: {
+      k: "Function",
+      t: "forall m. Monoid m => m",
+      m: "Data.Monoid",
+      d: "The identity value for a `Monoid`.",
     },
-    every: {
-      sig: "bool every(bool Function(E) test)",
-      doc: "Checks whether every element satisfies `test`.",
+    identity: {
+      k: "Function",
+      t: "forall a. a -> a",
+      m: "Data.Function",
+      d: "Returns its argument unchanged.",
     },
-    contains: {
-      sig: "bool contains(Object? element)",
-      doc: "Whether the collection contains an element equal to `element`.",
+    const: {
+      k: "Function",
+      t: "forall a b. a -> b -> a",
+      m: "Data.Function",
+      d: "Returns its first argument, ignoring the second.",
     },
-    add: {
-      sig: "void add(E value)",
-      doc: "Adds `value` to the end of this list/set.",
+    flip: {
+      k: "Function",
+      t: "forall a b c. (a -> b -> c) -> b -> a -> c",
+      m: "Data.Function",
+      d: "Flips the order of the first two arguments of a function.",
     },
-    remove: {
-      sig: "bool remove(Object? value)",
-      doc: "Removes the first occurrence of `value`.",
+    compose: {
+      k: "Function",
+      t: "forall b c a. (b -> c) -> (a -> b) -> a -> c",
+      m: "Control.Semigroupoid",
+      d: "Right-to-left function composition. Also available as `<<<`.",
+    },
+    not: {
+      k: "Function",
+      t: "Boolean -> Boolean",
+      m: "Data.HeytingAlgebra",
+      d: "Boolean negation.",
+    },
+    eq: {
+      k: "Function",
+      t: "forall a. Eq a => a -> a -> Boolean",
+      m: "Data.Eq",
+      d: "Test equality. Also available as `==`.",
+    },
+    compare: {
+      k: "Function",
+      t: "forall a. Ord a => a -> a -> Ordering",
+      m: "Data.Ord",
+      d: "Compare two values and return their ordering.",
+    },
+    negate: {
+      k: "Function",
+      t: "forall a. Ring a => a -> a",
+      m: "Data.Ring",
+      d: "Negate a value. `negate x = zero - x`.",
+    },
+    unit: {
+      k: "Constant",
+      t: "Unit",
+      m: "Data.Unit",
+      d: "The single value of type `Unit`.",
+    },
+    void: {
+      k: "Function",
+      t: "forall f a. Functor f => f a -> f Unit",
+      m: "Data.Functor",
+      d: "Replace all values in a functor with `Unit`.",
+    },
+    when: {
+      k: "Function",
+      t: "forall m. Applicative m => Boolean -> m Unit -> m Unit",
+      m: "Control.Applicative",
+      d: "Perform an action when a condition is `true`.",
+    },
+    unless: {
+      k: "Function",
+      t: "forall m. Applicative m => Boolean -> m Unit -> m Unit",
+      m: "Control.Applicative",
+      d: "Perform an action when a condition is `false`.",
+    },
+    discard: {
+      k: "Function",
+      t: "forall f a. Functor f => f a -> f Unit",
+      m: "Data.Functor",
+      d: "Discard the result, replacing it with `Unit`.",
+    },
+
+    // --- Data.Maybe ---
+    maybe: {
+      k: "Function",
+      t: "forall a b. b -> (a -> b) -> Maybe a -> b",
+      m: "Data.Maybe",
+      d: "Eliminates a `Maybe`. Takes a default value, a function, and a `Maybe`.",
+    },
+    fromMaybe: {
+      k: "Function",
+      t: "forall a. a -> Maybe a -> a",
+      m: "Data.Maybe",
+      d: "Unwrap a `Maybe`, using a default value if `Nothing`.",
+    },
+    isJust: {
+      k: "Function",
+      t: "forall a. Maybe a -> Boolean",
+      m: "Data.Maybe",
+      d: "Returns `true` if the value is `Just`.",
+    },
+    isNothing: {
+      k: "Function",
+      t: "forall a. Maybe a -> Boolean",
+      m: "Data.Maybe",
+      d: "Returns `true` if the value is `Nothing`.",
+    },
+
+    // --- Data.Either ---
+    either: {
+      k: "Function",
+      t: "forall a b c. (a -> c) -> (b -> c) -> Either a b -> c",
+      m: "Data.Either",
+      d: "Eliminates an `Either`. Takes a handler for each case.",
+    },
+    isLeft: {
+      k: "Function",
+      t: "forall a b. Either a b -> Boolean",
+      m: "Data.Either",
+      d: "Returns `true` if the value is `Left`.",
+    },
+    isRight: {
+      k: "Function",
+      t: "forall a b. Either a b -> Boolean",
+      m: "Data.Either",
+      d: "Returns `true` if the value is `Right`.",
+    },
+
+    // --- Data.Array ---
+    length: {
+      k: "Function",
+      t: "forall a. Array a -> Int",
+      m: "Data.Array",
+      d: "Get the number of elements in an array.",
+    },
+    head: {
+      k: "Function",
+      t: "forall a. Array a -> Maybe a",
+      m: "Data.Array",
+      d: "Get the first element of an array, or `Nothing` if empty.",
+    },
+    tail: {
+      k: "Function",
+      t: "forall a. Array a -> Maybe (Array a)",
+      m: "Data.Array",
+      d: "Get all elements except the first, or `Nothing` if empty.",
+    },
+    last: {
+      k: "Function",
+      t: "forall a. Array a -> Maybe a",
+      m: "Data.Array",
+      d: "Get the last element of an array, or `Nothing` if empty.",
+    },
+    init: {
+      k: "Function",
+      t: "forall a. Array a -> Maybe (Array a)",
+      m: "Data.Array",
+      d: "Get all elements except the last, or `Nothing` if empty.",
+    },
+    filter: {
+      k: "Function",
+      t: "forall a. (a -> Boolean) -> Array a -> Array a",
+      m: "Data.Array",
+      d: "Filter an array, keeping only elements that satisfy the predicate.",
     },
     sort: {
-      sig: "void sort([int Function(E, E)? compare])",
-      doc: "Sorts this list according to the `compare` function.",
+      k: "Function",
+      t: "forall a. Ord a => Array a -> Array a",
+      m: "Data.Array",
+      d: "Sort an array in ascending order.",
     },
-    join: {
-      sig: 'String join([String separator = ""])',
-      doc: "Converts each element to a `String` and concatenates them.",
+    sortBy: {
+      k: "Function",
+      t: "forall a. (a -> a -> Ordering) -> Array a -> Array a",
+      m: "Data.Array",
+      d: "Sort an array using a custom comparison function.",
     },
-    toList: {
-      sig: "List<E> toList({bool growable = true})",
-      doc: "Creates a `List` containing the elements of this `Iterable`.",
+    reverse: {
+      k: "Function",
+      t: "forall a. Array a -> Array a",
+      m: "Data.Array",
+      d: "Reverse an array.",
     },
-    toSet: {
-      sig: "Set<E> toSet()",
-      doc: "Creates a `Set` with the same elements as this iterable.",
+    cons: {
+      k: "Function",
+      t: "forall a. a -> Array a -> Array a",
+      m: "Data.Array",
+      d: "Prepend an element to an array.",
     },
-    first: { sig: "E get first", doc: "Returns the first element." },
-    last: { sig: "E get last", doc: "Returns the last element." },
-    reversed: {
-      sig: "Iterable<E> get reversed",
-      doc: "The elements of this list in reverse order.",
+    snoc: {
+      k: "Function",
+      t: "forall a. Array a -> a -> Array a",
+      m: "Data.Array",
+      d: "Append an element to the end of an array.",
     },
-    sublist: {
-      sig: "List<E> sublist(int start, [int? end])",
-      doc: "Returns a new list from `start` (inclusive) to `end` (exclusive).",
+    concat: {
+      k: "Function",
+      t: "forall a. Array (Array a) -> Array a",
+      m: "Data.Array",
+      d: "Flatten an array of arrays into a single array.",
+    },
+    concatMap: {
+      k: "Function",
+      t: "forall a b. (a -> Array b) -> Array a -> Array b",
+      m: "Data.Array",
+      d: "Map a function over an array and flatten the results.",
+    },
+    zip: {
+      k: "Function",
+      t: "forall a b. Array a -> Array b -> Array (Tuple a b)",
+      m: "Data.Array",
+      d: "Combine two arrays pairwise into an array of tuples.",
+    },
+    elem: {
+      k: "Function",
+      t: "forall a. Eq a => a -> Array a -> Boolean",
+      m: "Data.Array",
+      d: "Check if an element is in an array.",
+    },
+    index: {
+      k: "Function",
+      t: "forall a. Array a -> Int -> Maybe a",
+      m: "Data.Array",
+      d: "Get the element at an index, or `Nothing` if out of bounds. Also available as `!!`.",
+    },
+    foldl: {
+      k: "Function",
+      t: "forall a b. (b -> a -> b) -> b -> Array a -> b",
+      m: "Data.Foldable",
+      d: "Left-associative fold over an array.",
+    },
+    foldr: {
+      k: "Function",
+      t: "forall a b. (a -> b -> b) -> b -> Array a -> b",
+      m: "Data.Foldable",
+      d: "Right-associative fold over an array.",
+    },
+    traverse_: {
+      k: "Function",
+      t: "forall a b f t. Applicative f => Foldable t => (a -> f b) -> t a -> f Unit",
+      m: "Data.Foldable",
+      d: "Traverse a foldable for effects, discarding results.",
+    },
+    for_: {
+      k: "Function",
+      t: "forall a b f t. Applicative f => Foldable t => t a -> (a -> f b) -> f Unit",
+      m: "Data.Foldable",
+      d: "`traverse_` with its arguments flipped.",
+    },
+
+    // --- Data.String ---
+    joinWith: {
+      k: "Function",
+      t: "String -> Array String -> String",
+      m: "Data.String.Common",
+      d: "Join an array of strings with a separator.",
     },
     split: {
-      sig: "List<String> split(Pattern pattern)",
-      doc: "Splits the string at matches of `pattern`.",
+      k: "Function",
+      t: "Pattern -> String -> Array String",
+      m: "Data.String.Common",
+      d: "Split a string by a pattern.",
     },
     trim: {
-      sig: "String trim()",
-      doc: "Removes leading and trailing whitespace.",
+      k: "Function",
+      t: "String -> String",
+      m: "Data.String.Common",
+      d: "Remove leading and trailing whitespace.",
     },
-    replaceAll: {
-      sig: "String replaceAll(Pattern from, String replace)",
-      doc: "Replaces all substrings matching `from` with `replace`.",
+    toLower: {
+      k: "Function",
+      t: "String -> String",
+      m: "Data.String.Common",
+      d: "Convert a string to lowercase.",
     },
-    startsWith: {
-      sig: "bool startsWith(Pattern pattern, [int index = 0])",
-      doc: "Whether this string starts with a match of `pattern`.",
+    toUpper: {
+      k: "Function",
+      t: "String -> String",
+      m: "Data.String.Common",
+      d: "Convert a string to uppercase.",
     },
-    endsWith: {
-      sig: "bool endsWith(String other)",
-      doc: "Whether this string ends with `other`.",
+
+    // --- Effect.Console ---
+    log: {
+      k: "Function",
+      t: "String -> Effect Unit",
+      m: "Effect.Console",
+      d: "Write a message to the console.",
     },
-    substring: {
-      sig: "String substring(int start, [int? end])",
-      doc: "The substring from `start` inclusive to `end` exclusive.",
+    logShow: {
+      k: "Function",
+      t: "forall a. Show a => a -> Effect Unit",
+      m: "Effect.Console",
+      d: "`show` a value and write it to the console.",
     },
-    toLowerCase: {
-      sig: "String toLowerCase()",
-      doc: "Converts all characters to lower case.",
+    warn: {
+      k: "Function",
+      t: "String -> Effect Unit",
+      m: "Effect.Console",
+      d: "Write a warning to the console.",
     },
-    toUpperCase: {
-      sig: "String toUpperCase()",
-      doc: "Converts all characters to upper case.",
+    error: {
+      k: "Function",
+      t: "String -> Effect Unit",
+      m: "Effect.Console",
+      d: "Write an error to the console.",
     },
-    then: {
-      sig: "Future<R> then<R>(FutureOr<R> Function(T) onValue, {Function? onError})",
-      doc: "Registers callbacks for when this future completes.",
-    },
-    catchError: {
-      sig: "Future<T> catchError(Function onError, {bool Function(Object)? test})",
-      doc: "Handles errors emitted by this `Future`.",
-    },
-    whenComplete: {
-      sig: "Future<T> whenComplete(FutureOr<void> Function() action)",
-      doc: "Registers a function called when this future completes.",
-    },
-    listen: {
-      sig: "StreamSubscription<T> listen(void Function(T)? onData, ...)",
-      doc: "Adds a subscription to this stream.",
-    },
-    keys: { sig: "Iterable<K> get keys", doc: "The keys of this map." },
-    values: { sig: "Iterable<V> get values", doc: "The values of this map." },
-    entries: {
-      sig: "Iterable<MapEntry<K,V>> get entries",
-      doc: "The map entries of this map.",
-    },
-    containsKey: {
-      sig: "bool containsKey(Object? key)",
-      doc: "Whether this map contains the given `key`.",
-    },
-    containsValue: {
-      sig: "bool containsValue(Object? value)",
-      doc: "Whether this map contains the given `value`.",
-    },
-    putIfAbsent: {
-      sig: "V putIfAbsent(K key, V Function() ifAbsent)",
-      doc: "Look up the value of `key`, or add a new entry if it isn't there.",
-    },
-    indexOf: {
-      sig: "int indexOf(E element, [int start = 0])",
-      doc: "The first index of `element` in this list.",
-    },
-    clear: {
-      sig: "void clear()",
-      doc: "Removes all elements from this collection.",
-    },
-    addAll: {
-      sig: "void addAll(Iterable<E> iterable)",
-      doc: "Appends all objects of `iterable` to the end of this list.",
-    },
-    insert: {
-      sig: "void insert(int index, E element)",
-      doc: "Inserts `element` at position `index`.",
-    },
-    removeAt: {
-      sig: "E removeAt(int index)",
-      doc: "Removes the object at position `index`.",
-    },
-    asMap: {
-      sig: "Map<int, E> asMap()",
-      doc: "An unmodifiable `Map` view of this list.",
-    },
-    take: {
-      sig: "Iterable<E> take(int count)",
-      doc: "Returns a lazy iterable of the first `count` elements.",
-    },
-    skip: {
-      sig: "Iterable<E> skip(int count)",
-      doc: "Returns an iterable that skips the first `count` elements.",
-    },
-    expand: {
-      sig: "Iterable<T> expand<T>(Iterable<T> Function(E) f)",
-      doc: "Expands each element into zero or more elements.",
-    },
-    fillRange: {
-      sig: "void fillRange(int start, int end, [E? fillValue])",
-      doc: "Overwrites a range of elements with `fillValue`.",
+    info: {
+      k: "Function",
+      t: "String -> Effect Unit",
+      m: "Effect.Console",
+      d: "Write an info message to the console.",
     },
   };
 
-  // ===== 5. HELPER: Find local symbols =====
-  function findLocalSymbols(text) {
-    const syms = [];
-    const lines = text.split("\n");
-    const pats = [
-      {
-        r: /(?:abstract\s+)?(?:sealed\s+)?(?:base\s+)?class\s+(\w+)/,
-        k: "class",
-      },
-      { r: /mixin\s+(\w+)/, k: "mixin" },
-      { r: /enum\s+(\w+)/, k: "enum" },
-      { r: /extension\s+(\w+)\s+on/, k: "extension" },
-      { r: /typedef\s+(\w+)/, k: "typedef" },
-    ];
-    const funcPat =
-      /(?:(?:Future|Stream|void|int|double|String|bool|num|dynamic|List|Map|Set|Iterable|Object)(?:<[^>]*>)?\??\s+)(\w+)\s*[\(<]/;
-    const varPat = /(?:var|final|const|late)\s+(\w+)/;
+  // ═══════════════════════════════════════════════
+  // 5. SNIPPETS
+  // ═══════════════════════════════════════════════
+  const SNIPPETS = [
+    {
+      label: "module",
+      detail: "Module declaration",
+      doc: "Declare a new PureScript module.",
+      body: "module ${1:Main} where\n\nimport Prelude\n\n$0",
+    },
+    {
+      label: "import",
+      detail: "Import statement",
+      doc: "Import a module.",
+      body: "import ${1:Data.Maybe} (${2:Maybe(..)})\n$0",
+    },
+    {
+      label: "import as",
+      detail: "Qualified import",
+      doc: "Import a module with a qualified alias.",
+      body: "import ${1:Data.Array} as ${2:Array}\n$0",
+    },
+    {
+      label: "data",
+      detail: "Data type declaration",
+      doc: "Declare a new algebraic data type.",
+      body: "data ${1:TypeName}\n  = ${2:Constructor1}\n  | ${3:Constructor2}\n$0",
+    },
+    {
+      label: "newtype",
+      detail: "Newtype declaration",
+      doc: "Declare a newtype wrapper.",
+      body: "newtype ${1:Name} = ${1:Name} ${2:WrappedType}\n$0",
+    },
+    {
+      label: "type",
+      detail: "Type alias",
+      doc: "Declare a type alias.",
+      body: "type ${1:Name} =\n  { ${2:field} :: ${3:Type}\n  }\n$0",
+    },
+    {
+      label: "type row",
+      detail: "Open row type alias",
+      doc: "Declare an open row type alias for extensible records.",
+      body: "type ${1:Name} r =\n  { ${2:field} :: ${3:Type}\n  | r\n  }\n$0",
+    },
+    {
+      label: "class",
+      detail: "Type class declaration",
+      doc: "Declare a new type class.",
+      body: "class ${1:ClassName} ${2:a} where\n  ${3:method} :: ${4:a -> a}\n$0",
+    },
+    {
+      label: "instance",
+      detail: "Type class instance",
+      doc: "Define a type class instance.",
+      body: "instance ${1:instanceName} :: ${2:ClassName} ${3:Type} where\n  ${4:method} = ${5:implementation}\n$0",
+    },
+    {
+      label: "derive instance",
+      detail: "Derived instance",
+      doc: "Derive a type class instance automatically.",
+      body: "derive instance ${1:instanceName} :: ${2:Eq} ${3:MyType}\n$0",
+    },
+    {
+      label: "derive newtype instance",
+      detail: "Derived newtype instance",
+      doc: "Derive a type class instance via the underlying newtype.",
+      body: "derive newtype instance ${1:instanceName} :: ${2:Show} ${3:MyNewtype}\n$0",
+    },
+    {
+      label: "func",
+      detail: "Function with type signature",
+      doc: "Define a function with its type annotation.",
+      body: "${1:name} :: ${2:Type}\n${1:name} ${3:args} = ${4:body}\n$0",
+    },
+    {
+      label: "effunc",
+      detail: "Effectful function",
+      doc: "Define a function returning Effect.",
+      body: "${1:name} :: ${2:String} -> Effect Unit\n${1:name} ${3:arg} = do\n  ${4:pure unit}\n$0",
+    },
+    {
+      label: "case",
+      detail: "Case expression",
+      doc: "Pattern match on a value.",
+      body: "case ${1:expr} of\n  ${2:pattern1} -> ${3:result1}\n  ${4:pattern2} -> ${5:result2}\n$0",
+    },
+    {
+      label: "caseof",
+      detail: "Case lambda (point-free)",
+      doc: "Anonymous case expression (\\case style).",
+      body: "case _ of\n  ${1:pattern1} -> ${2:result1}\n  ${3:pattern2} -> ${4:result2}\n$0",
+    },
+    {
+      label: "do",
+      detail: "Do block",
+      doc: "A monadic do block.",
+      body: "do\n  ${1:result} <- ${2:action}\n  ${3:pure result}\n$0",
+    },
+    {
+      label: "ado",
+      detail: "Ado block (applicative do)",
+      doc: "An applicative do block.",
+      body: "ado\n  ${1:x} <- ${2:action1}\n  ${3:y} <- ${4:action2}\n  in ${5:x}\n$0",
+    },
+    {
+      label: "let",
+      detail: "Let expression",
+      doc: "Bind a local variable.",
+      body: "let\n  ${1:name} = ${2:value}\nin\n  ${3:body}\n$0",
+    },
+    {
+      label: "ifthenelse",
+      detail: "If-then-else",
+      doc: "Conditional expression.",
+      body: "if ${1:condition}\n  then ${2:trueValue}\n  else ${3:falseValue}\n$0",
+    },
+    {
+      label: "where",
+      detail: "Where clause",
+      doc: "Define local bindings after an expression.",
+      body: "${1:expr}\n  where\n  ${2:name} = ${3:value}\n$0",
+    },
+    {
+      label: "foreign import",
+      detail: "Foreign import",
+      doc: "Import a JavaScript function via FFI.",
+      body: "foreign import ${1:name} :: ${2:Type}\n$0",
+    },
+    {
+      label: "main",
+      detail: "Main entry point",
+      doc: "The standard main function for a PureScript application.",
+      body: 'main :: Effect Unit\nmain = do\n  ${1:log "Hello, PureScript!"}\n$0',
+    },
+    {
+      label: "guard",
+      detail: "Guards",
+      doc: "Function with guard clauses.",
+      body: "${1:name} ${2:x}\n  | ${3:condition1} = ${4:result1}\n  | ${5:condition2} = ${6:result2}\n  | otherwise = ${7:default}\n$0",
+    },
+  ];
 
-    lines.forEach((line, i) => {
-      for (const p of pats) {
-        const m = line.match(p.r);
-        if (m)
-          syms.push({
-            name: m[1],
-            line: i,
-            col: line.indexOf(m[1]),
-            kind: p.k,
-            decl: line.trim(),
-          });
+  // ═══════════════════════════════════════════════
+  // 6. HELPER FUNCTIONS
+  // ═══════════════════════════════════════════════
+
+  function findDefinitionsInDoc(model, word) {
+    const results = [];
+    const lc = model.getLineCount();
+    const esc = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    for (let i = 1; i <= lc; i++) {
+      const ln = model.getLineContent(i);
+      const trimmed = ln.trimStart();
+      // Type signature
+      if (new RegExp("^" + esc + "\\s*::").test(trimmed)) {
+        const col = ln.indexOf(word) + 1;
+        results.push({
+          uri: model.uri,
+          range: {
+            startLineNumber: i,
+            startColumn: col,
+            endLineNumber: i,
+            endColumn: col + word.length,
+          },
+        });
       }
-      const fm = line.match(funcPat);
-      if (fm && !line.trim().startsWith("//"))
-        syms.push({
-          name: fm[1],
-          line: i,
-          col: line.indexOf(fm[1]),
-          kind: "function",
-          decl: line.trim(),
+      // Data / newtype / type declaration
+      const dm = trimmed.match(/^(data|newtype|type)\s+(\w+)/);
+      if (dm && dm[2] === word) {
+        const col = ln.indexOf(word) + 1;
+        results.push({
+          uri: model.uri,
+          range: {
+            startLineNumber: i,
+            startColumn: col,
+            endLineNumber: i,
+            endColumn: col + word.length,
+          },
         });
-      const vm = line.match(varPat);
-      if (vm && !line.trim().startsWith("//"))
-        syms.push({
-          name: vm[1],
-          line: i,
-          col: line.indexOf(vm[1]),
-          kind: "variable",
-          decl: line.trim(),
+      }
+      // Class declaration
+      const cm = trimmed.match(/^class\s+(?:.*=>\s*)?(\w+)/);
+      if (cm && cm[1] === word) {
+        const col = ln.indexOf(word) + 1;
+        results.push({
+          uri: model.uri,
+          range: {
+            startLineNumber: i,
+            startColumn: col,
+            endLineNumber: i,
+            endColumn: col + word.length,
+          },
         });
+      }
+      // Function def (word = ...) or (word args =)
+      if (
+        new RegExp("^" + esc + "\\s+[^:].*=").test(trimmed) ||
+        new RegExp("^" + esc + "\\s*=").test(trimmed)
+      ) {
+        const col = ln.indexOf(word) + 1;
+        results.push({
+          uri: model.uri,
+          range: {
+            startLineNumber: i,
+            startColumn: col,
+            endLineNumber: i,
+            endColumn: col + word.length,
+          },
+        });
+      }
+      // Constructor in data decl
+      const conMatch = trimmed.match(/[=|]\s+([A-Z]\w+)/g);
+      if (conMatch) {
+        for (const c of conMatch) {
+          const name = c.replace(/^[=|]\s+/, "");
+          if (name === word) {
+            const col = ln.indexOf(name) + 1;
+            results.push({
+              uri: model.uri,
+              range: {
+                startLineNumber: i,
+                startColumn: col,
+                endLineNumber: i,
+                endColumn: col + name.length,
+              },
+            });
+          }
+        }
+      }
+    }
+    // Deduplicate by line number
+    const seen = new Set();
+    return results.filter((r) => {
+      const key = r.range.startLineNumber;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
     });
+  }
+
+  function findTypeSignatureInDoc(model, word) {
+    const lc = model.getLineCount();
+    const esc = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    for (let i = 1; i <= lc; i++) {
+      const ln = model.getLineContent(i).trimStart();
+      const m = ln.match(new RegExp("^" + esc + "\\s*::\\s*(.+)$"));
+      if (m) return m[1].trim();
+    }
+    return null;
+  }
+
+  function findDocCommentAbove(model, lineNumber) {
+    const comments = [];
+    for (let i = lineNumber - 1; i >= 1; i--) {
+      const ln = model.getLineContent(i).trim();
+      if (ln.startsWith("-- |")) {
+        comments.unshift(ln.replace(/^--\s*\|?\s*/, ""));
+      } else if (ln.startsWith("--")) {
+        comments.unshift(ln.replace(/^--\s*/, ""));
+      } else {
+        break;
+      }
+    }
+    return comments.length ? comments.join(" ") : null;
+  }
+
+  function getLocalSymbols(model) {
+    const syms = [];
+    const seen = new Set();
+    const lc = model.getLineCount();
+    for (let i = 1; i <= lc; i++) {
+      const ln = model.getLineContent(i);
+      const trimmed = ln.trimStart();
+      // type signatures
+      const tsm = trimmed.match(/^([a-z_]\w*'?)\s*::\s*(.+)$/);
+      if (tsm && !seen.has(tsm[1])) {
+        seen.add(tsm[1]);
+        const doc = findDocCommentAbove(model, i);
+        syms.push({
+          name: tsm[1],
+          kind: "Function",
+          type: tsm[2].trim(),
+          doc: doc,
+          line: i,
+        });
+      }
+      // data / newtype / type
+      const dm = trimmed.match(/^(data|newtype|type)\s+([A-Z]\w*)/);
+      if (dm && !seen.has(dm[2])) {
+        seen.add(dm[2]);
+        const doc = findDocCommentAbove(model, i);
+        syms.push({
+          name: dm[2],
+          kind: dm[1] === "type" ? "TypeAlias" : "Type",
+          type: ln.trim(),
+          doc: doc,
+          line: i,
+        });
+      }
+      // class
+      const cm = trimmed.match(/^class\s+(?:.*=>\s*)?([A-Z]\w*)/);
+      if (cm && !seen.has(cm[1])) {
+        seen.add(cm[1]);
+        const doc = findDocCommentAbove(model, i);
+        syms.push({
+          name: cm[1],
+          kind: "Class",
+          type: trimmed,
+          doc: doc,
+          line: i,
+        });
+      }
+    }
     return syms;
   }
 
-  function getDocComment(lines, lineIndex) {
-    let doc = "";
-    for (let j = lineIndex - 1; j >= 0; j--) {
-      const t = lines[j].trim();
-      if (t.startsWith("///")) {
-        doc = t.replace(/^\/\/\/\s?/, "") + "\n" + doc;
-      } else if (t === "" || t.startsWith("@")) continue;
-      else break;
+  function kindToMonaco(k) {
+    switch (k) {
+      case "Type":
+      case "TypeAlias":
+        return monaco.languages.CompletionItemKind.Class;
+      case "Class":
+        return monaco.languages.CompletionItemKind.Interface;
+      case "Constructor":
+        return monaco.languages.CompletionItemKind.EnumMember;
+      case "Function":
+        return monaco.languages.CompletionItemKind.Function;
+      case "Constant":
+        return monaco.languages.CompletionItemKind.Constant;
+      default:
+        return monaco.languages.CompletionItemKind.Variable;
     }
-    return doc.trim();
   }
 
-  // ===== 6. COMPLETION PROVIDER =====
-  monaco.languages.registerCompletionItemProvider("dart", {
-    triggerCharacters: [".", "@", "$"],
-    provideCompletionItems(model, position) {
+  function symbolKindToMonaco(k) {
+    switch (k) {
+      case "Type":
+        return monaco.languages.SymbolKind.Class;
+      case "TypeAlias":
+        return monaco.languages.SymbolKind.TypeParameter;
+      case "Class":
+        return monaco.languages.SymbolKind.Interface;
+      case "Function":
+        return monaco.languages.SymbolKind.Function;
+      default:
+        return monaco.languages.SymbolKind.Variable;
+    }
+  }
+
+  // ═══════════════════════════════════════════════
+  // 7. COMPLETION PROVIDER
+  // ═══════════════════════════════════════════════
+  monaco.languages.registerCompletionItemProvider("purescript", {
+    triggerCharacters: ["."],
+    provideCompletionItems: function (model, position) {
       const word = model.getWordUntilPosition(position);
       const range = {
         startLineNumber: position.lineNumber,
@@ -794,1155 +1212,389 @@ export default (monaco: typeof Monaco) => {
         startColumn: word.startColumn,
         endColumn: word.endColumn,
       };
-      const line = model.getLineContent(position.lineNumber);
-      const before = line.substring(0, position.column - 1);
-      const CK = monaco.languages.CompletionItemKind;
-      const SNIPPET =
-        monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet;
-      const S = [];
+      const suggestions = [];
 
-      // ---- DOT COMPLETIONS ----
-      if (/\w+\.\s*$/.test(before)) {
-        const members = [
-          {
-            l: "toString",
-            i: "toString()",
-            k: CK.Method,
-            d: "String toString()",
-          },
-          {
-            l: "hashCode",
-            i: "hashCode",
-            k: CK.Property,
-            d: "int get hashCode",
-          },
-          {
-            l: "runtimeType",
-            i: "runtimeType",
-            k: CK.Property,
-            d: "Type get runtimeType",
-          },
-          { l: "length", i: "length", k: CK.Property, d: "int get length" },
-          { l: "isEmpty", i: "isEmpty", k: CK.Property, d: "bool get isEmpty" },
-          {
-            l: "isNotEmpty",
-            i: "isNotEmpty",
-            k: CK.Property,
-            d: "bool get isNotEmpty",
-          },
-          { l: "first", i: "first", k: CK.Property, d: "E get first" },
-          { l: "last", i: "last", k: CK.Property, d: "E get last" },
-          {
-            l: "reversed",
-            i: "reversed",
-            k: CK.Property,
-            d: "Iterable<E> get reversed",
-          },
-          { l: "keys", i: "keys", k: CK.Property, d: "Iterable<K> get keys" },
-          {
-            l: "values",
-            i: "values",
-            k: CK.Property,
-            d: "Iterable<V> get values",
-          },
-          {
-            l: "entries",
-            i: "entries",
-            k: CK.Property,
-            d: "Iterable<MapEntry<K,V>> get entries",
-          },
-          {
-            l: "add",
-            i: "add(${1:value})",
-            k: CK.Method,
-            d: "void add(E value)",
-          },
-          {
-            l: "addAll",
-            i: "addAll(${1:iterable})",
-            k: CK.Method,
-            d: "void addAll(Iterable<E>)",
-          },
-          {
-            l: "insert",
-            i: "insert(${1:index}, ${2:element})",
-            k: CK.Method,
-            d: "void insert(int, E)",
-          },
-          {
-            l: "remove",
-            i: "remove(${1:value})",
-            k: CK.Method,
-            d: "bool remove(Object?)",
-          },
-          {
-            l: "removeAt",
-            i: "removeAt(${1:index})",
-            k: CK.Method,
-            d: "E removeAt(int index)",
-          },
-          {
-            l: "removeLast",
-            i: "removeLast()",
-            k: CK.Method,
-            d: "E removeLast()",
-          },
-          {
-            l: "removeWhere",
-            i: "removeWhere((${1:e}) => ${2})",
-            k: CK.Method,
-            d: "void removeWhere(bool Function(E))",
-          },
-          { l: "clear", i: "clear()", k: CK.Method, d: "void clear()" },
-          {
-            l: "contains",
-            i: "contains(${1:element})",
-            k: CK.Method,
-            d: "bool contains(Object?)",
-          },
-          {
-            l: "containsKey",
-            i: "containsKey(${1:key})",
-            k: CK.Method,
-            d: "bool containsKey(Object?)",
-          },
-          {
-            l: "containsValue",
-            i: "containsValue(${1:value})",
-            k: CK.Method,
-            d: "bool containsValue(Object?)",
-          },
-          {
-            l: "indexOf",
-            i: "indexOf(${1:element})",
-            k: CK.Method,
-            d: "int indexOf(E)",
-          },
-          {
-            l: "lastIndexOf",
-            i: "lastIndexOf(${1:element})",
-            k: CK.Method,
-            d: "int lastIndexOf(E)",
-          },
-          {
-            l: "map",
-            i: "map((${1:e}) => ${2})",
-            k: CK.Method,
-            d: "Iterable<T> map<T>(T Function(E))",
-          },
-          {
-            l: "where",
-            i: "where((${1:e}) => ${2})",
-            k: CK.Method,
-            d: "Iterable<E> where(bool Function(E))",
-          },
-          {
-            l: "forEach",
-            i: "forEach((${1:e}) {\n\t$0\n})",
-            k: CK.Method,
-            d: "void forEach(void Function(E))",
-          },
-          {
-            l: "any",
-            i: "any((${1:e}) => ${2})",
-            k: CK.Method,
-            d: "bool any(bool Function(E))",
-          },
-          {
-            l: "every",
-            i: "every((${1:e}) => ${2})",
-            k: CK.Method,
-            d: "bool every(bool Function(E))",
-          },
-          {
-            l: "reduce",
-            i: "reduce((${1:a}, ${2:b}) => ${3})",
-            k: CK.Method,
-            d: "E reduce(E Function(E,E))",
-          },
-          {
-            l: "fold",
-            i: "fold(${1:init}, (${2:prev}, ${3:e}) => ${4})",
-            k: CK.Method,
-            d: "T fold<T>(T, T Function(T,E))",
-          },
-          {
-            l: "join",
-            i: "join('${1:, }')",
-            k: CK.Method,
-            d: "String join([String separator])",
-          },
-          {
-            l: "sort",
-            i: "sort(${1})",
-            k: CK.Method,
-            d: "void sort([int Function(E,E)?])",
-          },
-          {
-            l: "sublist",
-            i: "sublist(${1:start})",
-            k: CK.Method,
-            d: "List<E> sublist(int, [int?])",
-          },
-          { l: "toList", i: "toList()", k: CK.Method, d: "List<E> toList()" },
-          { l: "toSet", i: "toSet()", k: CK.Method, d: "Set<E> toSet()" },
-          {
-            l: "take",
-            i: "take(${1:count})",
-            k: CK.Method,
-            d: "Iterable<E> take(int)",
-          },
-          {
-            l: "skip",
-            i: "skip(${1:count})",
-            k: CK.Method,
-            d: "Iterable<E> skip(int)",
-          },
-          {
-            l: "expand",
-            i: "expand((${1:e}) => ${2})",
-            k: CK.Method,
-            d: "Iterable<T> expand<T>(...)",
-          },
-          { l: "asMap", i: "asMap()", k: CK.Method, d: "Map<int,E> asMap()" },
-          {
-            l: "split",
-            i: "split('${1}')",
-            k: CK.Method,
-            d: "List<String> split(Pattern)",
-          },
-          { l: "trim", i: "trim()", k: CK.Method, d: "String trim()" },
-          {
-            l: "trimLeft",
-            i: "trimLeft()",
-            k: CK.Method,
-            d: "String trimLeft()",
-          },
-          {
-            l: "trimRight",
-            i: "trimRight()",
-            k: CK.Method,
-            d: "String trimRight()",
-          },
-          {
-            l: "replaceAll",
-            i: "replaceAll('${1:from}', '${2:to}')",
-            k: CK.Method,
-            d: "String replaceAll(Pattern, String)",
-          },
-          {
-            l: "replaceFirst",
-            i: "replaceFirst('${1:from}', '${2:to}')",
-            k: CK.Method,
-            d: "String replaceFirst(Pattern, String)",
-          },
-          {
-            l: "startsWith",
-            i: "startsWith('${1}')",
-            k: CK.Method,
-            d: "bool startsWith(Pattern)",
-          },
-          {
-            l: "endsWith",
-            i: "endsWith('${1}')",
-            k: CK.Method,
-            d: "bool endsWith(String)",
-          },
-          {
-            l: "substring",
-            i: "substring(${1:start})",
-            k: CK.Method,
-            d: "String substring(int, [int?])",
-          },
-          {
-            l: "toLowerCase",
-            i: "toLowerCase()",
-            k: CK.Method,
-            d: "String toLowerCase()",
-          },
-          {
-            l: "toUpperCase",
-            i: "toUpperCase()",
-            k: CK.Method,
-            d: "String toUpperCase()",
-          },
-          {
-            l: "padLeft",
-            i: "padLeft(${1:width})",
-            k: CK.Method,
-            d: "String padLeft(int, [String])",
-          },
-          {
-            l: "padRight",
-            i: "padRight(${1:width})",
-            k: CK.Method,
-            d: "String padRight(int, [String])",
-          },
-          {
-            l: "compareTo",
-            i: "compareTo(${1:other})",
-            k: CK.Method,
-            d: "int compareTo(...)",
-          },
-          {
-            l: "codeUnits",
-            i: "codeUnits",
-            k: CK.Property,
-            d: "List<int> get codeUnits",
-          },
-          {
-            l: "then",
-            i: "then((${1:value}) {\n\t$0\n})",
-            k: CK.Method,
-            d: "Future<R> then<R>(...)",
-          },
-          {
-            l: "catchError",
-            i: "catchError((${1:e}) {\n\t$0\n})",
-            k: CK.Method,
-            d: "Future<T> catchError(...)",
-          },
-          {
-            l: "whenComplete",
-            i: "whenComplete(() {\n\t$0\n})",
-            k: CK.Method,
-            d: "Future<T> whenComplete(...)",
-          },
-          {
-            l: "timeout",
-            i: "timeout(Duration(${1:seconds: 5}))",
-            k: CK.Method,
-            d: "Future<T> timeout(Duration)",
-          },
-          {
-            l: "asStream",
-            i: "asStream()",
-            k: CK.Method,
-            d: "Stream<T> asStream()",
-          },
-          {
-            l: "listen",
-            i: "listen((${1:event}) {\n\t$0\n})",
-            k: CK.Method,
-            d: "StreamSubscription<T> listen(...)",
-          },
-          {
-            l: "putIfAbsent",
-            i: "putIfAbsent(${1:key}, () => ${2:value})",
-            k: CK.Method,
-            d: "V putIfAbsent(K, V Function())",
-          },
-          {
-            l: "update",
-            i: "update(${1:key}, (${2:v}) => ${3})",
-            k: CK.Method,
-            d: "V update(K, V Function(V))",
-          },
-          {
-            l: "writeln",
-            i: "writeln('${1}')",
-            k: CK.Method,
-            d: "void writeln([Object?])",
-          },
-          {
-            l: "write",
-            i: "write('${1}')",
-            k: CK.Method,
-            d: "void write(Object?)",
-          },
-          { l: "close", i: "close()", k: CK.Method, d: "Future close()" },
-          { l: "abs", i: "abs()", k: CK.Method, d: "num abs()" },
-          { l: "round", i: "round()", k: CK.Method, d: "int round()" },
-          { l: "ceil", i: "ceil()", k: CK.Method, d: "int ceil()" },
-          { l: "floor", i: "floor()", k: CK.Method, d: "int floor()" },
-          { l: "toInt", i: "toInt()", k: CK.Method, d: "int toInt()" },
-          {
-            l: "toDouble",
-            i: "toDouble()",
-            k: CK.Method,
-            d: "double toDouble()",
-          },
-          {
-            l: "toStringAsFixed",
-            i: "toStringAsFixed(${1:fractionDigits})",
-            k: CK.Method,
-            d: "String toStringAsFixed(int)",
-          },
-          {
-            l: "clamp",
-            i: "clamp(${1:lowerLimit}, ${2:upperLimit})",
-            k: CK.Method,
-            d: "num clamp(num, num)",
-          },
-          { l: "isNaN", i: "isNaN", k: CK.Property, d: "bool get isNaN" },
-          {
-            l: "isFinite",
-            i: "isFinite",
-            k: CK.Property,
-            d: "bool get isFinite",
-          },
-          {
-            l: "isNegative",
-            i: "isNegative",
-            k: CK.Property,
-            d: "bool get isNegative",
-          },
-          { l: "sign", i: "sign", k: CK.Property, d: "num get sign" },
-        ];
-        const seen = new Set();
-        members.forEach((m) => {
-          if (!seen.has(m.l)) {
-            seen.add(m.l);
-            S.push({
-              label: m.l,
-              kind: m.k,
-              insertText: m.i,
-              insertTextRules: m.i.includes("$") ? SNIPPET : undefined,
-              detail: m.d,
-              documentation: D[m.l] ? D[m.l].doc : "",
-              range,
-            });
-          }
-        });
-        return { suggestions: S };
-      }
-
-      // ---- KEYWORDS ----
-      [
-        "abstract",
-        "as",
-        "assert",
-        "async",
-        "await",
-        "base",
-        "break",
-        "case",
-        "catch",
-        "class",
-        "const",
-        "continue",
-        "covariant",
-        "default",
-        "deferred",
-        "do",
-        "dynamic",
-        "else",
-        "enum",
-        "export",
-        "extends",
-        "extension",
-        "external",
-        "factory",
-        "false",
-        "final",
-        "finally",
-        "for",
-        "get",
-        "hide",
-        "if",
-        "implements",
+      // Keywords
+      const keywords = [
+        "module",
+        "where",
         "import",
+        "data",
+        "type",
+        "newtype",
+        "class",
+        "instance",
+        "derive",
+        "foreign",
+        "infixl",
+        "infixr",
+        "infix",
+        "do",
+        "ado",
+        "let",
         "in",
-        "interface",
-        "is",
-        "late",
-        "library",
-        "mixin",
-        "new",
-        "null",
+        "if",
+        "then",
+        "else",
+        "case",
         "of",
-        "on",
-        "operator",
-        "part",
-        "required",
-        "rethrow",
-        "return",
-        "sealed",
-        "set",
-        "show",
-        "static",
-        "super",
-        "switch",
-        "sync",
-        "this",
-        "throw",
+        "forall",
+        "as",
+        "hiding",
+        "qualified",
         "true",
-        "try",
-        "typedef",
-        "var",
-        "void",
-        "when",
-        "while",
-        "with",
-        "yield",
-      ].forEach((kw) =>
-        S.push({
+        "false",
+        "otherwise",
+      ];
+      for (const kw of keywords) {
+        suggestions.push({
           label: kw,
-          kind: CK.Keyword,
+          kind: monaco.languages.CompletionItemKind.Keyword,
           insertText: kw,
           detail: "keyword",
+          sortText: "3_" + kw,
           range,
-        }),
-      );
+        });
+      }
 
-      // ---- TYPES ----
-      [
-        ["int", "dart:core"],
-        ["double", "dart:core"],
-        ["num", "dart:core"],
-        ["String", "dart:core"],
-        ["bool", "dart:core"],
-        ["List", "dart:core"],
-        ["Map", "dart:core"],
-        ["Set", "dart:core"],
-        ["Future", "dart:async"],
-        ["Stream", "dart:async"],
-        ["Iterable", "dart:core"],
-        ["Object", "dart:core"],
-        ["Function", "dart:core"],
-        ["Null", "dart:core"],
-        ["Never", "dart:core"],
-        ["Type", "dart:core"],
-        ["Symbol", "dart:core"],
-        ["BigInt", "dart:core"],
-        ["DateTime", "dart:core"],
-        ["Duration", "dart:core"],
-        ["RegExp", "dart:core"],
-        ["Uri", "dart:core"],
-        ["Record", "dart:core"],
-        ["Enum", "dart:core"],
-        ["Error", "dart:core"],
-        ["Exception", "dart:core"],
-        ["FormatException", "dart:core"],
-        ["StateError", "dart:core"],
-        ["ArgumentError", "dart:core"],
-        ["RangeError", "dart:core"],
-        ["UnsupportedError", "dart:core"],
-        ["UnimplementedError", "dart:core"],
-        ["TypeError", "dart:core"],
-        ["StackTrace", "dart:core"],
-        ["Stopwatch", "dart:core"],
-        ["StringBuffer", "dart:core"],
-        ["StringSink", "dart:core"],
-        ["MapEntry", "dart:core"],
-        ["FutureOr", "dart:async"],
-        ["Completer", "dart:async"],
-        ["StreamController", "dart:async"],
-        ["StreamSubscription", "dart:async"],
-        ["StreamTransformer", "dart:async"],
-        ["Timer", "dart:async"],
-        ["Zone", "dart:async"],
-      ].forEach(([n, lib]) =>
-        S.push({
-          label: n,
-          kind: CK.Class,
-          insertText: n,
-          detail: lib,
-          documentation: D[n] ? D[n].doc : "",
+      // Knowledge base entries
+      for (const [name, info] of Object.entries(KB)) {
+        suggestions.push({
+          label: name,
+          kind: kindToMonaco(info.k),
+          detail: info.t,
+          documentation: { value: "**" + info.m + "**\n\n" + info.d },
+          insertText: name,
+          sortText: "2_" + name,
           range,
-        }),
-      );
+        });
+      }
 
-      // ---- GLOBAL FUNCTIONS ----
-      [
-        {
-          l: "print",
-          i: "print(${1:object})",
-          d: "void print(Object?)",
-          dc: "Prints to the console.",
-        },
-        {
-          l: "identical",
-          i: "identical(${1:a}, ${2:b})",
-          d: "bool identical(Object?, Object?)",
-          dc: "Checks reference equality.",
-        },
-      ].forEach((f) =>
-        S.push({
-          label: f.l,
-          kind: CK.Function,
-          insertText: f.i,
-          insertTextRules: SNIPPET,
-          detail: f.d,
-          documentation: f.dc,
+      // Snippets
+      for (const sn of SNIPPETS) {
+        suggestions.push({
+          label: sn.label,
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          detail: sn.detail,
+          documentation: { value: sn.doc },
+          insertText: sn.body,
+          insertTextRules:
+            monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          sortText: "4_" + sn.label,
           range,
-        }),
-      );
+        });
+      }
 
-      // ---- ANNOTATIONS ----
-      [
-        {
-          l: "@override",
-          doc: "Marks a member as overriding a superclass member.",
-        },
-        { l: "@deprecated", doc: "Marks a declaration as deprecated." },
-        {
-          l: "@Deprecated",
-          i: "@Deprecated('${1:message}')",
-          doc: "Marks as deprecated with a message.",
-        },
-        { l: "@pragma", i: "@pragma('${1:name}')", doc: "A hint to tools." },
-        {
-          l: "@protected",
-          doc: "Only usable within defining class and subclasses.",
-        },
-        { l: "@visibleForTesting", doc: "Visible only for testing." },
-        { l: "@immutable", doc: "Marks a class as immutable." },
-        { l: "@nonVirtual", doc: "Marks an instance member as non-virtual." },
-      ].forEach((a) =>
-        S.push({
-          label: a.l,
-          kind: CK.Property,
-          insertText: a.i || a.l,
-          insertTextRules: a.i ? SNIPPET : undefined,
-          detail: "annotation",
-          documentation: a.doc,
+      // Local symbols from current document
+      const locals = getLocalSymbols(model);
+      for (const s of locals) {
+        suggestions.push({
+          label: s.name,
+          kind: kindToMonaco(s.kind),
+          detail: s.type || s.kind,
+          documentation: s.doc ? { value: s.doc } : undefined,
+          insertText: s.name,
+          sortText: "0_" + s.name,
           range,
-        }),
-      );
+        });
+      }
 
-      // ---- SNIPPETS ----
-      const snips = [
-        {
-          l: "main",
-          d: "Main function",
-          t: "void main(${1:List<String> args}) {\n\t$0\n}",
-        },
-        {
-          l: "mainAsync",
-          d: "Async main",
-          t: "Future<void> main(${1:List<String> args}) async {\n\t$0\n}",
-        },
-        {
-          l: "class",
-          d: "Class definition",
-          t: "class ${1:Name} {\n\t${1:Name}(${2});\n\n\t$0\n}",
-        },
-        {
-          l: "classExtends",
-          d: "Class extends",
-          t: "class ${1:Name} extends ${2:Super} {\n\t${1:Name}(${3}) : super(${4});\n\n\t$0\n}",
-        },
-        {
-          l: "classImpl",
-          d: "Class implements",
-          t: "class ${1:Name} implements ${2:Interface} {\n\t$0\n}",
-        },
-        {
-          l: "abstractClass",
-          d: "Abstract class",
-          t: "abstract class ${1:Name} {\n\t$0\n}",
-        },
-        {
-          l: "sealedClass",
-          d: "Sealed class",
-          t: "sealed class ${1:Name} {\n\t$0\n}",
-        },
-        {
-          l: "enum",
-          d: "Enum definition",
-          t: "enum ${1:Name} {\n\t${2:value1},\n\t${3:value2},\n}",
-        },
-        {
-          l: "enhancedEnum",
-          d: "Enhanced enum",
-          t: "enum ${1:Name} {\n\t${2:val1}(${3}),\n\t${4:val2}(${5});\n\n\tconst ${1:Name}(${6:this.field});\n\n\tfinal ${7:String} ${8:field};\n}",
-        },
-        {
-          l: "mixin",
-          d: "Mixin definition",
-          t: "mixin ${1:Name} on ${2:Class} {\n\t$0\n}",
-        },
-        {
-          l: "extension",
-          d: "Extension",
-          t: "extension ${1:Name} on ${2:Type} {\n\t$0\n}",
-        },
-        { l: "fun", d: "Function", t: "${1:void} ${2:name}(${3}) {\n\t$0\n}" },
-        {
-          l: "asyncFun",
-          d: "Async function",
-          t: "Future<${1:void}> ${2:name}(${3}) async {\n\t$0\n}",
-        },
-        {
-          l: "arrowFun",
-          d: "Arrow function",
-          t: "${1:void} ${2:name}(${3}) => ${4:expression};",
-        },
-        {
-          l: "getter",
-          d: "Getter",
-          t: "${1:Type} get ${2:name} => ${3:value};",
-        },
-        {
-          l: "setter",
-          d: "Setter",
-          t: "set ${1:name}(${2:Type} ${3:value}) {\n\t_${1:name} = ${3:value};\n}",
-        },
-        { l: "ifStmt", d: "If statement", t: "if (${1:condition}) {\n\t$0\n}" },
-        {
-          l: "ifElse",
-          d: "If-else",
-          t: "if (${1:condition}) {\n\t$2\n} else {\n\t$0\n}",
-        },
-        {
-          l: "forLoop",
-          d: "For loop",
-          t: "for (var ${1:i} = 0; ${1:i} < ${2:length}; ${1:i}++) {\n\t$0\n}",
-        },
-        {
-          l: "forIn",
-          d: "For-in loop",
-          t: "for (final ${1:item} in ${2:items}) {\n\t$0\n}",
-        },
-        {
-          l: "whileLoop",
-          d: "While loop",
-          t: "while (${1:condition}) {\n\t$0\n}",
-        },
-        {
-          l: "doWhile",
-          d: "Do-while loop",
-          t: "do {\n\t$0\n} while (${1:condition});",
-        },
-        {
-          l: "switchStmt",
-          d: "Switch statement",
-          t: "switch (${1:value}) {\n\tcase ${2:pattern}:\n\t\t$0\n\t\tbreak;\n\tdefault:\n\t\tbreak;\n}",
-        },
-        {
-          l: "switchExpr",
-          d: "Switch expression (Dart 3)",
-          t: "final ${1:result} = switch (${2:value}) {\n\t${3:pattern} => ${4:expr},\n\t_ => ${5:default},\n};",
-        },
-        {
-          l: "tryCatch",
-          d: "Try-catch",
-          t: "try {\n\t$0\n} catch (e) {\n\tprint(e);\n}",
-        },
-        {
-          l: "tryOnCatch",
-          d: "Try-on-catch",
-          t: "try {\n\t$0\n} on ${1:Exception} catch (e, s) {\n\tprint('\\$e\\n\\$s');\n}",
-        },
-        {
-          l: "tryCatchFinally",
-          d: "Try-catch-finally",
-          t: "try {\n\t$0\n} catch (e) {\n\tprint(e);\n} finally {\n\t\n}",
-        },
-        {
-          l: "importPkg",
-          d: "Import statement",
-          t: "import '${1:package}';$0",
-        },
-        {
-          l: "importAs",
-          d: "Import with alias",
-          t: "import '${1:package}' as ${2:alias};$0",
-        },
-        {
-          l: "importShow",
-          d: "Import with show",
-          t: "import '${1:package}' show ${2:Symbol};$0",
-        },
-        {
-          l: "importHide",
-          d: "Import with hide",
-          t: "import '${1:package}' hide ${2:Symbol};$0",
-        },
-        { l: "typedef", d: "Type alias", t: "typedef ${1:Name} = ${2:Type};" },
-        {
-          l: "typedefFn",
-          d: "Function type alias",
-          t: "typedef ${1:Name} = ${2:void} Function(${3});",
-        },
-        {
-          l: "singleton",
-          d: "Singleton pattern",
-          t: "class ${1:Name} {\n\tstatic final ${1:Name} _instance = ${1:Name}._internal();\n\n\tfactory ${1:Name}() => _instance;\n\n\t${1:Name}._internal();\n\n\t$0\n}",
-        },
-        {
-          l: "factory",
-          d: "Factory constructor",
-          t: "factory ${1:Class}.${2:name}(${3}) {\n\t$0\n}",
-        },
-        {
-          l: "test",
-          d: "Test function",
-          t: "test('${1:description}', () {\n\t$0\n});",
-        },
-        {
-          l: "testAsync",
-          d: "Async test",
-          t: "test('${1:description}', () async {\n\t$0\n});",
-        },
-        {
-          l: "group",
-          d: "Test group",
-          t: "group('${1:description}', () {\n\t$0\n});",
-        },
-        {
-          l: "streamCtrl",
-          d: "StreamController",
-          t: "final ${1:controller} = StreamController<${2:String}>.broadcast();\n$0",
-        },
-        {
-          l: "futureDelayed",
-          d: "Future.delayed",
-          t: "await Future.delayed(Duration(${1:milliseconds: 500}));$0",
-        },
-        {
-          l: "copyWith",
-          d: "copyWith method",
-          t: "${1:ClassName} copyWith({\n\t${2:String}? ${3:field},\n}) {\n\treturn ${1:ClassName}(\n\t\t${3:field}: ${3:field} ?? this.${3:field},\n\t);\n}",
-        },
-      ];
-      snips.forEach((s) =>
-        S.push({
-          label: s.l,
-          kind: CK.Snippet,
-          insertText: s.t,
-          insertTextRules: SNIPPET,
-          detail: "Snippet: " + s.d,
-          documentation: { value: s.d },
-          range,
-          sortText: "0" + s.l,
-        }),
-      );
-
-      // ---- LOCAL SYMBOLS ----
-      const localSyms = findLocalSymbols(model.getValue());
-      const added = new Set(S.map((s) => s.label));
-      localSyms.forEach((sym) => {
-        if (!added.has(sym.name)) {
-          added.add(sym.name);
-          const kindMap = {
-            class: CK.Class,
-            mixin: CK.Class,
-            enum: CK.Enum,
-            extension: CK.Class,
-            typedef: CK.Interface,
-            function: CK.Function,
-            variable: CK.Variable,
-          };
-          S.push({
-            label: sym.name,
-            kind: kindMap[sym.kind] || CK.Variable,
-            insertText: sym.name,
-            detail: "(local " + sym.kind + ")",
-            range,
-          });
-        }
-      });
-
-      return { suggestions: S };
+      return { suggestions };
     },
   });
 
-  // ===== 7. HOVER PROVIDER =====
-  monaco.languages.registerHoverProvider("dart", {
-    provideHover(model, position) {
-      const w = model.getWordAtPosition(position);
-      if (!w) return null;
-      const txt = w.word;
-      const rng = new monaco.Range(
-        position.lineNumber,
-        w.startColumn,
-        position.lineNumber,
-        w.endColumn,
-      );
-
-      if (D[txt]) {
-        return {
-          range: rng,
-          contents: [
-            { value: "```dart\n" + D[txt].sig + "\n```" },
-            { value: D[txt].doc },
-          ],
-        };
-      }
-
-      const lines = model.getLinesContent();
-      const pats = [
-        {
-          r: new RegExp(
-            "(?:abstract\\s+)?(?:sealed\\s+)?(?:base\\s+)?class\\s+" +
-              txt +
-              "(?:\\s|[<{]|extends|implements|with)",
-          ),
-          t: "class",
-        },
-        { r: new RegExp("mixin\\s+" + txt + "(?:\\s|[<{]|on)"), t: "mixin" },
-        { r: new RegExp("enum\\s+" + txt + "(?:\\s|[<{])"), t: "enum" },
-        { r: new RegExp("extension\\s+" + txt + "\\s+on"), t: "extension" },
-        { r: new RegExp("typedef\\s+" + txt + "\\s*[=<]"), t: "typedef" },
-        {
-          r: new RegExp(
-            "(?:void|int|double|String|bool|num|dynamic|Future|Stream|List|Map|Set|Iterable|Object)(?:<[^>]*>)?\\??\\s+" +
-              txt +
-              "\\s*[(<]",
-          ),
-          t: "function/method",
-        },
-        {
-          r: new RegExp("(?:var|final|const|late)\\s+" + txt + "\\b"),
-          t: "variable",
-        },
-      ];
-
-      for (let i = 0; i < lines.length; i++) {
-        for (const p of pats) {
-          if (p.r.test(lines[i])) {
-            const doc = getDocComment(lines, i);
-            return {
-              range: rng,
-              contents: [
-                { value: "```dart\n" + lines[i].trim() + "\n```" },
-                ...(doc ? [{ value: doc }] : []),
-                { value: "*Defined at line " + (i + 1) + "*" },
-              ],
-            };
-          }
-        }
-      }
-      return null;
-    },
-  });
-
-  // ===== 8. DEFINITION PROVIDER =====
-  monaco.languages.registerDefinitionProvider("dart", {
-    provideDefinition(model, position) {
-      const w = model.getWordAtPosition(position);
-      if (!w) return null;
-      const txt = w.word;
-      const lines = model.getLinesContent();
-      const pats = [
-        new RegExp(
-          "(?:abstract\\s+)?(?:sealed\\s+)?(?:base\\s+)?class\\s+" +
-            txt +
-            "(?:\\s|[<{]|extends|implements|with)",
-        ),
-        new RegExp("mixin\\s+" + txt + "(?:\\s|[<{]|on)"),
-        new RegExp("enum\\s+" + txt + "(?:\\s|[<{])"),
-        new RegExp("extension\\s+" + txt + "\\s+on"),
-        new RegExp("typedef\\s+" + txt + "\\s*[=<]"),
-        new RegExp(
-          "(?:void|int|double|String|bool|num|dynamic|var|final|const|late|Future|Stream|List|Map|Set|Iterable|Object)(?:<[^>]*>)?\\??\\s+" +
-            txt +
-            "\\s*[\\(;=,]",
-        ),
-        new RegExp("\\b" + txt + "\\s*\\([^)]*\\)\\s*\\{"),
-      ];
-      for (let i = 0; i < lines.length; i++) {
-        for (const p of pats) {
-          if (p.test(lines[i])) {
-            const col = lines[i].indexOf(txt) + 1;
-            return {
-              uri: model.uri,
-              range: new monaco.Range(i + 1, col, i + 1, col + txt.length),
-            };
-          }
-        }
-      }
-      return null;
-    },
-  });
-
-  // ===== 9. SIGNATURE HELP PROVIDER =====
-  monaco.languages.registerSignatureHelpProvider("dart", {
-    signatureHelpTriggerCharacters: ["(", ","],
-    provideSignatureHelp(model, position) {
-      const line = model.getLineContent(position.lineNumber);
-      const before = line.substring(0, position.column - 1);
-      const m = before.match(/(\w+)\s*\([^)]*$/);
-      if (!m) return null;
-      const fn = m[1];
-      const afterParen = before.substring(before.lastIndexOf("(") + 1);
-      const activeParam = (afterParen.match(/,/g) || []).length;
-
-      const sigs = {
-        print: {
-          l: "void print(Object? object)",
-          d: "Prints a string representation to the console.",
-          p: [
-            { label: "Object? object", documentation: "The object to print." },
-          ],
-        },
-        Duration: {
-          l: "Duration({int days, int hours, int minutes, int seconds, int milliseconds, int microseconds})",
-          d: "Creates a Duration.",
-          p: [
-            { label: "int days", documentation: "Days." },
-            { label: "int hours", documentation: "Hours." },
-            { label: "int minutes", documentation: "Minutes." },
-            { label: "int seconds", documentation: "Seconds." },
-            { label: "int milliseconds", documentation: "Milliseconds." },
-            { label: "int microseconds", documentation: "Microseconds." },
-          ],
-        },
-        RegExp: {
-          l: "RegExp(String source, {bool multiLine, bool caseSensitive})",
-          d: "Creates a regular expression.",
-          p: [
-            { label: "String source", documentation: "The pattern." },
-            { label: "bool multiLine", documentation: "Match across lines." },
-            { label: "bool caseSensitive", documentation: "Case sensitive." },
-          ],
-        },
-        identical: {
-          l: "bool identical(Object? a, Object? b)",
-          d: "Check reference equality.",
-          p: [
-            { label: "Object? a", documentation: "First object." },
-            { label: "Object? b", documentation: "Second object." },
-          ],
-        },
-        "Future.delayed": {
-          l: "Future.delayed(Duration duration, [FutureOr<T> Function()? computation])",
-          d: "Creates a future that completes after a delay.",
-          p: [
-            { label: "Duration duration", documentation: "The delay." },
-            {
-              label: "FutureOr<T> Function()? computation",
-              documentation: "Computation after delay.",
-            },
-          ],
-        },
+  // ═══════════════════════════════════════════════
+  // 8. HOVER PROVIDER
+  // ═══════════════════════════════════════════════
+  monaco.languages.registerHoverProvider("purescript", {
+    provideHover: function (model, position) {
+      const word = model.getWordAtPosition(position);
+      if (!word) return null;
+      const name = word.word;
+      const range = {
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: word.startColumn,
+        endColumn: word.endColumn,
       };
 
-      let sig = sigs[fn];
-      if (!sig) {
-        const text = model.getValue();
-        const fp = new RegExp(
-          "(?:\\w+(?:<[^>]*>)?\\??\\s+)?" + fn + "\\s*\\(([^)]*)\\)",
-          "m",
-        );
-        const fm = text.match(fp);
-        if (fm) {
-          const params = fm[1]
-            .split(",")
-            .map((p) => p.trim())
-            .filter(Boolean);
-          sig = {
-            l: fm[0].trim(),
-            d: "",
-            p: params.map((p) => ({ label: p, documentation: "" })),
-          };
+      // Check knowledge base
+      if (KB[name]) {
+        const info = KB[name];
+        const contents = [
+          { value: "```purescript\n" + info.t + "\n```" },
+          { value: "**" + info.k + "** — *" + info.m + "*\n\n" + info.d },
+        ];
+        return { range, contents };
+      }
+
+      // Check local type signature
+      const localType = findTypeSignatureInDoc(model, name);
+      if (localType) {
+        const lineNum = findLineOfSignature(model, name);
+        const doc = lineNum ? findDocCommentAbove(model, lineNum) : null;
+        const contents = [
+          { value: "```purescript\n" + name + " :: " + localType + "\n```" },
+        ];
+        if (doc) contents.push({ value: doc });
+        return { range, contents };
+      }
+
+      return null;
+    },
+  });
+
+  function findLineOfSignature(model, word) {
+    const lc = model.getLineCount();
+    const esc = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    for (let i = 1; i <= lc; i++) {
+      const ln = model.getLineContent(i).trimStart();
+      if (new RegExp("^" + esc + "\\s*::").test(ln)) return i;
+    }
+    return null;
+  }
+
+  // ═══════════════════════════════════════════════
+  // 9. DEFINITION PROVIDER
+  // ═══════════════════════════════════════════════
+  monaco.languages.registerDefinitionProvider("purescript", {
+    provideDefinition: function (model, position) {
+      const word = model.getWordAtPosition(position);
+      if (!word) return null;
+      return findDefinitionsInDoc(model, word.word);
+    },
+  });
+
+  // ═══════════════════════════════════════════════
+  // 10. SIGNATURE HELP PROVIDER
+  // ═══════════════════════════════════════════════
+  monaco.languages.registerSignatureHelpProvider("purescript", {
+    signatureHelpTriggerCharacters: ["("],
+    signatureHelpRetriggerCharacters: [",", " "],
+    provideSignatureHelp: function (model, position) {
+      const lineContent = model.getLineContent(position.lineNumber);
+      const textBefore = lineContent.substring(0, position.column - 1);
+      // Find the function name before the paren
+      const match = textBefore.match(/(\w+)\s*\(\s*[^)]*$/);
+      if (!match) return null;
+      const fnName = match[1];
+      let sig = null;
+      let doc = "";
+      if (KB[fnName]) {
+        sig = fnName + " :: " + KB[fnName].t;
+        doc = KB[fnName].d;
+      } else {
+        const localSig = findTypeSignatureInDoc(model, fnName);
+        if (localSig) {
+          sig = fnName + " :: " + localSig;
+          const lineNum = findLineOfSignature(model, fnName);
+          if (lineNum) doc = findDocCommentAbove(model, lineNum) || "";
         }
       }
       if (!sig) return null;
-
       return {
         value: {
-          signatures: [
-            { label: sig.l, documentation: sig.d, parameters: sig.p },
-          ],
           activeSignature: 0,
-          activeParameter: activeParam,
+          activeParameter: 0,
+          signatures: [
+            {
+              label: sig,
+              documentation: { value: doc },
+              parameters: [],
+            },
+          ],
         },
-        dispose() {},
+        dispose: function () {},
       };
     },
   });
 
-  // ===== 10. DOCUMENT SYMBOL PROVIDER =====
-  monaco.languages.registerDocumentSymbolProvider("dart", {
-    provideDocumentSymbols(model) {
-      const syms = [];
-      const SK = monaco.languages.SymbolKind;
-      const lines = model.getLinesContent();
-      const pats = [
-        {
-          r: /(?:abstract\s+)?(?:sealed\s+)?(?:base\s+)?class\s+(\w+)/,
-          k: SK.Class,
-        },
-        { r: /mixin\s+(\w+)/, k: SK.Class },
-        { r: /enum\s+(\w+)/, k: SK.Enum },
-        { r: /extension\s+(\w+)/, k: SK.Class },
-        { r: /typedef\s+(\w+)/, k: SK.Interface },
-        {
-          r: /(?:void|int|double|String|bool|num|Future|Stream|dynamic|List|Map|Set)\S*\s+(\w+)\s*\(/,
-          k: SK.Function,
-        },
-        { r: /(?:get|set)\s+(\w+)/, k: SK.Property },
-      ];
-      lines.forEach((line, i) => {
-        if (line.trim().startsWith("//")) return;
-        pats.forEach((p) => {
-          const m = line.match(p.r);
-          if (m) {
-            const c = line.indexOf(m[1]) + 1;
-            syms.push({
-              name: m[1],
-              kind: p.k,
-              range: new monaco.Range(i + 1, 1, i + 1, line.length + 1),
-              selectionRange: new monaco.Range(
-                i + 1,
-                c,
-                i + 1,
-                c + m[1].length,
-              ),
-              detail: "",
+  // ═══════════════════════════════════════════════
+  // 11. DOCUMENT SYMBOL PROVIDER
+  // ═══════════════════════════════════════════════
+  monaco.languages.registerDocumentSymbolProvider("purescript", {
+    provideDocumentSymbols: function (model) {
+      const symbols = [];
+      const lc = model.getLineCount();
+      for (let i = 1; i <= lc; i++) {
+        const ln = model.getLineContent(i);
+        const trimmed = ln.trimStart();
+
+        // Module
+        const mm = trimmed.match(/^module\s+([\w.]+)/);
+        if (mm) {
+          symbols.push({
+            name: mm[1],
+            kind: monaco.languages.SymbolKind.Module,
+            range: {
+              startLineNumber: i,
+              startColumn: 1,
+              endLineNumber: i,
+              endColumn: ln.length + 1,
+            },
+            selectionRange: {
+              startLineNumber: i,
+              startColumn: ln.indexOf(mm[1]) + 1,
+              endLineNumber: i,
+              endColumn: ln.indexOf(mm[1]) + mm[1].length + 1,
+            },
+            tags: [],
+          });
+        }
+
+        // data / newtype / type
+        const dm = trimmed.match(/^(data|newtype|type)\s+([A-Z]\w*)/);
+        if (dm) {
+          const k =
+            dm[1] === "type"
+              ? monaco.languages.SymbolKind.TypeParameter
+              : dm[1] === "newtype"
+                ? monaco.languages.SymbolKind.Struct
+                : monaco.languages.SymbolKind.Class;
+          symbols.push({
+            name: dm[2],
+            kind: k,
+            detail: dm[1],
+            range: {
+              startLineNumber: i,
+              startColumn: 1,
+              endLineNumber: i,
+              endColumn: ln.length + 1,
+            },
+            selectionRange: {
+              startLineNumber: i,
+              startColumn: ln.indexOf(dm[2]) + 1,
+              endLineNumber: i,
+              endColumn: ln.indexOf(dm[2]) + dm[2].length + 1,
+            },
+            tags: [],
+          });
+        }
+
+        // class
+        const cm = trimmed.match(/^class\s+(?:.*=>\s*)?([A-Z]\w*)/);
+        if (cm) {
+          symbols.push({
+            name: cm[1],
+            kind: monaco.languages.SymbolKind.Interface,
+            detail: "class",
+            range: {
+              startLineNumber: i,
+              startColumn: 1,
+              endLineNumber: i,
+              endColumn: ln.length + 1,
+            },
+            selectionRange: {
+              startLineNumber: i,
+              startColumn: ln.indexOf(cm[1]) + 1,
+              endLineNumber: i,
+              endColumn: ln.indexOf(cm[1]) + cm[1].length + 1,
+            },
+            tags: [],
+          });
+        }
+
+        // instance
+        const im = trimmed.match(
+          /^(?:derive\s+(?:newtype\s+)?)?instance\s+(\w+)/,
+        );
+        if (im) {
+          symbols.push({
+            name: im[1],
+            kind: monaco.languages.SymbolKind.Object,
+            detail: "instance",
+            range: {
+              startLineNumber: i,
+              startColumn: 1,
+              endLineNumber: i,
+              endColumn: ln.length + 1,
+            },
+            selectionRange: {
+              startLineNumber: i,
+              startColumn: ln.indexOf(im[1]) + 1,
+              endLineNumber: i,
+              endColumn: ln.indexOf(im[1]) + im[1].length + 1,
+            },
+            tags: [],
+          });
+        }
+
+        // Top-level type signatures => function
+        if (ln === trimmed) {
+          const fm = trimmed.match(/^([a-z_]\w*'?)\s*::/);
+          if (fm) {
+            symbols.push({
+              name: fm[1],
+              kind: monaco.languages.SymbolKind.Function,
+              detail: trimmed
+                .substring(fm[1].length)
+                .replace(/^\s*::\s*/, "")
+                .trim(),
+              range: {
+                startLineNumber: i,
+                startColumn: 1,
+                endLineNumber: i,
+                endColumn: ln.length + 1,
+              },
+              selectionRange: {
+                startLineNumber: i,
+                startColumn: 1,
+                endLineNumber: i,
+                endColumn: fm[1].length + 1,
+              },
               tags: [],
             });
           }
-        });
-      });
-      return syms;
+        }
+
+        // foreign import
+        const fi = trimmed.match(/^foreign\s+import\s+(\w+)/);
+        if (fi) {
+          symbols.push({
+            name: fi[1],
+            kind: monaco.languages.SymbolKind.Function,
+            detail: "foreign import",
+            range: {
+              startLineNumber: i,
+              startColumn: 1,
+              endLineNumber: i,
+              endColumn: ln.length + 1,
+            },
+            selectionRange: {
+              startLineNumber: i,
+              startColumn: ln.indexOf(fi[1]) + 1,
+              endLineNumber: i,
+              endColumn: ln.indexOf(fi[1]) + fi[1].length + 1,
+            },
+            tags: [],
+          });
+        }
+      }
+      return symbols;
     },
   });
 
-  // ===== 11. FOLDING RANGE PROVIDER =====
-  monaco.languages.registerFoldingRangeProvider("dart", {
-    provideFoldingRanges(model) {
-      const ranges = [];
-      const lines = model.getLinesContent();
-      const braceStack = [];
-      const commentStarts = [];
-
-      lines.forEach((line, i) => {
-        const t = line.trim();
-        if (t.startsWith("/*") || t.startsWith("/**")) commentStarts.push(i);
-        if (t.endsWith("*/") && commentStarts.length) {
-          const s = commentStarts.pop();
-          if (s !== i)
-            ranges.push({
-              start: s + 1,
-              end: i + 1,
-              kind: monaco.languages.FoldingRangeKind.Comment,
-            });
-        }
-        for (const ch of line) {
-          if (ch === "{") braceStack.push(i);
-          else if (ch === "}" && braceStack.length) {
-            const s = braceStack.pop();
-            if (s !== i)
-              ranges.push({
-                start: s + 1,
-                end: i + 1,
-                kind: monaco.languages.FoldingRangeKind.Region,
-              });
-          }
-        }
-        if (
-          t.startsWith("import ") &&
-          (i === 0 || !lines[i - 1].trim().startsWith("import "))
-        ) {
-          let e = i;
-          while (
-            e + 1 < lines.length &&
-            lines[e + 1].trim().startsWith("import ")
-          )
-            e++;
-          if (e > i)
-            ranges.push({
-              start: i + 1,
-              end: e + 1,
-              kind: monaco.languages.FoldingRangeKind.Imports,
-            });
-        }
+  // ═══════════════════════════════════════════════
+  // 12. REFERENCE HIGHLIGHT PROVIDER
+  // ═══════════════════════════════════════════════
+  monaco.languages.registerDocumentHighlightProvider("purescript", {
+    provideDocumentHighlights: function (model, position) {
+      const word = model.getWordAtPosition(position);
+      if (!word) return [];
+      const matches = model.findMatches(
+        "\\b" + word.word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b",
+        true,
+        true,
+        true,
+        null,
+        false,
+      );
+      return matches.map(function (m) {
+        return {
+          range: m.range,
+          kind: monaco.languages.DocumentHighlightKind.Read,
+        };
       });
-      return ranges;
     },
   });
 };

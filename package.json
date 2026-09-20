@@ -27,6 +27,7 @@
     "json5": "./dist/json5.js",
     "julia": "./dist/julia.js",
     "kotlin": "./dist/kotlin.js",
+    "lean": "./dist/lean.js",
     "lua": "./dist/lua.js",
     "minizinc": "./dist/minizinc.js",
     "nim": "./dist/nim.js",
