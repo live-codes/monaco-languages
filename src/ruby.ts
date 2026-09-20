@@ -2214,4 +2214,199 @@ export default (monaco: typeof Monaco) => {
       return result;
     },
   });
+
+  // ─── Rename Provider (scope-aware) ──────────────────────────────────
+  monaco.languages.registerRenameProvider("ruby", {
+    provideRenameEdits: function (model, position, newName) {
+      const word = model.getWordAtPosition(position);
+      if (!word) return null;
+      const name = word.word;
+
+      const lines = model.getLinesContent();
+      const lineStart: number[] = [];
+      let total = 0;
+      for (let i = 0; i < lines.length; i++) {
+        lineStart.push(total);
+        total += lines[i].length + 1;
+      }
+      const at = (line: number, col: number) => lineStart[line] + col;
+      const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      // "$" is a word character in this language's wordPattern, so a global
+      // name already includes its leading "$" and needs no boundary there.
+      const occurrence = new RegExp(
+        (name.startsWith("$") ? "" : "\\b") + esc(name) + "\\b",
+        "g",
+      );
+
+      // Instance/class/global variables are distinct bindings from a plain
+      // local of the same name, so they are tracked separately by sigil.
+      const sigilAt = (line: string, index: number) => {
+        if (index > 0 && line[index - 1] === "@")
+          return index > 1 && line[index - 2] === "@" ? "@@" : "@";
+        if (index > 0 && line[index - 1] === "$") return "$";
+        return "";
+      };
+      // A plain local: no sigil in front, and not a `$global` whose name
+      // already carries its own sigil.
+      const isLocal = (line: string, index: number) =>
+        !name.startsWith("$") && sigilAt(line, index) === "";
+
+      // Scopes: `{ … }` blocks plus keyword … end blocks.
+      type Scope = { start: number; end: number; names: Set<string> };
+      const scopes: Scope[] = [];
+      const open: Scope[] = [];
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        for (let c = 0; c < line.length; c++) {
+          if (line[c] === "{") {
+            const scope: Scope = {
+              start: at(i, c),
+              end: Infinity,
+              names: new Set<string>(),
+            };
+            scopes.push(scope);
+            open.push(scope);
+          } else if (line[c] === "}") {
+            const scope = open.pop();
+            if (scope) scope.end = at(i, c);
+          }
+        }
+        const code = line.replace(/#.*$/, "").trim();
+        if (
+          /^(def|class|module|if|unless|while|until|for|case|begin|do)\b/.test(
+            code,
+          ) ||
+          /\bdo\s*(\|[^|]*\|)?\s*$/.test(code)
+        ) {
+          const scope: Scope = {
+            start: at(i, 0),
+            end: Infinity,
+            names: new Set<string>(),
+          };
+          scopes.push(scope);
+          open.push(scope);
+        }
+        if (/^end\b/.test(code)) {
+          const scope = open.pop();
+          if (scope) scope.end = at(i, 0);
+        }
+      }
+      const eof = at(lines.length - 1, lines[lines.length - 1].length);
+      for (const scope of open) scope.end = eof;
+
+      // Innermost scope containing `offset` (geometry only).
+      const enclosing = (offset: number) => {
+        let found: Scope | undefined;
+        for (const scope of scopes) {
+          if (scope.start <= offset && offset <= scope.end) {
+            if (!found || scope.start > found.start) found = scope;
+          }
+        }
+        return found;
+      };
+      // Innermost enclosing scope that declares `name` — the name's binding.
+      const declaring = (offset: number) => {
+        let found: Scope | undefined;
+        for (const scope of scopes) {
+          if (
+            scope.start <= offset &&
+            offset <= scope.end &&
+            scope.names.has(name)
+          ) {
+            if (!found || scope.start > found.start) found = scope;
+          }
+        }
+        return found;
+      };
+
+      // A sigil-free name is a local when it is assigned (`x = …`) or is a
+      // parameter (`def f(x)`, `… do |x|`); those are the ones block-scoped.
+      const declarations: { start: number; end: number; scope?: Scope }[] = [];
+      for (let i = 0; i < lines.length; i++) {
+        occurrence.lastIndex = 0;
+        let m;
+        while ((m = occurrence.exec(lines[i])) !== null) {
+          if (!isLocal(lines[i], m.index)) continue;
+          const before = lines[i].slice(0, m.index).replace(/\s+$/, "");
+          const after = lines[i].slice(m.index + name.length);
+          const assigned = /^\s*(?:[-+*\/%]|\|\||&&)?=(?!=|>)/.test(after);
+          const parameter =
+            /[,(|]\s*$/.test(before) && /^\s*[,|)]/.test(after);
+          if (!assigned && !parameter) continue;
+          const scope = enclosing(at(i, m.index));
+          if (scope) scope.names.add(name);
+          declarations.push({
+            start: at(i, m.index),
+            end: at(i, m.index) + name.length,
+            scope,
+          });
+        }
+      }
+
+      // Resolve a sigil-free name span to its binding: declarations use their
+      // own scope, plain references the innermost enclosing declaration.
+      const resolve = (start: number, end: number) => {
+        for (const decl of declarations) {
+          if (decl.start <= start && end <= decl.end) return decl.scope;
+        }
+        return declaring(start);
+      };
+
+      const cursorLine = position.lineNumber - 1;
+      const cursorSigil = sigilAt(lines[cursorLine], word.startColumn - 1);
+      const cursorLocal = isLocal(lines[cursorLine], word.startColumn - 1);
+      const cursorScope = cursorLocal
+        ? resolve(
+            at(cursorLine, word.startColumn - 1),
+            at(cursorLine, word.endColumn - 1),
+          )
+        : undefined;
+      const targetStart = cursorScope ? cursorScope.start : -1;
+
+      const edits: Monaco.editor.IWorkspaceTextEdit[] = [];
+      for (let i = 0; i < lines.length; i++) {
+        occurrence.lastIndex = 0;
+        let m;
+        while ((m = occurrence.exec(lines[i])) !== null) {
+          if (sigilAt(lines[i], m.index) !== cursorSigil) continue;
+          const start = at(i, m.index);
+          if (cursorLocal) {
+            const scope = resolve(start, start + name.length);
+            if ((scope ? scope.start : -1) !== targetStart) continue;
+          }
+          if (targetStart !== -1) {
+            const before = lines[i].slice(0, m.index).replace(/\s+$/, "");
+            if (before.endsWith(".") || before.endsWith("::")) continue;
+          }
+          edits.push({
+            resource: model.uri,
+            versionId: model.getVersionId(),
+            textEdit: {
+              range: new monaco.Range(
+                i + 1,
+                m.index + 1,
+                i + 1,
+                m.index + 1 + name.length,
+              ),
+              text: newName,
+            },
+          });
+        }
+      }
+      return { edits };
+    },
+    resolveRenameLocation: function (model, position) {
+      const word = model.getWordAtPosition(position);
+      if (!word) return { rejectReason: "Cannot rename this element." };
+      return {
+        range: new monaco.Range(
+          position.lineNumber,
+          word.startColumn,
+          position.lineNumber,
+          word.endColumn,
+        ),
+        text: word.word,
+      };
+    },
+  });
 };
