@@ -32,6 +32,7 @@ export const languages = [
   { id: "haskell", name: "Haskell" },
   { id: "haxe", name: "Haxe" },
   { id: "imba", name: "Imba" },
+  { id: "janet", name: "Janet" },
   { id: "java", name: "Java" },
   { id: "json5", name: "JSON5" },
   { id: "julia", name: "Julia" },
@@ -49,6 +50,7 @@ export const languages = [
   { id: "purescript", name: "PureScript" },
   { id: "python", name: "Python" },
   { id: "r", name: "R" },
+  { id: "racket", name: "Racket" },
   { id: "ripple", name: "Ripple" },
   { id: "ruby", name: "Ruby" },
   { id: "rune", name: "Rune" },
@@ -402,6 +404,62 @@ class Person {
 imba.mount <App>
 `,
 
+  janet: `# Janet: closures, destructuring and the core library.
+
+(defn make-counter
+  "Return a closure that increments its own state."
+  [start]
+  (var n start)
+  (fn [] (++ n) n))
+
+(def counter (make-counter 0))
+
+(each i (range 5)
+  (printf "count %d -> %d" i (counter)))
+
+(defn factorial
+  [n]
+  (if (< n 2)
+    1
+    (* n (factorial (- n 1)))))
+
+(defn describe
+  [x]
+  (cond
+    (nil? x) "nothing"
+    (number? x) (string "number " x)
+    (string? x) (string "string " x)
+    (string "a " (type x))))
+
+(def shapes
+  [{:kind :circle :radius 1.5}
+   {:kind :rect :width 2 :height 3}])
+
+(defn area
+  [{:kind kind :radius r :width w :height h}]
+  (case kind
+    :circle (* math/pi r r)
+    :rect (* w h)
+    0))
+
+(each shape shapes
+  (print (describe shape) "->" (area shape)))
+
+(print "5! =" (factorial 5))
+
+(let [names @["ada" "alan" "grace"]]
+  (array/push names "edsger")
+  (print (string/join (map string/ascii-upper names) ", ")))
+
+# Short function syntax and threading.
+(def total (->> (range 10) (map |(* $ $)) (reduce + 0)))
+(print "sum of squares:" total)
+
+(defn main
+  [& args]
+  (print "args:" (length args)))
+`,
+
   java: `import java.util.List;
 import java.util.stream.Collectors;
 
@@ -731,6 +789,54 @@ if __name__ == "__main__":
 values <- vapply(0:10, fibonacci, numeric(1))
 cat("Fibonacci:", values, "\\n")
 cat("Mean:", mean(values), "\\n")
+`,
+
+  racket: `#lang racket
+
+;; A small Racket demo: structs, higher-order functions and iteration.
+
+(struct point (x y) #:transparent)
+
+(define (distance a b)
+  (define dx (- (point-x a) (point-x b)))
+  (define dy (- (point-y a) (point-y b)))
+  (sqrt (+ (* dx dx) (* dy dy))))
+
+(define (factorial n)
+  (if (< n 2)
+      1
+      (* n (factorial (sub1 n)))))
+
+(define (describe v)
+  (cond
+    [(number? v) (format "number ~a" v)]
+    [(string? v) (format "string ~s" v)]
+    [(point? v) (format "point ~a" (list (point-x v) (point-y v)))]
+    [else (format "other: ~a" v)]))
+
+(define points
+  (for/list ([i (in-range 5)])
+    (point i (* i i))))
+
+(for ([p points])
+  (displayln (describe p)))
+
+(printf "distance: ~a\\n" (distance (first points) (last points)))
+(printf "5! = ~a\\n" (factorial 5))
+
+(define names '("ada" "alan" "grace"))
+(displayln (string-join (map string-upcase names) ", "))
+
+(let loop ([i 0] [acc '()])
+  (if (= i 5)
+      (displayln (reverse acc))
+      (loop (add1 i) (cons i acc))))
+
+(define (main . args)
+  (displayln (format "args: ~a" (length args))))
+
+(module+ main
+  (main 1 2 3))
 `,
 
   ripple: `import { track } from "ripple";
