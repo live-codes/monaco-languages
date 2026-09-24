@@ -51,6 +51,7 @@ export const languages = [
   { id: "python", name: "Python" },
   { id: "r", name: "R" },
   { id: "racket", name: "Racket" },
+  { id: "razor", name: "Razor" },
   { id: "ripple", name: "Ripple" },
   { id: "ruby", name: "Ruby" },
   { id: "rune", name: "Rune" },
@@ -837,6 +838,64 @@ cat("Mean:", mean(values), "\\n")
 
 (module+ main
   (main 1 2 3))
+`,
+
+  razor: `@page "/people"
+@model PeopleViewModel
+@using System.Linq
+@inject IPeopleService People
+
+@{
+    ViewData["Title"] = "People";
+    var heading = $"People ({Model.People.Count})";
+}
+
+<h1>@heading</h1>
+
+@* Render only the adults. *@
+@if (Model.People.Any())
+{
+    <ul class="people">
+        @foreach (var person in Model.People.Where(p => p.Age > 38))
+        {
+            <li>
+                <strong>@person.Name</strong>
+                <span>@person.Age</span>
+                @if (person.Age >= 45)
+                {
+                    <em>(senior)</em>
+                }
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>No people found.</p>
+}
+
+@section Scripts {
+    <script>
+        console.log("Loaded @Model.People.Count people");
+    </script>
+}
+
+@functions {
+    string FormatName(Person person)
+    {
+        return person.Name.ToUpper();
+    }
+
+    int TotalAge()
+    {
+        var total = 0;
+        foreach (var person in Model.People)
+        {
+            total += person.Age;
+        }
+        return total;
+    }
+}
 `,
 
   ripple: `import { track } from "ripple";

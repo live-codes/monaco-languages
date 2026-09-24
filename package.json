@@ -43,6 +43,7 @@
     "python": "./dist/python.js",
     "r": "./dist/r.js",
     "racket": "./dist/racket.js",
+    "razor": "./dist/razor.js",
     "ripple": "./dist/ripple.js",
     "ruby": "./dist/ruby.js",
     "rune": "./dist/rune.js",
