@@ -15,6 +15,7 @@
  */
 
 export const languages = [
+  { id: "ada", name: "Ada" },
   { id: "astro", name: "Astro" },
   { id: "c", name: "C" },
   { id: "clio", name: "Clio" },
@@ -69,6 +70,50 @@ export const languages = [
 
 /** Sample source loaded for a language, keyed by language id. */
 export const samples = {
+  ada: `-- Ada demonstration: discriminated records, case, loops and attributes.
+with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Integer_Text_IO; use Ada.Integer_Text_IO;
+with Ada.Float_Text_IO; use Ada.Float_Text_IO;
+
+procedure Hello_Ada is
+   type Shape_Kind is (Circle, Rectangle);
+
+   type Shape (Kind : Shape_Kind) is record
+      case Kind is
+         when Circle =>
+            Radius : Float;
+         when Rectangle =>
+            Width, Height : Float;
+      end case;
+   end record;
+
+   function Area (S : Shape) return Float is
+   begin
+      case S.Kind is
+         when Circle =>
+            return 3.14159 * S.Radius ** 2;
+         when Rectangle =>
+            return S.Width * S.Height;
+      end case;
+   end Area;
+
+   Count  : constant Integer := 3;
+   Shapes : array (1 .. Count) of Shape :=
+     (1 => (Kind => Circle, Radius => 1.5),
+      2 => (Kind => Rectangle, Width => 2.0, Height => 3.0),
+      3 => (Kind => Rectangle, Width => 1.0, Height => 1.0));
+begin
+   Put_Line ("Ada shapes:");
+   for I in Shapes'Range loop
+      Put ("Area(");
+      Put (I, Width => 1);
+      Put (") = ");
+      Put (Area (Shapes (I)), Fore => 1, Aft => 2, Exp => 0);
+      New_Line;
+   end loop;
+end Hello_Ada;
+`,
+
   astro: `---
 const title = "Astro";
 const items = ["Islands", "Zero JS", "Content-first"];

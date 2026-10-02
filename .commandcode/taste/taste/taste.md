@@ -3,7 +3,7 @@
 - Removes throwaway/scratch files from the repo instead of leaving them as untracked clutter. Confidence: 0.5
 - Cares about keyboard accessibility in UI: controls should keep focus after interaction so they can be operated with the keyboard (e.g. arrow keys to change a selection) without re-clicking. Confidence: 0.6
 - Dislikes redundant/duplicated UI text — prefers a single obvious display of the current value rather than repeating it in a second element. Confidence: 0.55
-- For Monaco language support, do not define custom themes: emit only standard token scopes so highlighting renders correctly under the existing/default themes. Confidence: 0.85
+- For Monaco language support, do not define custom themes: emit only standard token scopes so highlighting renders correctly under the existing/default themes. Confidence: 0.9
 - Expects new language support to be complete and first-class: syntax highlighting plus the full IntelliSense surface (autocomplete, snippets, hover info, go-to-definition, rename, code folding, etc.), not tokenization alone. Confidence: 0.8
 - Prefers incremental, batched rollouts over big-bang changes: implement on a small representative starter batch first to validate the pattern, then extend to the rest; when fixing a bug prefers scoping the fix narrowly (e.g. only the newly-changed modules) rather than broadening it. Confidence: 0.6
 - Prefers self-contained, inline implementations over extracting a shared helper — each file/module should stand alone rather than depend on a new common abstraction; he'll accept duplicating non-trivial logic (e.g. a scope parser) in every file rather than introduce a shared engine. Confidence: 0.65
@@ -11,3 +11,4 @@
 - Expects symbol-level editor operations (rename, references, and go-to-definition) to respect lexical scope/semantics rather than naive whole-document text matching — flags renaming same-named variables across scopes as a bug, and will approve extending a proven scope pass to the other symbol providers so definition/references/rename all agree on the binding. Confidence: 0.55
 - Wants an established pattern applied uniformly across the whole codebase: once a new approach is proven, he'll follow up to convert the stragglers still on the old implementation rather than tolerate inconsistency. Confidence: 0.6
 - Communicates in terse, direct imperatives (e.g. "fix python, kotlin, lean, nim, ocaml") without restating context, expecting the agent to infer the goal and carry it through to verifiable completion. Confidence: 0.45
+5

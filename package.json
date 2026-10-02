@@ -1,11 +1,12 @@
 {
   "name": "@live-codes/monaco-languages",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Language support for Monaco Editor",
   "repository": {
     "url": "https://github.com/live-codes/monaco-languages"
   },
   "exports": {
+    "ada": "./dist/ada.js",
     "astro": "./dist/astro.js",
     "c-family": "./dist/c-family.js",
     "c": "./dist/c.js",
