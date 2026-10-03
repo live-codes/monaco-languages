@@ -16,6 +16,7 @@
 
 export const languages = [
   { id: "ada", name: "Ada" },
+  { id: "asm", name: "Assembly (x86)" },
   { id: "astro", name: "Astro" },
   { id: "c", name: "C" },
   { id: "clio", name: "Clio" },
@@ -112,6 +113,54 @@ begin
       New_Line;
    end loop;
 end Hello_Ada;
+`,
+
+  asm: `; x86-64 assembly - NASM syntax.
+; Demonstrates sections, data, a macro and a local label.
+
+section .data
+    msg     db "Hello, assembly!", 10    ; string with a trailing newline
+    msglen  equ $ - msg                  ; constant: length of msg
+
+section .bss
+    buffer  resb 64                      ; scratch space
+
+section .text
+    global _start
+
+; print str, len - write(2) wrapper
+%macro print 2
+    mov     rax, 1          ; sys_write
+    mov     rdi, 1          ; fd = stdout
+    mov     rsi, %1
+    mov     rdx, %2
+    syscall
+%endmacro
+
+_start:
+    print   msg, msglen
+
+    mov     rcx, 3          ; loop counter
+.count:
+    push    rcx
+    mov     rdi, rcx
+    call    print_digit
+    pop     rcx
+    loop    .count
+
+    mov     rax, 60         ; sys_exit
+    xor     rdi, rdi
+    syscall
+
+; Writes the low digit of rdi followed by a newline.
+print_digit:
+    add     rdi, '0'
+    mov     [buffer], rdi
+    mov     rax, 1          ; sys_write
+    mov     rsi, buffer
+    mov     rdx, 1
+    syscall
+    ret
 `,
 
   astro: `---

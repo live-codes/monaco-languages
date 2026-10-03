@@ -7,6 +7,7 @@
   },
   "exports": {
     "ada": "./dist/ada.js",
+    "asm": "./dist/asm.js",
     "astro": "./dist/astro.js",
     "c-family": "./dist/c-family.js",
     "c": "./dist/c.js",
