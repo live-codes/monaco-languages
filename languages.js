@@ -29,6 +29,7 @@ export const languages = [
   { id: "elixir", name: "Elixir" },
   { id: "elm", name: "Elm" },
   { id: "erlang", name: "Erlang" },
+  { id: "fortran", name: "Fortran" },
   { id: "fsharp", name: "F#" },
   { id: "go", name: "Go" },
   { id: "haskell", name: "Haskell" },
@@ -394,6 +395,63 @@ main() ->
         fun(N) -> io:format("~p! = ~p~n", [N, factorial(N)]) end,
         lists:seq(1, 5)
     ).
+`,
+
+  fortran: `module geometry
+  implicit none
+  private
+  public :: point, circle, distance, area
+
+  real, parameter :: pi = 3.141592653589793
+
+  type :: point
+    real :: x = 0.0
+    real :: y = 0.0
+  contains
+    procedure :: distance => point_distance
+  end type point
+
+  type :: circle
+    type(point) :: center
+    real :: radius = 0.0
+  end type circle
+
+contains
+
+  real function point_distance(self, other) result(d)
+    class(point), intent(in) :: self, other
+    d = sqrt((self%x - other%x)**2 + (self%y - other%y)**2)
+  end function point_distance
+
+  real function area(self) result(a)
+    class(circle), intent(in) :: self
+    a = pi * self%radius**2
+  end function area
+
+end module geometry
+
+program main
+  use geometry
+  implicit none
+
+  type(point) :: a, b
+  type(circle) :: c
+  real :: values(5)
+  integer :: i
+
+  a = point(0.0, 0.0)
+  b = point(3.0, 4.0)
+  c%center = b
+  c%radius = 2.5
+
+  do i = 1, size(values)
+    values(i) = real(i)**2
+  end do
+
+  write (*, '(A, F6.3)') "distance = ", a%distance(b)
+  print *, "area = ", area(c)
+  print *, "sum = ", sum(values)
+end program main
 `,
 
   fsharp: `module Demo
