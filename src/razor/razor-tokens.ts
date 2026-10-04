@@ -9,7 +9,10 @@ export const config: languages.LanguageConfiguration = {
   },
   brackets: [
     ["<!--", "-->"],
-    ["<", ">"],
+    // Angle brackets are intentionally excluded from `brackets`: they collide
+    // with C# operators such as `=>`, `>` and generics, which the bracket
+    // colorizer would otherwise flag as unexpected (red).
+    // ["<", ">"],
     ["{", "}"],
     ["[", "]"],
     ["(", ")"],

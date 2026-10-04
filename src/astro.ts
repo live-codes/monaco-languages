@@ -7,7 +7,9 @@ const config = {
   brackets: [
     ["---", "---"],
     ["<!--", "-->"],
-    ["<", ">"],
+    // Angle brackets are intentionally excluded: they collide with operators
+    // such as `=>`/`>` and generics, causing false unexpected-bracket red.
+    // ["<", ">"],
     ["{", "}"],
     ["(", ")"],
   ],

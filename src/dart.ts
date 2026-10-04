@@ -16,7 +16,9 @@ export default (monaco: typeof Monaco) => {
       ["{", "}"],
       ["[", "]"],
       ["(", ")"],
-      ["<", ">"],
+      // Angle brackets are intentionally excluded: they collide with operators
+      // such as `=>`/`->`/`>` and generics, causing false unexpected-bracket red.
+      // ["<", ">"],
     ],
     autoClosingPairs: [
       { open: "{", close: "}" },
