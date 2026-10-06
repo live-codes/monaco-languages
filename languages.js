@@ -25,6 +25,7 @@ export const languages = [
   { id: "commonlisp", name: "Common Lisp" },
   { id: "cpp", name: "C++" },
   { id: "csharp", name: "C#" },
+  { id: "d", name: "D" },
   { id: "dart", name: "Dart" },
   { id: "elixir", name: "Elixir" },
   { id: "elm", name: "Elm" },
@@ -64,6 +65,7 @@ export const languages = [
   { id: "sql", name: "SQL" },
   { id: "svelte", name: "Svelte" },
   { id: "swift", name: "Swift" },
+  { id: "v", name: "V" },
   { id: "vbnet", name: "Visual Basic", module: "vb" },
   { id: "vue", name: "Vue" },
   { id: "wat", name: "WebAssembly (WAT)" },
@@ -321,6 +323,41 @@ class Program
             Console.WriteLine($"{person.Name} is {person.Age}");
         }
     }
+}
+`,
+
+  d: `import std.stdio;
+import std.algorithm : filter, map, reduce;
+import std.math : sqrt;
+
+struct Point
+{
+    double x, y;
+
+    Point opBinary(string op)(Point rhs) if (op == "+")
+    {
+        return Point(x + rhs.x, y + rhs.y);
+    }
+
+    double norm() const
+    {
+        return sqrt(x * x + y * y);
+    }
+}
+
+void main()
+{
+    auto points = [Point(1, 2), Point(3, 4), Point(-1, 5)];
+
+    auto total = points
+        .filter!(p => p.x > 0)
+        .map!(p => p.norm)
+        .reduce!((a, b) => a + b);
+
+    writeln("Total norm: ", total);
+
+    foreach (i, p; points)
+        writefln("point[%d] = (%s, %s)", i, p.x, p.y);
 }
 `,
 
@@ -1234,6 +1271,43 @@ enum Shape {
 
 let shapes: [Shape] = [.circle(radius: 2), .rectangle(width: 3, height: 4)]
 shapes.forEach { print($0.area) }
+`,
+
+  v: `import math
+import os
+
+struct Point {
+mut:
+	x f64
+	y f64
+}
+
+fn (p Point) norm() f64 {
+	return math.sqrt(p.x * p.x + p.y * p.y)
+}
+
+fn (p Point) str() string {
+	return '(\${p.x}, \${p.y})'
+}
+
+fn main() {
+	points := [Point{1, 2}, Point{3, 4}, Point{-1, 5}]
+
+	total := points
+		.filter(it.x > 0)
+		.map(it.norm())
+		.reduce(f64(0), fn (acc f64, p f64) f64 {
+			return acc + p
+		})
+
+	println('Total norm: \${total:.2f}')
+
+	for i, p in points {
+		println('point[\${i}] = \${p}')
+	}
+
+	println('args: \${os.args}')
+}
 `,
 
   vbnet: `Imports System
