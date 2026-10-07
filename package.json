@@ -1,6 +1,6 @@
 {
   "name": "@live-codes/monaco-languages",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "description": "Language support for Monaco Editor",
   "repository": {
     "url": "https://github.com/live-codes/monaco-languages"
@@ -22,6 +22,7 @@
     "elixir": "./dist/elixir.js",
     "elm": "./dist/elm.js",
     "erlang": "./dist/erlang.js",
+    "flutter": "./dist/flutter.js",
     "fortran": "./dist/fortran.js",
     "fsharp": "./dist/fsharp.js",
     "go": "./dist/go.js",

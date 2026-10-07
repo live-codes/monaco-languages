@@ -48,6 +48,9 @@ export default (monaco: typeof Monaco) => {
     "protect",
     "defer",
     "edefer",
+    "let",
+    "if-let",
+    "when-let",
     "with",
     "when-with",
     "if-with",
@@ -745,6 +748,21 @@ export default (monaco: typeof Monaco) => {
       s: "(edefer form body...)",
       d: "Run form after body only if body terminates abnormally; otherwise return the last form of body.",
       e: "(edefer (print \"cleanup\") (do-work))",
+    },
+    let: {
+      s: "(let [binding value ...] body...)",
+      d: "Create a new scope and bind each value to the corresponding symbol, then evaluate body. Each pair in the binding tuple is assigned as if with def, and the form returns the last body value.",
+      e: "(let [a 1 b (+ a 1)] (+ a b)) # => 3",
+    },
+    "if-let": {
+      s: "(if-let [binding value ...] then else?)",
+      d: "Make multiple bindings (same syntax as let) and, when all are truthy, evaluate then; otherwise evaluate else (default nil).",
+      e: '(if-let [x (get tab :k)] (print x) (print "missing"))',
+    },
+    "when-let": {
+      s: "(when-let [binding value ...] body...)",
+      d: "Bind values like let and, when all are truthy, evaluate body; otherwise return nil. Equivalent to (if-let bindings (do ;body)).",
+      e: "(when-let [x (get tab :k)] (print x))",
     },
     with: {
       s: "(with [binding ctor dtor] body...)",
