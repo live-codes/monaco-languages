@@ -24,6 +24,7 @@ export const languages = [
   { id: "cobol", name: "COBOL" },
   { id: "commonlisp", name: "Common Lisp" },
   { id: "cpp", name: "C++" },
+  { id: "crystal", name: "Crystal" },
   { id: "csharp", name: "C#" },
   { id: "d", name: "D" },
   { id: "dart", name: "Dart" },
@@ -301,6 +302,75 @@ int main() {
   std::cout << "Sum: " << sum(numbers) << '\\n';
   return 0;
 }
+`,
+
+  crystal: `# A small Crystal demo: modules, enums, structs, classes and blocks.
+
+module Greeter
+  def greet(name : String) : String
+    "Hello, \#{name}!"
+  end
+end
+
+enum Color
+  Red
+  Green
+  Blue
+end
+
+struct Point
+  getter x : Int32
+  getter y : Int32
+
+  def initialize(@x : Int32, @y : Int32)
+  end
+
+  def +(other : Point) : Point
+    Point.new(@x + other.x, @y + other.y)
+  end
+
+  def to_s(io : IO) : Nil
+    io << "(" << @x << ", " << @y << ")"
+  end
+end
+
+abstract class Shape
+  include Greeter
+
+  getter name : String
+  property color : Color
+
+  def initialize(@name : String, @color : Color = Color::Red)
+  end
+
+  abstract def area : Float64
+
+  def describe : String
+    "\#{greet(@name)} color=\#{@color} area=\#{area}"
+  end
+end
+
+class Circle < Shape
+  def initialize(radius : Float64)
+    super("circle")
+    @radius = radius
+  end
+
+  def area : Float64
+    Math::PI * @radius ** 2
+  end
+end
+
+points = [Point.new(1, 2), Point.new(3, 4)]
+total = points.reduce(Point.new(0, 0)) { |acc, p| acc + p }
+puts "Total: \#{total}"
+
+shapes = [Circle.new(1.5), Circle.new(2.0)] of Shape
+shapes.each do |shape|
+  puts shape.describe
+end
+
+3.times { |i| puts "index \#{i}" }
 `,
 
   csharp: `using System;
